@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>我们的恋爱小屋</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- 第一页：欢迎页 -->
+  <section id="homePage" class="page home-page active">
+    <div class="soft-bg"></div>
+
+    <!-- 贴纸 -->
+<img src="golden.png" class="sticker sticker-golden" alt="golden">
+<img src="samoyed.png" class="sticker sticker-samoyed" alt="samoyed">
+<img src="bingbing.png" class="sticker sticker-bingbing" alt="bingbing">
+<img src="linabell.png" class="sticker sticker-linabell" alt="linabell">
+
+
+    <main class="welcome-card home-door-card">
+  <div class="home-question-bubble">
+    会幸福吗？
+  </div>
+
+  <div class="house-name-board">
+    <div class="board-nail left"></div>
+    <div class="board-nail right"></div>
+    <div class="house-name-small">♡ Welcome Home ♡</div>
+    <h1>鱼鱼和獭獭的小屋</h1>
+  </div>
+
+  <div class="home-answer-bubble">
+    会！
+  </div>
+
+  <button id="enterBtn" class="main-btn home-knock-btn">
+    敲门进入回忆
+  </button>
+</main>
+  </section>
+
+
+  <!-- 第二页：恋爱回忆 -->
+  <section id="memoryPage" class="page memory-page">
+   <header class="memory-header">
+  <button id="backBtn" class="back-btn" type="button">
+    <div class="back-icon">←</div>
+    <div class="back-text">小屋</div>
+  </button>
+
+  <div class="memory-title-box">
+    <h2>恋爱回忆</h2>
+    <div class="memory-date-scroll">
+      <span id="currentMemoryDate">2026.03.31</span>
+    </div>
+  </div>
+</header>
+<!-- 右上角音乐播放器 -->
+<button id="musicPlayerBtn" class="music-player" type="button">
+  <div id="playerDisc" class="player-disc empty">
+    <span class="music-note">♪</span>
+  </div>
+  <div class="player-text">音乐</div>
+</button>
+
+<!-- 音乐选择弹窗 -->
+<div id="musicPanel" class="music-panel">
+  <div class="music-panel-mask"></div>
+
+  <div class="music-panel-card">
+    <button id="closeMusicPanelBtn" class="music-close-btn" type="button">×</button>
+    <h3>选择一张唱片</h3>
+    <p>点一下想听的歌，就会开始播放啦。</p>
+
+    <div id="albumList" class="album-list"></div>
+  </div>
+</div>
+
+<audio id="bgMusic"></audio>
+
+
+    <!-- 第二页贴纸 -->
+    <img src="kitty.png" class="memory-sticker memory-kitty" alt="kitty">
+    <img src="bingbing.png" class="memory-sticker memory-bingbing" alt="bingbing">
+    <img src="linabell.png" class="memory-sticker memory-linabell" alt="linabell">
+    <img src="otter.png" class="memory-sticker memory-otter" alt="otter">
+
+    <!-- 左侧跟随标签 -->
+    <div id="dateTag" class="date-tag">
+      2026.03.31
+    </div>
+
+    <!-- 时间轴 -->
+    <main class="timeline-wrap">
+      <div class="timeline-line"></div>
+      <div id="timelineList" class="timeline-list"></div>
+    </main>
+  </section>
+
+
+  <!-- 点击图片后的弹窗 -->
+  <div id="memoryModal" class="modal">
+    <div class="modal-mask"></div>
+
+    <div class="modal-card">
+      <button id="closeModalBtn" class="close-btn">×</button>
+      <img id="modalImg" src="" alt="回忆图片">
+      <h3 id="modalTitle"></h3>
+      <p id="modalDate"></p>
+      <div id="modalText"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
