@@ -126,6 +126,19 @@ const memories = {
     text: "拼豆超级放松，很好吃的一顿牛肉"
   },
 
+  "2026-06-01": {
+    title: "儿童节特辑",
+    images: ["images/20260601-1.jpg",
+	 "images/20260601-2.jpg",
+	 "images/20260601-3.jpg",
+	 "images/20260601-4.jpg",
+	 "images/20260601-5.jpg",
+	 "images/20260601-6.jpg",
+	 "images/20260601-7.jpg",
+	    ],
+    text: "不要放过这个小年糕小豆腐小大福"
+ },
+
 
   "2026-06-06": {
     title: "穿上我买的睡衣了",
