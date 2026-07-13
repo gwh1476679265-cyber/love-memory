@@ -541,8 +541,8 @@ const musicList = [
   },
   {
     title: "love you so much",
-    cover: "music/love you so much.jpg",
-    src: "music/love you so much.mp3"
+    cover: "music/loveyousomuch.jpg",
+    src: "music/loveyousomuch.mp3"
   },
   {
     title: "玻璃",
