@@ -1899,3 +1899,29 @@ body {
     transform: rotate(8deg) !important;
   }
 }
+/* =========================
+   🆕 新增：恋爱正数计时器样式
+========================= */
+.love-counter {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ff78a6;
+  /* 搭配整体的粉蓝渐变胶囊背景 */
+  background: linear-gradient(135deg, #fff1f8, #e4f6ff);
+  padding: 5px 16px;
+  border-radius: 999px;
+  display: inline-block;
+  border: 1px solid rgba(255, 196, 220, 0.7);
+  box-shadow: 0 4px 10px rgba(255, 137, 184, 0.1);
+  letter-spacing: 0.5px;
+}
+
+/* 突出显示天数数字 */
+.love-counter span {
+  font-size: 18px;
+  color: #ff4a86;
+  margin: 0 3px;
+  font-family: "Arial", sans-serif;
+  text-shadow: 0 2px 4px rgba(255, 74, 134, 0.15);
+}

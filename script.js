@@ -630,3 +630,29 @@ bgMusic.addEventListener("play", () => {
 });
 
 createAlbumList();
+// ===============================
+// 🆕 新增：恋爱天数正数计时器
+// ===============================
+function updateLoveDays() {
+  // 设置你们在一起的纪念日：2026年5月9日
+  const START_DATE = new Date("2026-05-09T00:00:00");
+  const today = new Date();
+  
+  // 统一把时间戳的小时、分钟、秒清零，确保按整天计算
+  const start = new Date(START_DATE.getFullYear(), START_DATE.getMonth(), START_DATE.getDate());
+  const current = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  
+  // 计算毫秒差并转换成天数
+  const timeDiff = current.getTime() - start.getTime();
+  // Math.floor 后 +1 代表在一起的当天算作第 1 天
+  const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+  
+  // 将计算好的天数写入页面
+  const loveDaysEl = document.getElementById("loveDays");
+  if (loveDaysEl) {
+    loveDaysEl.textContent = daysDiff;
+  }
+}
+
+// 页面加载完成后立即自动执行一次
+updateLoveDays();
