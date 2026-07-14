@@ -656,3 +656,25 @@ function updateLoveDays() {
 
 // 页面加载完成后立即自动执行一次
 updateLoveDays();
+// ===============================
+// 🆕 新增：访客开门暗中提醒功能
+// ===============================
+function sendVisitNotification() {
+  // 替换成你在Server酱复制的专属 SendKey
+  const SEND_KEY = "这里填你复制的SCT开头的Key"; 
+  
+  // 组装推送的内容
+  const title = encodeURIComponent("有人敲开鱼鱼和獭獭的小屋门啦！");
+  const desp = encodeURIComponent(`访问时间：${new Date().toLocaleString()}\n快去看看是不是宝宝来看回忆了~`);
+  
+  // 利用浏览器自带的 fetch 暗中发送请求，不影响网页本身的正常加载
+  fetch(`https://sctapi.ftqq.com/${SEND_KEY}.send?title=${title}&desp=${desp}`, {
+    method: "POST",
+    mode: "no-cors" // 采用no-cors模式防止跨域报错阻碍网页运行
+  })
+  .then(() => console.log("欢迎回家~"))
+  .catch((err) => console.log("网络开小差啦"));
+}
+
+// 只要网页一加载，立刻触发提醒
+sendVisitNotification();
