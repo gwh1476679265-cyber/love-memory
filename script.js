@@ -661,7 +661,7 @@ updateLoveDays();
 // ===============================
 function sendVisitNotification() {
   // 替换成你在Server酱复制的专属 SendKey
-  const SEND_KEY = "这里填你复制的SCT开头的Key"; 
+  const SEND_KEY = "SCT379244TZtLhXn7GKU9Macjf8jWQV9xl"; 
   
   // 组装推送的内容
   const title = encodeURIComponent("有人敲开鱼鱼和獭獭的小屋门啦！");
