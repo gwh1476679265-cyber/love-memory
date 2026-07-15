@@ -60,25 +60,30 @@
   <button id="enterBtn" class="main-btn home-knock-btn">
     敲门进入回忆
   </button>
-</main>
-  </section>
+   </main>
+</section>
 
 
-  <!-- 第二页：恋爱回忆 -->
+ <!-- 第二页：恋爱回忆 -->
   <section id="memoryPage" class="page memory-page">
    <header class="memory-header">
+
+<!-- 左上角返回小屋 -->
   <button id="backBtn" class="back-btn" type="button">
     <div class="back-icon">←</div>
     <div class="back-text">小屋</div>
   </button>
 
-  <div class="memory-title-box">
+<!-- 🆕 修改这里：删掉之前的独立按钮，直接让这个牌子变成触发器 -->
+  <div id="toAboutBtn" class="memory-title-box" style="cursor: pointer;">
     <h2>恋爱回忆</h2>
     <div class="memory-date-scroll">
       <span id="currentMemoryDate">2026.03.31</span>
     </div>
   </div>
 </header>
+
+
 <!-- 右上角音乐播放器 -->
 <button id="musicPlayerBtn" class="music-player" type="button">
   <div id="playerDisc" class="player-disc empty">
@@ -109,15 +114,30 @@
     <img src="linabell.png" class="memory-sticker memory-linabell" alt="linabell">
     <img src="otter.png" class="memory-sticker memory-otter" alt="otter">
 
-    <!-- 左侧跟随标签 -->
-    <div id="dateTag" class="date-tag">
-      2026.03.31
-    </div>
 
-    <!-- 时间轴 -->
+  <!-- 时间轴 -->
     <main class="timeline-wrap">
       <div class="timeline-line"></div>
       <div id="timelineList" class="timeline-list"></div>
+
+     <!-- 🆕 更新版：位于中轴线正底部的惊喜礼物模块 -->
+      <div class="timeline-gift-node">
+        <!-- 中轴线上的发光圆点作为终点 -->
+        <div class="gift-timeline-dot"></div>
+        
+        <!-- 惊喜礼物主体 -->
+        <div class="surprise-gift-box">
+          <!-- 上方悬挂的互动小爱心 -->
+          <div class="gift-top-heart">💖</div>
+          <!-- 礼物卡片主体 -->
+          <div class="gift-card-body">
+            <span class="gift-icon">🎁</span>
+            <h3>你收到了一个未拆封的彩蛋</h3>
+            <p>抬头看看，试着点击 <span class="highlight-click">“恋爱回忆”</span> 牌子~</p>
+          </div>
+        </div>
+      </div>
+
     </main>
   </section>
 
@@ -134,7 +154,158 @@
       <div id="modalText"></div>
     </div>
   </div>
+<!-- ========================================== -->
+  <!-- 🆕 新增：第三页：关于边芸芸的一切 -->
+  <!-- ========================================== -->
+  <section id="aboutPage" class="page about-page">
+    <!-- 顶部固定表头 -->
+    <header class="about-header">
+      <button id="backToMemoryBtn" class="back-to-memory-btn" type="button">
+        <div class="back-icon-mini">←</div>
+        <div class="back-text-mini">回忆</div>
+      </button>
+      <div class="about-title-box">
+        <h2>关于边芸芸的一切</h2>
+      </div>
+    </header>
 
+    <!-- 主体内容包裹区 -->
+    <main class="about-content-wrap">
+      
+      <!-- 模块一：喜恶切客切换（吃喝雷达） -->
+      <section class="yunyaun-section">
+        <div class="toggle-tabs">
+          <button id="tabLike" class="tab-btn active" type="button">芸芸超爱 💖</button>
+          <button id="tabDislike" class="tab-btn" type="button">芸芸退散 ❌</button>
+        </div>
+        
+        <!-- 爱吃内容 -->
+        <div id="likeContent" class="food-grid-content active">
+          <div class="food-category">
+            <h4>🏷️ 类型 & 口味</h4>
+            <div class="tags-pool">
+              <span>烤肉</span><span>铁板烧</span><span>烧烤</span><span>融合式西餐</span><span>家常菜</span><span>辣</span><span>甜</span><span>香菜</span><span>叉烧</span><span>抹茶+红豆</span>
+            </div>
+          </div>
+          <div class="food-category">
+            <h4>🍓 水果 & 面包</h4>
+            <div class="tags-pool">
+              <span>西瓜 🍉</span><span>凤梨 🍍</span><span>榴莲 👑</span><span>芒果 🥭</span><span>肉松面包</span><span>红豆面包</span><span>布丁</span><span>抹茶泡芙</span>
+            </div>
+          </div>
+          <div class="food-category">
+            <h4>🥤 喜欢喝的</h4>
+            <div class="tags-pool">
+              <span>霸王茶姬 (白雾红尘 标准糖)</span><span>一点点 (抹茶)</span><span>阿嬷奶茶</span><span>喜茶 (茉莉浓抹)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 不吃内容（默认隐藏） -->
+        <div id="dislikeContent" class="food-grid-content">
+          <div class="food-category">
+            <h4>🚫 坚决不吃</h4>
+            <div class="tags-pool dislike">
+              <span>三文鱼</span><span>菜包</span><span>荠菜 (气味)</span><span>韭菜</span><span>oeat (一般)</span><span>云贵菜 (梅果+)</span><span>芭乐</span><span>沙茶</span><span>海送</span><span>锅巴</span><span>血糯米</span><span>紫米糯米球</span><span>紫米饭</span><span>蒜苗</span><span>日料</span>
+            </div>
+          </div>
+          <div class="food-category">
+            <h4>🙅 坚决不喝</h4>
+            <div class="tags-pool dislike">
+              <span>茶百道</span><span>碳酸饮料</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 模块二：3D翻转甜品/餐厅卡片 -->
+      <section class="yunyaun-section">
+        <div class="section-title">🍰 芸芸的宝藏私房榜 (点击翻面)</div>
+        <div class="cards-market">
+          
+          <!-- 卡片1 -->
+          <div class="flip-card">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><h4>皮师傅</h4></div>
+              <div class="flip-card-back"><p>❤️ 马卡龙</p></div>
+            </div>
+          </div>
+          <!-- 卡片2 -->
+          <div class="flip-card">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><h4>DRUNKBAKER</h4></div>
+              <div class="flip-card-back"><p>黑生巧软曲奇<br>提拉米苏 / 十层巧克力蛋糕<br>芒果抹茶 / 蓝莓抹茶</p></div>
+            </div>
+          </div>
+          <!-- 卡片3 -->
+          <div class="flip-card">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><h4>好利来</h4></div>
+              <div class="flip-card-back"><p>小蛋糕 / 半熟芝士<br>(原味/巧克力/奥利奥)<br>树莓生巧 / 抹茶</p></div>
+            </div>
+          </div>
+          <!-- 卡片4 -->
+          <div class="flip-card">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><h4>满记甜品</h4></div>
+              <div class="flip-card-back"><p>榴莲有关 👑<br>榴莲双皮奶 / 琥珀果仁双皮奶</p></div>
+            </div>
+          </div>
+          <!-- 卡片5 -->
+          <div class="flip-card">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><h4>老鸭煲</h4></div>
+              <div class="flip-card-back"><p>👵 奶奶做的<br>比张生记还要好吃！</p></div>
+            </div>
+          </div>
+          <!-- 卡片6 -->
+          <div class="flip-card">
+            <div class="flip-card-inner">
+              <div class="flip-card-front"><h4>爱去餐厅</h4></div>
+              <div class="flip-card-back"><p>洞庭3000 (湘菜)<br>吃饭皇帝大 (湘菜)<br>费大厨 (湘菜)<br>池奈蛋包饭 / 金猪 / 必胜客</p></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+     <!-- 模块三：浪漫约定清单 -->
+      <section class="yunyaun-section">
+        <div class="section-title">📌 我们的约定 (要记得)</div>
+        <div class="todo-notebook">
+          <!-- 一起去爬山 ⛰️（原本自带的） -->
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">一起去爬山 ⛰️</span></div>
+          
+          <!-- 以下为新增备忘录内容 -->
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">来余姚开车 🚗</span></div>
+          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">来杭州送花 💐</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">来余姚送花 🌸</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">洞庭 3000 里吃饭 🍲</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">一起看 live 🎵</span></div>
+          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">一起吃小和山 🥞</span></div>
+          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">来工大 🏫</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">纯 k 卤肉饭 🍚</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">给她调调料 🥢</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">吃周黑鸭 黑鸭煲 🦆</span></div>
+          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">看电量（下次见面看看🔋）</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">良渚小鹿 🦌</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">木屋烧烤（楼下 🍢）</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">鸭血粉丝（温州瘦肉丸 🥣）</span></div>
+          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">胸式呼吸 腹式呼吸 😮‍💨</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">俯视仰视 👀</span></div>
+          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">智取发绳 🎀</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">补一个草坪音乐会 🎸</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">补一个线下观影 🎬</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">给她做蛋糕 🍰</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">给她画画 🎨</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">送护手霜 🧴</span></div>
+          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">相机胶卷相机 📷</span></div>
+        </div>
+     </section>
+</main>
+  </section>
+
+  <!-- 引入控制页面跳转、天数计算、吃喝雷达及卡片翻转的 JS 逻辑文件 -->
   <script src="script.js"></script>
 </body>
 </html>

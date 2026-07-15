@@ -389,23 +389,6 @@ body {
   line-height: 1.6;
 }
 
-/* 左侧跟随日期标签 */
-.date-tag {
-  position: fixed;
-  left: 10px;
-  top: 48%;
-  z-index: 20;
-  padding: 9px 12px;
-  border-radius: 999px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #ff91bd, #8bd2ff);
-  box-shadow: 0 10px 24px rgba(255, 137, 184, 0.28);
-  opacity: 0;
-  transform: translateY(-50%) translateX(-8px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
 
 .memory-page.active .date-tag {
   opacity: 1;
@@ -602,11 +585,8 @@ body {
   }
 
   .memory-sticker {
-    opacity: 0.55;
-  }
-}
-.date-tag {
-  display: none !important;
+   opacity: 0.55;
+ }
 }
 .memory-photo.has-multiple {
   position: relative;
@@ -2070,4 +2050,450 @@ body {
     left: 1% !important;
     top: 16% !important;
   }
+}
+/* =========================
+   🆕 新增：第三页（关于边芸芸的一切）基础样式与按钮
+========================= */
+
+
+
+/* 1. 第三页整体背景（延续温柔的粉蓝马卡龙波点风） */
+.about-page {
+  min-height: 100vh;
+  padding-bottom: 80px;
+  background:
+    radial-gradient(circle at 85% 8%, rgba(255, 224, 238, 0.9) 0, transparent 26%),
+    radial-gradient(circle at 15% 12%, rgba(216, 243, 255, 0.9) 0, transparent 28%),
+    linear-gradient(180deg, #fff8fc 0%, #f5f0ff 50%, #fff7fb 100%);
+}
+
+/* 2. 第三页头部毛玻璃和标题 */
+.about-header {
+  position: relative;
+  height: 92px !important;
+  z-index: 40;
+}
+
+.about-header::before {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 88px;
+  z-index: 25;
+  background: rgba(255, 247, 252, 0.62);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1.5px solid rgba(255, 196, 220, 0.58);
+}
+
+.about-title-box {
+  position: fixed !important;
+  left: 50% !important;
+  top: 12px !important;
+  width: 230px !important;
+  height: 68px !important;
+  transform: translateX(-50%) !important;
+  border-radius: 22px !important;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1.5px solid #ffd1e3;
+  box-shadow: 0 12px 26px rgba(255, 135, 180, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 42;
+}
+
+.about-title-box h2 {
+  margin: 0 !important;
+  color: #ff78a6;
+  font-size: 20px !important;
+  letter-spacing: 1px;
+}
+
+/* 3. 第三页的返回按钮 */
+.back-to-memory-btn {
+  position: fixed !important;
+  left: 14px !important;
+  top: 12px !important;
+  width: 62px !important;
+  height: 68px !important;
+  border-radius: 21px !important;
+  z-index: 43 !important;
+  border: 1.5px solid #ffd1e3;
+  background: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.back-icon-mini {
+  color: #ff78a6;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.back-text-mini {
+  color: #ff78a6;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* 4. 主体留白卡片内容样式 */
+.about-content-wrap {
+  width: min(90vw, 460px);
+  margin: 30px auto 0;
+  padding-top: 10px;
+  position: relative;
+  z-index: 2;
+}
+
+.placeholder-card {
+  padding: 30px 24px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1.5px solid rgba(255, 211, 228, 0.95);
+  box-shadow: 0 14px 30px rgba(131, 99, 117, 0.1);
+  text-align: center;
+  color: #735d69;
+}
+
+.placeholder-card h3 {
+  color: #ff78a6;
+  margin-bottom: 16px;
+}
+
+.placeholder-card p {
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 8px 0;
+}
+
+/* 手机端按钮微调 */
+@media (max-width: 480px) {
+  .about-yunyaun-btn {
+    top: 92px !important;
+    width: 62px !important;
+    height: 70px !important;
+  }
+}
+/* =========================
+   🆕 第三页高阶交互增强样式
+========================= */
+.yunyaun-section {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1.5px solid rgba(255, 211, 228, 0.9);
+  box-shadow: 0 10px 24px rgba(131, 99, 117, 0.08);
+  border-radius: 28px;
+  padding: 20px 16px;
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ff78a6;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+/* 选项卡切换按钮 */
+.toggle-tabs {
+  display: flex;
+  background: #fff0f6;
+  padding: 4px;
+  border-radius: 999px;
+  margin-bottom: 16px;
+  border: 1px solid #ffd3e4;
+}
+.tab-btn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #8a7280;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, #ff91bd, #8bcfff);
+  color: white;
+  box-shadow: 0 4px 10px rgba(255, 145, 189, 0.25);
+}
+
+/* 标签糖果池 */
+.food-grid-content {
+  display: none;
+}
+.food-grid-content.active {
+  display: block;
+}
+.food-category {
+  margin-bottom: 14px;
+}
+.food-category h4 {
+  margin: 0 0 8px 4px;
+  font-size: 12px;
+  color: #8a7280;
+}
+.tags-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.tags-pool span {
+  background: #fff;
+  border: 1px solid #ffd5e4;
+  color: #65485a;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(255, 137, 184, 0.06);
+}
+.tags-pool.dislike span {
+  border-color: #d2ecf9;
+  background: #fdfcff;
+  color: #6d828e;
+}
+
+/* 3D 翻转卡片核心 */
+.cards-market {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+.flip-card {
+  background-color: transparent;
+  height: 90px;
+  perspective: 1000px;
+  cursor: pointer;
+}
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+  box-shadow: 0 6px 14px rgba(131, 99, 117, 0.06);
+  border-radius: 18px;
+}
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+.flip-card-front, .flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  box-sizing: border-box;
+}
+.flip-card-front {
+  background: linear-gradient(135deg, #ffffff, #fffdfd);
+  border: 1.5px solid #ffd4e5;
+  color: #ff78a6;
+}
+.flip-card-front h4 { margin: 0; font-size: 13px; font-weight: 800; }
+.flip-card-back {
+  background: linear-gradient(135deg, #fff2f8, #eaf7ff);
+  border: 1.5px solid #ffd4e5;
+  color: #65485a;
+  transform: rotateY(180deg);
+}
+.flip-card-back p { margin: 0; font-size: 11px; font-weight: 700; line-height: 1.4; }
+
+/* 笔记本约定待办清单 */
+.todo-notebook {
+  background: #fff;
+  border: 1.5px solid #ffd5e4;
+  border-radius: 18px;
+  padding: 12px 16px;
+}
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #ffe3ee;
+}
+.todo-item:last-child { border-bottom: none; }
+.checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #ffb6d0;
+  border-radius: 50%;
+  display: inline-block;
+}
+.checkbox.checked {
+  background: #ff78a6;
+  border-color: #ff78a6;
+  color: white;
+  font-size: 11px;
+  line-height: 14px;
+  text-align: center;
+  font-weight: bold;
+}
+.todo-text { font-size: 13px; font-weight: 700; color: #65485a; }
+.todo-item.done .todo-text {
+  color: #bfaab5;
+text-decoration: line-through;
+}
+/* =========================
+   空状态样式
+========================= */
+
+.empty-photo {
+  width: 100%;
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #bca8b5;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.6;
+  background:
+    linear-gradient(135deg, rgba(255, 226, 239, 0.9), rgba(220, 245, 255, 0.9));
+  border: 1.5px dashed #ffc6da;
+  border-radius: 18px;
+}
+
+.empty-timeline {
+  padding: 60px 20px;
+  text-align: center;
+  color: #bca8b5;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.8;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  border: 1.5px dashed #ffd5e4;
+  margin: 20px 0;
+}
+/* /* ==========================================
+   🆕 完美修正版：时间轴正底部惊喜礼物样式
+========================================== */
+
+.timeline-gift-node {
+  position: relative;
+  width: 100%;
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+}
+
+/* 轴线发光终点圆点 */
+.gift-timeline-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid #ff9fc3;
+  box-shadow: 
+    0 0 0 6px rgba(255, 203, 222, 0.5),
+    0 6px 14px rgba(255, 127, 174, 0.2);
+  margin-bottom: 20px;
+}
+
+/* 惊喜卡片主体：去掉了穿过文字的丝带背景，确保文字清晰 */
+.surprise-gift-box {
+  position: relative;
+  width: min(85vw, 310px);
+  padding: 26px 20px 22px;
+  border-radius: 26px;
+  background: #ffffff; /* 纯白背景彻底遮挡后方的线条 */
+  border: 2px solid #ffd3e4;
+  text-align: center;
+  box-shadow: 0 14px 35px rgba(255, 145, 189, 0.16);
+  animation: giftFloatNew 3s ease-in-out infinite;
+}
+
+/* 替代蝴蝶结：卡片顶部挂着一颗带呼吸闪烁效果的小爱心 */
+.gift-top-heart {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  background: #ffffff;
+  padding: 0 6px;
+  border-radius: 50%;
+  z-index: 5;
+  animation: heartPulse 1.5s ease-in-out infinite alternate;
+}
+
+.gift-card-body {
+  position: relative;
+  z-index: 2;
+}
+
+.gift-icon {
+  display: inline-block;
+  font-size: 36px;
+  margin-bottom: 10px;
+  animation: giftWobbleNew 2.5s ease-in-out infinite;
+}
+
+.gift-card-body h3 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #ff78a6;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.gift-card-body p {
+  margin: 0;
+  font-size: 13px;
+  color: #65485a;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+/* 强化点击指引的高亮标签 */
+.highlight-click {
+  color: #ff4a86;
+  background: #fff0f6;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-weight: 800;
+  border: 1px dashed #ffc5dc;
+  display: inline-block;
+  margin: 0 2px;
+}
+
+/* 动效：卡片整体的柔和上下浮动 */
+@keyframes giftFloatNew {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* 动效：小礼物盒微微晃动 */
+@keyframes giftWobbleNew {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  20% { transform: rotate(-6deg) scale(1.03); }
+  60% { transform: rotate(6deg) scale(1.03); }
+}
+
+/* 动效：顶部爱心有规律的微放大闪烁 */
+@keyframes heartPulse {
+  0% { transform: translateX(-50%) scale(0.9); opacity: 0.8; }
+  100% { transform: translateX(-50%) scale(1.1); opacity: 1; }
 }

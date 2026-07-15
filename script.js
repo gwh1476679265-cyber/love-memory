@@ -4,8 +4,11 @@
 
 const homePage = document.getElementById("homePage");
 const memoryPage = document.getElementById("memoryPage");
+
+
 const enterBtn = document.getElementById("enterBtn");
 const backBtn = document.getElementById("backBtn");
+
 
 enterBtn.addEventListener("click", () => {
   homePage.classList.remove("active");
@@ -18,6 +21,7 @@ backBtn.addEventListener("click", () => {
   homePage.classList.add("active");
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
+
 
 
 // ===============================
@@ -202,7 +206,6 @@ const today = new Date();
 today.setHours(0, 0, 0, 0);
 
 const timelineList = document.getElementById("timelineList");
-const dateTag = document.getElementById("dateTag");
 
 function pad(num) {
   return String(num).padStart(2, "0");
@@ -501,15 +504,15 @@ function openMemoryModal(dateText, memory, currentImage = "") {
 
     if (imageToShow) {
       modalImg.src = imageToShow;
-      modalImg.style.display = "block";
+     modalImg.style.display = "block";
     } else {
-      modalImg.src = "";
+      modalImg.removeAttribute("src");
       modalImg.style.display = "none";
     }
   } else {
     modalTitle.textContent = "这一天的回忆";
     modalText.textContent = "这里还没有添加内容。";
-    modalImg.src = "";
+    modalImg.removeAttribute("src");
     modalImg.style.display = "none";
   }
 
@@ -712,4 +715,77 @@ document.querySelectorAll('.dog-container').forEach(dog => {
   
   // 💻 监听电脑端鼠标点击事件
   dog.addEventListener('click', triggerDogSticker);
+});
+// ===============================
+// 🆕 新增：点击“恋爱回忆”标题牌子跳转到第三页逻辑
+// ===============================
+const aboutPage = document.getElementById("aboutPage");
+const toAboutBtn = document.getElementById("toAboutBtn"); // 此时绑定的是中间的牌子
+const backToMemoryBtn = document.getElementById("backToMemoryBtn");
+
+// 点击顶部的“恋爱回忆”牌子 -> 跳转到关于芸芸新页面
+if (toAboutBtn && aboutPage) {
+  toAboutBtn.addEventListener("click", () => {
+    // 获取当前处于活跃的第二页，将其隐藏
+    document.getElementById("memoryPage").classList.remove("active");
+    aboutPage.classList.add("active");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+
+// 从关于芸芸新页面 -> 返回第二页恋爱回忆
+if (backToMemoryBtn) {
+  backToMemoryBtn.addEventListener("click", () => {
+    if (aboutPage) aboutPage.classList.remove("active");
+    document.getElementById("memoryPage").classList.add("active");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+// ==========================================
+// 🆕 新增：第三页（关于边芸芸的一切）交互逻辑
+// ==========================================
+
+// 1. 选项卡切换（超爱 vs 退散）
+const tabLike = document.getElementById("tabLike");
+const tabDislike = document.getElementById("tabDislike");
+const likeContent = document.getElementById("likeContent");
+const dislikeContent = document.getElementById("dislikeContent");
+
+if (tabLike && tabDislike && likeContent && dislikeContent) {
+  tabLike.addEventListener("click", () => {
+    tabLike.classList.add("active");
+    tabDislike.classList.remove("active");
+    likeContent.classList.add("active");
+    dislikeContent.classList.remove("active");
+  });
+
+  tabDislike.addEventListener("click", () => {
+    tabDislike.classList.add("active");
+    tabLike.classList.remove("active");
+    dislikeContent.classList.add("active");
+    likeContent.classList.remove("active");
+  });
+}
+
+// 2. 宝藏私房榜卡片 3D 翻转
+document.querySelectorAll('.flip-card').forEach(card => {
+  card.addEventListener('click', () => {
+    card.classList.toggle('flipped');
+  });
+});
+
+// 3. 浪漫约定清单小钩钩点击切换（可选附加）
+document.querySelectorAll('.todo-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const checkbox = item.querySelector('.checkbox');
+    if (item.classList.contains('done')) {
+      item.classList.remove('done');
+      if (checkbox) checkbox.innerHTML = '';
+      if (checkbox) checkbox.classList.remove('checked');
+    } else {
+      item.classList.add('done');
+      if (checkbox) checkbox.innerHTML = '✔';
+      if (checkbox) checkbox.classList.add('checked');
+    }
+  });
 });
