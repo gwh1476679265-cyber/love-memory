@@ -716,21 +716,29 @@ document.querySelectorAll('.dog-container').forEach(dog => {
   // 💻 监听电脑端鼠标点击事件
   dog.addEventListener('click', triggerDogSticker);
 });
-// ===============================
-// 🆕 新增：点击“恋爱回忆”标题牌子跳转到第三页逻辑
-// ===============================
-const aboutPage = document.getElementById("aboutPage");
-const toAboutBtn = document.getElementById("toAboutBtn"); // 此时绑定的是中间的牌子
-const backToMemoryBtn = document.getElementById("backToMemoryBtn");
+// ==========================================
+// 📱 完美移动端兼容：点击恋爱回忆牌子跳转逻辑
+// ==========================================
+const aboutPageEl = document.getElementById("aboutPage");
+const toAboutBtnEl = document.getElementById("toAboutBtn");
+const memoryPageEl = document.getElementById("memoryPage");
 
-// 点击顶部的“恋爱回忆”牌子 -> 跳转到关于芸芸新页面
-if (toAboutBtn && aboutPage) {
-  toAboutBtn.addEventListener("click", () => {
-    // 获取当前处于活跃的第二页，将其隐藏
-    document.getElementById("memoryPage").classList.remove("active");
-    aboutPage.classList.add("active");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
+function handleToAboutTransition(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  if (aboutPageEl && memoryPageEl) {
+    memoryPageEl.classList.remove("active");
+    aboutPageEl.classList.add("active");
+    window.scrollTo({ top: 0, behavior: "instant" }); // 手机端使用 instant 响应更快防止白屏
+  }
+}
+
+if (toAboutBtnEl) {
+  // 同时监听触屏与常规点击，完美解决移动端失效问题
+  toAboutBtnEl.addEventListener("touchstart", handleToAboutTransition, { passive: false });
+  toAboutBtnEl.addEventListener("click", handleToAboutTransition);
 }
 
 // 从关于芸芸新页面 -> 返回第二页恋爱回忆

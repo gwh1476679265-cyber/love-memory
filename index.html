@@ -118,18 +118,15 @@
   <!-- 时间轴 -->
     <main class="timeline-wrap">
       <div class="timeline-line"></div>
+      
+      <!-- 回忆卡片在这里动态渲染，保持完全独立 -->
       <div id="timelineList" class="timeline-list"></div>
 
-     <!-- 🆕 更新版：位于中轴线正底部的惊喜礼物模块 -->
+      <!-- 🆕 安全区：移到外部的惊喜礼物模块，再也不会被清空 -->
       <div class="timeline-gift-node">
-        <!-- 中轴线上的发光圆点作为终点 -->
         <div class="gift-timeline-dot"></div>
-        
-        <!-- 惊喜礼物主体 -->
         <div class="surprise-gift-box">
-          <!-- 上方悬挂的互动小爱心 -->
           <div class="gift-top-heart">💖</div>
-          <!-- 礼物卡片主体 -->
           <div class="gift-card-body">
             <span class="gift-icon">🎁</span>
             <h3>你收到了一个未拆封的彩蛋</h3>

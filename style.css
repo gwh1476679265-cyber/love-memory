@@ -2497,3 +2497,61 @@ text-decoration: line-through;
   0% { transform: translateX(-50%) scale(0.9); opacity: 0.8; }
   100% { transform: translateX(-50%) scale(1.1); opacity: 1; }
 }
+/* ==========================================
+   📱 移动端专项 Bug 修复与体验优化
+========================================== */
+
+@media (max-width: 480px) {
+  /* 1. 彻底解决小狗气泡在手机端超出屏幕被切断的问题 */
+  .dog-container {
+    z-index: 99 !important;
+  }
+  
+  /* 左侧玲娜贝儿与气泡微调，确保不超出左边界 */
+  .home-page .sticker-linabell {
+    left: 4px !important;
+    top: 15% !important;
+  }
+  .home-page .sticker-linabell .dog-bubble {
+    left: 0% !important;
+    transform: translateX(10px) scale(0);
+    transform-origin: bottom left;
+  }
+  .home-page .sticker-linabell .dog-bubble.show {
+    transform: translateX(10px) scale(1);
+  }
+  /* 调整气泡下方的尖尖位置 */
+  .home-page .sticker-linabell .dog-bubble::after {
+    left: 20px !important;
+  }
+
+  /* 右侧星黛露/饼饼与气泡微调，确保不超出右边界 */
+  .home-page .sticker-bingbing {
+    right: 4px !important;
+    top: 15% !important;
+  }
+  .home-page .sticker-bingbing .dog-bubble {
+    left: auto !important;
+    right: 0% !important;
+    transform: translateX(-10px) scale(0);
+    transform-origin: bottom right;
+  }
+  .home-page .sticker-bingbing .dog-bubble.show {
+    transform: translateX(-10px) scale(1);
+  }
+  .home-page .sticker-bingbing .dog-bubble::after {
+    left: auto !important;
+    right: 20px !important;
+  }
+
+  /* 2. 确保时间轴底部留有足够的安全距离，防止礼物被底栏遮挡 */
+  .timeline-wrap {
+    padding-bottom: 60px !important;
+  }
+}
+
+/* 彻底隔离中轴线，不允许背景冰棒线穿透礼物卡片 */
+.surprise-gift-box {
+  background: #ffffff !important;
+  z-index: 5 !important;
+}
