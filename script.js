@@ -679,18 +679,20 @@ function sendVisitNotification() {
 // 只要网页一加载，立刻触发提醒
 sendVisitNotification();
 // ===============================
-// 🆕 新增：点击小狗摇晃及弹出气泡逻辑
+// 🆕 最终完美兼容版：小狗摇晃及弹出气泡逻辑（兼容手机与电脑）
 // ===============================
 document.querySelectorAll('.dog-container').forEach(dog => {
   let timer = null;
 
-  dog.addEventListener('click', function(e) {
+  // 编写一个统一的触发函数
+  function triggerDogSticker(e) {
+    e.preventDefault();  // 阻止手机端的300ms点击延迟和穿透
     e.stopPropagation(); // 阻止事件冒泡
 
-    const bubble = this.querySelector('.dog-bubble');
-    const img = this.querySelector('.sticker-img');
+    const bubble = dog.querySelector('.dog-bubble');
+    const img = dog.querySelector('.sticker-img');
 
-    // 1. 触发摇晃动画（先移除再添加，确保连续点击也能触发）
+    // 1. 触发摇晃动画
     img.classList.remove('dog-shake');
     void img.offsetWidth; // 触发浏览器重绘
     img.classList.add('dog-shake');
@@ -698,10 +700,16 @@ document.querySelectorAll('.dog-container').forEach(dog => {
     // 2. 显示气泡
     bubble.classList.add('show');
 
-    // 3. 清除之前的定时器，重新倒计时 2.5 秒后关闭气泡
+    // 3. 倒计时 2.5 秒后关闭气泡
     clearTimeout(timer);
     timer = setTimeout(() => {
       bubble.classList.remove('show');
     }, 2500);
-  });
+  }
+
+  // 📱 监听手机端手指触摸事件
+  dog.addEventListener('touchstart', triggerDogSticker, { passive: false });
+  
+  // 💻 监听电脑端鼠标点击事件
+  dog.addEventListener('click', triggerDogSticker);
 });

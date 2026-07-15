@@ -1937,7 +1937,11 @@ body {
   pointer-events: auto !important; /* 强制开启点击事件 */
   user-select: none;
   display: inline-block;
+/* 🎁 给手机端增加一点点隐形的点击保护区域，防止手指粗点不准 */
+  padding: 10px; 
+  margin: -10px;
 }
+
 
 /* 2. 精准还原金毛在首页的位置与大小 */
 .home-page .sticker-golden {
