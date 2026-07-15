@@ -1925,3 +1925,145 @@ body {
   font-family: "Arial", sans-serif;
   text-shadow: 0 2px 4px rgba(255, 74, 134, 0.15);
 }
+/* =========================
+   🆕 最终完美修正版：小狗互动与气泡样式
+========================= */
+
+/* 1. 核心容器：继承原有的首页贴纸绝对定位和层级 */
+.dog-container {
+  position: absolute !important;
+  z-index: 99 !important; /* 提到最上层，确保能被点到 */
+  cursor: pointer;
+  pointer-events: auto !important; /* 强制开启点击事件 */
+  user-select: none;
+  display: inline-block;
+}
+
+/* 2. 精准还原金毛在首页的位置与大小 */
+.home-page .sticker-golden {
+  width: 92px !important;
+  left: calc(50% - 250px) !important;
+  bottom: calc(50% - 235px) !important;
+  transform: rotate(-8deg) !important;
+}
+
+/* 3. 精准还原萨摩耶在首页的位置与大小 */
+.home-page .sticker-samoyed {
+  width: 94px !important;
+  right: calc(50% - 240px) !important;
+  left: auto !important;
+  bottom: calc(50% - 230px) !important;
+  transform: rotate(8deg) !important;
+}
+
+/* 4. 手机端位置适配 */
+@media (max-width: 480px) {
+  .home-page .sticker-golden {
+    width: 78px !important;
+    left: 5% !important;
+    bottom: 15% !important;
+  }
+
+  .home-page .sticker-samoyed {
+    width: 80px !important;
+    right: 5% !important;
+    bottom: 15% !important;
+  }
+}
+
+/* 5. 内部小狗图片样式与阴影 */
+.sticker-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 14px rgba(129, 93, 114, 0.18));
+}
+
+/* 6. 小狗头顶的文字气泡样式 */
+.dog-bubble {
+  position: absolute;
+  bottom: 115%; /* 向上挪一点，别压到小狗头 */
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  transform-origin: bottom center;
+  background: rgba(255, 255, 255, 0.96);
+  color: #65485a;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 14px;
+  border: 1.5px solid #ffc5dc;
+  box-shadow: 0 6px 16px rgba(255, 137, 184, 0.2);
+  white-space: nowrap;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* 气泡下方的尖尖 */
+.dog-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  border-right: 1.5px solid #ffc5dc;
+  border-bottom: 1.5px solid #ffc5dc;
+}
+
+/* 气泡显示状态 */
+.dog-bubble.show {
+  transform: translateX(-50%) scale(1);
+}
+
+/* 微微摇晃动画 */
+.dog-shake {
+  animation: dogShakeAnim 0.5s ease-in-out;
+}
+
+@keyframes dogShakeAnim {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-10deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-6deg); }
+  80% { transform: rotate(4deg); }
+}
+/* =========================
+   🆕 新增：linabell 和 bingbing 互动与定位还原
+========================= */
+
+/* 1. 精准还原 bingbing 在首页的位置、旋转与大小 */
+.home-page .sticker-bingbing {
+  width: 86px !important;
+  right: calc(50% - 205px) !important;
+  left: auto !important;
+  top: calc(50% - 230px) !important;
+  transform: rotate(10deg) !important;
+}
+
+/* 2. 精准还原 linabell 在首页的位置、旋转与大小 */
+.home-page .sticker-linabell {
+  width: 112px !important;
+  left: calc(50% - 255px) !important;
+  top: calc(50% - 225px) !important;
+  transform: rotate(-14deg) !important;
+}
+
+/* 3. 两只新贴纸的手机端位置适配 */
+@media (max-width: 480px) {
+  .home-page .sticker-bingbing {
+    width: 72px !important;
+    right: 6% !important;
+    top: 17% !important;
+  }
+
+  .home-page .sticker-linabell {
+    width: 92px !important;
+    left: 1% !important;
+    top: 16% !important;
+  }
+}

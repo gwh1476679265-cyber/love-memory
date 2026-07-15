@@ -678,3 +678,30 @@ function sendVisitNotification() {
 
 // 只要网页一加载，立刻触发提醒
 sendVisitNotification();
+// ===============================
+// 🆕 新增：点击小狗摇晃及弹出气泡逻辑
+// ===============================
+document.querySelectorAll('.dog-container').forEach(dog => {
+  let timer = null;
+
+  dog.addEventListener('click', function(e) {
+    e.stopPropagation(); // 阻止事件冒泡
+
+    const bubble = this.querySelector('.dog-bubble');
+    const img = this.querySelector('.sticker-img');
+
+    // 1. 触发摇晃动画（先移除再添加，确保连续点击也能触发）
+    img.classList.remove('dog-shake');
+    void img.offsetWidth; // 触发浏览器重绘
+    img.classList.add('dog-shake');
+
+    // 2. 显示气泡
+    bubble.classList.add('show');
+
+    // 3. 清除之前的定时器，重新倒计时 2.5 秒后关闭气泡
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      bubble.classList.remove('show');
+    }, 2500);
+  });
+});
