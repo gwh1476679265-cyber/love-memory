@@ -28,7 +28,7 @@ backBtn.addEventListener("click", () => {
 
 
 // ===============================
-// 进入恋爱回忆前：生日贺卡展开动画
+// 进入恋爱回忆前：生日贺卡 + 三个礼物提示
 // ===============================
 
 const birthdayCardIntro = document.getElementById("birthdayCardIntro");
@@ -37,13 +37,20 @@ const birthdayCardHint = document.getElementById("birthdayCardHint");
 const birthdayCardContinueBtn = document.getElementById("birthdayCardContinueBtn");
 const skipBirthdayCardBtn = document.getElementById("skipBirthdayCardBtn");
 
+const birthdayGiftIntro = document.getElementById("birthdayGiftIntro");
+const birthdayGiftBoxes = document.querySelectorAll(".birthday-gift-box");
+const birthdayGiftStatus = document.getElementById("birthdayGiftStatus");
+const birthdayGiftContinueBtn = document.getElementById("birthdayGiftContinueBtn");
+const skipBirthdayGiftBtn = document.getElementById("skipBirthdayGiftBtn");
+
 let birthdayCardOpened = false;
-let birthdayCardClosing = false;
+let birthdayExperienceClosing = false;
 let birthdayCardPreviousFocus = null;
+let openedBirthdayGifts = new Set();
 
 function resetBirthdayCardIntro() {
   birthdayCardOpened = false;
-  birthdayCardClosing = false;
+  birthdayExperienceClosing = false;
 
   if (birthdayCardBook) {
     birthdayCardBook.classList.remove("opened");
@@ -57,6 +64,32 @@ function resetBirthdayCardIntro() {
 
   if (birthdayCardContinueBtn) {
     birthdayCardContinueBtn.hidden = true;
+    birthdayCardContinueBtn.classList.remove("show");
+  }
+}
+
+function resetBirthdayGiftIntro() {
+  openedBirthdayGifts = new Set();
+
+  birthdayGiftBoxes.forEach((giftBox) => {
+    giftBox.classList.remove("opened");
+    giftBox.disabled = false;
+    giftBox.setAttribute("aria-pressed", "false");
+
+    const giftIndex = giftBox.dataset.giftIndex || "";
+    giftBox.setAttribute("aria-label", `打开礼盒${giftIndex}`);
+
+    const clue = giftBox.querySelector(".birthday-gift-clue");
+    if (clue) clue.textContent = "";
+  });
+
+  if (birthdayGiftStatus) {
+    birthdayGiftStatus.textContent = "依次点开三个摇晃的礼盒吧";
+  }
+
+  if (birthdayGiftContinueBtn) {
+    birthdayGiftContinueBtn.hidden = true;
+    birthdayGiftContinueBtn.classList.remove("show");
   }
 }
 
@@ -65,52 +98,119 @@ function openBirthdayCardIntro() {
 
   birthdayCardPreviousFocus = document.activeElement;
   resetBirthdayCardIntro();
+  resetBirthdayGiftIntro();
+
+  birthdayGiftIntro?.classList.remove("show", "closing");
+  birthdayGiftIntro?.setAttribute("aria-hidden", "true");
 
   birthdayCardIntro.classList.remove("closing");
   birthdayCardIntro.classList.add("show");
   birthdayCardIntro.setAttribute("aria-hidden", "false");
   document.body.classList.add("birthday-card-lock");
 
-  // 等弹窗动画开始后再聚焦，键盘用户也可以按 Enter / 空格打开
   window.setTimeout(() => {
-    if (birthdayCardBook) birthdayCardBook.focus({ preventScroll: true });
+    birthdayCardBook?.focus({ preventScroll: true });
   }, 220);
 }
 
 function unfoldBirthdayCard() {
-  if (!birthdayCardBook || birthdayCardOpened || birthdayCardClosing) return;
+  if (!birthdayCardBook || birthdayCardOpened || birthdayExperienceClosing) return;
 
   birthdayCardOpened = true;
   birthdayCardBook.classList.add("opened");
   birthdayCardBook.setAttribute("aria-expanded", "true");
-  birthdayCardBook.setAttribute("aria-label", "生日贺卡已展开，再点一下进入恋爱回忆");
+  birthdayCardBook.setAttribute("aria-label", "生日贺卡已展开，请点击下方按钮查收礼物");
 
   if (birthdayCardHint) {
-    birthdayCardHint.textContent = "贺卡已经展开啦，再点一下贺卡，或点击下方按钮进入回忆";
+    birthdayCardHint.textContent = "贺卡已经展开啦，点击下方按钮继续拆礼物";
   }
 
   if (birthdayCardContinueBtn) {
     birthdayCardContinueBtn.hidden = false;
     window.setTimeout(() => {
       birthdayCardContinueBtn.classList.add("show");
+      birthdayCardContinueBtn.focus({ preventScroll: true });
     }, 520);
   }
 }
 
-function finishBirthdayCardIntro() {
-  if (!birthdayCardIntro || birthdayCardClosing) return;
+function openBirthdayGiftIntro() {
+  if (!birthdayCardIntro || !birthdayGiftIntro || birthdayExperienceClosing) return;
 
-  birthdayCardClosing = true;
+  resetBirthdayGiftIntro();
   birthdayCardIntro.classList.add("closing");
 
   window.setTimeout(() => {
     birthdayCardIntro.classList.remove("show", "closing");
     birthdayCardIntro.setAttribute("aria-hidden", "true");
+
+    birthdayGiftIntro.classList.remove("closing");
+    birthdayGiftIntro.classList.add("show");
+    birthdayGiftIntro.setAttribute("aria-hidden", "false");
+
+    window.setTimeout(() => {
+      birthdayGiftBoxes[0]?.focus({ preventScroll: true });
+    }, 180);
+  }, 360);
+}
+
+function openBirthdayGift(giftBox) {
+  if (!giftBox || giftBox.classList.contains("opened") || birthdayExperienceClosing) return;
+
+  const giftIndex = giftBox.dataset.giftIndex || "";
+  const clueText = giftBox.dataset.clue || "提示：有惊喜";
+  const clue = giftBox.querySelector(".birthday-gift-clue");
+
+  openedBirthdayGifts.add(giftIndex);
+  giftBox.classList.add("opened");
+  giftBox.disabled = true;
+  giftBox.setAttribute("aria-pressed", "true");
+  giftBox.setAttribute("aria-label", `礼盒${giftIndex}已打开，${clueText}`);
+
+  window.setTimeout(() => {
+    if (clue) clue.textContent = clueText;
+  }, 360);
+
+  if (openedBirthdayGifts.size === birthdayGiftBoxes.length) {
+    if (birthdayGiftStatus) {
+      birthdayGiftStatus.textContent = "三个礼盒都打开啦，礼物提示已全部查收！";
+    }
+
+    if (birthdayGiftContinueBtn) {
+      birthdayGiftContinueBtn.hidden = false;
+      window.setTimeout(() => {
+        birthdayGiftContinueBtn.classList.add("show");
+        birthdayGiftContinueBtn.focus({ preventScroll: true });
+      }, 650);
+    }
+  } else if (birthdayGiftStatus) {
+    const remaining = birthdayGiftBoxes.length - openedBirthdayGifts.size;
+    birthdayGiftStatus.textContent = `还剩 ${remaining} 个礼盒没有打开`;
+  }
+}
+
+function finishBirthdayExperience() {
+  if (birthdayExperienceClosing) return;
+
+  const activeIntro = birthdayGiftIntro?.classList.contains("show")
+    ? birthdayGiftIntro
+    : birthdayCardIntro;
+
+  if (!activeIntro) return;
+
+  birthdayExperienceClosing = true;
+  activeIntro.classList.add("closing");
+
+  window.setTimeout(() => {
+    birthdayCardIntro?.classList.remove("show", "closing");
+    birthdayCardIntro?.setAttribute("aria-hidden", "true");
+    birthdayGiftIntro?.classList.remove("show", "closing");
+    birthdayGiftIntro?.setAttribute("aria-hidden", "true");
     document.body.classList.remove("birthday-card-lock");
 
-    if (birthdayCardContinueBtn) {
-      birthdayCardContinueBtn.classList.remove("show");
-    }
+    birthdayCardContinueBtn?.classList.remove("show");
+    birthdayGiftContinueBtn?.classList.remove("show");
+    birthdayExperienceClosing = false;
 
     updateDateTag();
 
@@ -121,11 +221,7 @@ function finishBirthdayCardIntro() {
 }
 
 function handleBirthdayCardAction() {
-  if (!birthdayCardOpened) {
-    unfoldBirthdayCard();
-  } else {
-    finishBirthdayCardIntro();
-  }
+  if (!birthdayCardOpened) unfoldBirthdayCard();
 }
 
 if (birthdayCardBook) {
@@ -139,18 +235,24 @@ if (birthdayCardBook) {
   });
 }
 
-if (birthdayCardContinueBtn) {
-  birthdayCardContinueBtn.addEventListener("click", finishBirthdayCardIntro);
-}
+birthdayCardContinueBtn?.addEventListener("click", openBirthdayGiftIntro);
+skipBirthdayCardBtn?.addEventListener("click", finishBirthdayExperience);
 
-if (skipBirthdayCardBtn) {
-  skipBirthdayCardBtn.addEventListener("click", finishBirthdayCardIntro);
-}
+birthdayGiftBoxes.forEach((giftBox) => {
+  giftBox.addEventListener("click", () => openBirthdayGift(giftBox));
+});
 
-// Esc 可随时关闭，避免用户被弹窗困住
+birthdayGiftContinueBtn?.addEventListener("click", finishBirthdayExperience);
+skipBirthdayGiftBtn?.addEventListener("click", finishBirthdayExperience);
+
+// Esc 可随时退出整个生日流程，避免用户被弹窗困住
 window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && birthdayCardIntro?.classList.contains("show")) {
-    finishBirthdayCardIntro();
+  const birthdayLayerOpen =
+    birthdayCardIntro?.classList.contains("show") ||
+    birthdayGiftIntro?.classList.contains("show");
+
+  if (event.key === "Escape" && birthdayLayerOpen) {
+    finishBirthdayExperience();
   }
 });
 
@@ -338,7 +440,15 @@ const memories = {
     text: "鸡肫...娃娃菜...香肠...绿豆汤...柠檬茶...啤酒...🤤🤤"
   },
 
-
+  "2026-08-01": {
+    title: "🎀🎂",
+    images: ["images/20260801-1.jpg",
+	 "images/20260801-2.jpg",
+	  "images/20260801-3.jpg",
+ 	"images/20260801-4.jpg",
+ 	"images/20260801-5.jpg",	    ],
+    text: "进行一个小小的拆箱吧✔外貌check！✔✔✔"
+  },
 
 
 

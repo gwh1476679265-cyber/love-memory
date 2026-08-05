@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>我们的恋爱小屋</title>
-  <link rel="stylesheet" href="style.css?v=20260805-card-center-fix" />
+  <link rel="stylesheet" href="style.css?v=20260805-gift-boxes" />
 </head>
 <body>
 
@@ -105,6 +105,58 @@
 
       <p id="birthdayCardHint" class="birthday-card-hint">点击贺卡，拆开这份生日惊喜</p>
       <button id="birthdayCardContinueBtn" class="birthday-card-continue" type="button" hidden>
+        点击查收你的礼物！
+      </button>
+    </div>
+  </div>
+
+  <!-- 贺卡之后：三个生日礼盒 -->
+  <div id="birthdayGiftIntro" class="birthday-gift-intro" aria-hidden="true">
+    <div class="birthday-gift-mask"></div>
+
+    <div class="birthday-gift-dialog" role="dialog" aria-modal="true" aria-labelledby="birthdayGiftTitle">
+      <button id="skipBirthdayGiftBtn" class="birthday-gift-skip" type="button" aria-label="跳过礼物提示">跳过</button>
+
+      <div class="birthday-gift-copy">
+        <div class="birthday-gift-kicker">Three little clues for you</div>
+        <h2 id="birthdayGiftTitle">点击查收你的礼物！</h2>
+        <p>三个礼盒里，各藏着一条小提示</p>
+      </div>
+
+      <div id="birthdayGiftGrid" class="birthday-gift-grid">
+        <button class="birthday-gift-box" type="button" data-gift-index="1" data-clue="提示：back" aria-label="打开礼盒1">
+          <span class="birthday-gift-number">礼盒 1</span>
+          <span class="birthday-gift-visual" aria-hidden="true">
+            <span class="birthday-gift-lid"><i></i></span>
+            <span class="birthday-gift-body"><i></i></span>
+            <span class="birthday-gift-sparkles">✦</span>
+          </span>
+          <span class="birthday-gift-clue" aria-live="polite"></span>
+        </button>
+
+        <button class="birthday-gift-box" type="button" data-gift-index="2" data-clue="提示：mouth" aria-label="打开礼盒2">
+          <span class="birthday-gift-number">礼盒 2</span>
+          <span class="birthday-gift-visual" aria-hidden="true">
+            <span class="birthday-gift-lid"><i></i></span>
+            <span class="birthday-gift-body"><i></i></span>
+            <span class="birthday-gift-sparkles">✦</span>
+          </span>
+          <span class="birthday-gift-clue" aria-live="polite"></span>
+        </button>
+
+        <button class="birthday-gift-box" type="button" data-gift-index="3" data-clue="提示：cute" aria-label="打开礼盒3">
+          <span class="birthday-gift-number">礼盒 3</span>
+          <span class="birthday-gift-visual" aria-hidden="true">
+            <span class="birthday-gift-lid"><i></i></span>
+            <span class="birthday-gift-body"><i></i></span>
+            <span class="birthday-gift-sparkles">✦</span>
+          </span>
+          <span class="birthday-gift-clue" aria-live="polite"></span>
+        </button>
+      </div>
+
+      <p id="birthdayGiftStatus" class="birthday-gift-status">依次点开三个摇晃的礼盒吧</p>
+      <button id="birthdayGiftContinueBtn" class="birthday-gift-continue" type="button" hidden>
         进入恋爱回忆 →
       </button>
     </div>
@@ -351,6 +403,6 @@
   </section>
 
   <!-- 引入控制页面跳转、天数计算、吃喝雷达及卡片翻转的 JS 逻辑文件 -->
-  <script src="script.js?v=20260805-card-center-fix"></script>
+  <script src="script.js?v=20260805-gift-boxes"></script>
 </body>
 </html>
