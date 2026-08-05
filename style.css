@@ -2555,3 +2555,379 @@ text-decoration: line-through;
   background: #ffffff !important;
   z-index: 5 !important;
 }
+
+/* ==========================================
+   进入恋爱回忆前：生日贺卡弹窗与展开动画
+========================================== */
+
+body.birthday-card-lock {
+  overflow: hidden;
+  touch-action: none;
+}
+
+.birthday-card-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.38s ease, visibility 0.38s ease;
+}
+
+.birthday-card-intro.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.birthday-card-mask {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 194, 220, 0.34), transparent 34%),
+    radial-gradient(circle at 82% 20%, rgba(157, 223, 255, 0.28), transparent 34%),
+    rgba(79, 54, 71, 0.56);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.birthday-card-dialog {
+  --birthday-page-width: min(44vw, 286px);
+  position: relative;
+  z-index: 2;
+  width: min(96vw, 760px);
+  max-height: 96vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 14px 18px;
+  color: #65485a;
+  text-align: center;
+  transform: translateY(22px) scale(0.96);
+  transition: transform 0.48s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.36s ease;
+}
+
+.birthday-card-intro.show .birthday-card-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.birthday-card-intro.closing .birthday-card-dialog {
+  opacity: 0;
+  transform: translateY(10px) scale(0.92);
+}
+
+.birthday-card-copy {
+  margin-bottom: 12px;
+  text-shadow: 0 2px 12px rgba(61, 39, 52, 0.24);
+}
+
+.birthday-card-kicker {
+  margin-bottom: 5px;
+  color: #ffe7f1;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.birthday-card-copy h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(20px, 4.8vw, 30px);
+  line-height: 1.25;
+  letter-spacing: 1px;
+}
+
+.birthday-card-skip {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  z-index: 12;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 999px;
+  padding: 7px 12px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+}
+
+.birthday-card-skip:active {
+  transform: scale(0.96);
+}
+
+.birthday-card-book {
+  position: relative;
+  width: calc(var(--birthday-page-width) + var(--birthday-page-width));
+  aspect-ratio: 1.41 / 1;
+  margin: 8px auto 12px;
+  perspective: 1800px;
+  cursor: pointer;
+  outline: none;
+  /* 先把右半张封面移到容器中心，再整体旋转和放大。
+     这样移动端放大后仍会精确居中，不会向右漂移。 */
+  transform:
+    scale(1.34)
+    rotate(-1.5deg)
+    translateX(calc(var(--birthday-page-width) / -2));
+  transform-origin: center center;
+  transition:
+    transform 0.92s cubic-bezier(0.22, 0.75, 0.18, 1),
+    filter 0.35s ease;
+  filter: drop-shadow(0 24px 30px rgba(39, 22, 32, 0.34));
+}
+
+.birthday-card-book:focus-visible {
+  filter:
+    drop-shadow(0 24px 30px rgba(39, 22, 32, 0.34))
+    drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
+}
+
+.birthday-card-book.opened {
+  transform: scale(1) rotate(0deg) translateX(0);
+}
+
+.birthday-card-page,
+.birthday-card-cover-sheet {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  border-radius: 7px 15px 15px 7px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(116, 79, 99, 0.08),
+    0 12px 26px rgba(52, 31, 43, 0.18);
+}
+
+.birthday-card-page img,
+.birthday-card-face img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.birthday-card-inside-page {
+  left: 50%;
+  z-index: 1;
+  border-radius: 4px 14px 14px 4px;
+}
+
+.birthday-card-cover-sheet {
+  left: 50%;
+  z-index: 5;
+  overflow: visible;
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  transition: transform 1.08s cubic-bezier(0.2, 0.74, 0.15, 1);
+}
+
+.birthday-card-book.opened .birthday-card-cover-sheet {
+  transform: rotateY(-180deg);
+}
+
+.birthday-card-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 4px 14px 14px 4px;
+  background: #fff;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.birthday-card-back-face {
+  transform: rotateY(180deg);
+  border-radius: 14px 4px 4px 14px;
+}
+
+.birthday-card-back-face img {
+  border-radius: 14px 4px 4px 14px;
+}
+
+.birthday-card-hinge {
+  position: absolute;
+  left: 50%;
+  top: 2.5%;
+  z-index: 8;
+  width: 2px;
+  height: 95%;
+  opacity: 0;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent, rgba(111, 73, 94, 0.2), transparent);
+  box-shadow: 0 0 8px rgba(91, 58, 76, 0.15);
+  transition: opacity 0.5s ease 0.45s;
+  pointer-events: none;
+}
+
+.birthday-card-book.opened .birthday-card-hinge {
+  opacity: 1;
+}
+
+.birthday-card-tap-heart {
+  position: absolute;
+  left: 75%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: #ff6f9f;
+  font-size: 25px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1.5px solid #ffd0e2;
+  box-shadow: 0 8px 18px rgba(255, 112, 161, 0.25);
+  animation: birthdayHeartTap 1.35s ease-in-out infinite;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.birthday-card-book.opened .birthday-card-tap-heart {
+  opacity: 0;
+  transform: translateX(-50%) scale(0.4);
+  animation: none;
+}
+
+@keyframes birthdayHeartTap {
+  0%, 100% { transform: translate(-50%, 0) scale(1); }
+  50% { transform: translate(-50%, -7px) scale(1.08); }
+}
+
+.birthday-card-hint {
+  min-height: 24px;
+  margin: 7px 0 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+  text-shadow: 0 2px 10px rgba(55, 32, 45, 0.42);
+}
+
+.birthday-card-continue {
+  margin-top: 2px;
+  padding: 11px 22px;
+  border: 1.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, #ff8db8, #8bcfff);
+  box-shadow: 0 12px 26px rgba(255, 115, 167, 0.34);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.birthday-card-continue.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.birthday-card-continue:active {
+  transform: scale(0.96);
+}
+
+@media (max-width: 480px) {
+  .birthday-card-intro {
+    padding: 10px 6px;
+  }
+
+  .birthday-card-dialog {
+    --birthday-page-width: min(45vw, 210px);
+    width: 100%;
+    padding: 18px 4px 14px;
+  }
+
+  .birthday-card-copy {
+    margin-bottom: 8px;
+  }
+
+  .birthday-card-kicker {
+    font-size: 9px;
+    letter-spacing: 1.4px;
+  }
+
+  .birthday-card-book {
+    margin-top: 4px;
+    transform:
+      scale(1.42)
+      rotate(-1.5deg)
+      translateX(calc(var(--birthday-page-width) / -2));
+  }
+
+  .birthday-card-book.opened {
+    transform: scale(1) rotate(0deg) translateX(0);
+  }
+
+  .birthday-card-tap-heart {
+    bottom: 10px;
+    width: 32px;
+    height: 32px;
+    font-size: 22px;
+  }
+
+  .birthday-card-hint {
+    width: 92vw;
+    font-size: 12px;
+  }
+
+  .birthday-card-skip {
+    right: 8px;
+    top: 8px;
+  }
+}
+
+@media (max-height: 680px) {
+  .birthday-card-dialog {
+    --birthday-page-width: min(36vw, 235px);
+  }
+
+  .birthday-card-copy {
+    margin-bottom: 2px;
+  }
+
+  .birthday-card-book {
+    margin-top: 2px;
+    margin-bottom: 4px;
+  }
+
+  .birthday-card-hint {
+    margin-top: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .birthday-card-intro,
+  .birthday-card-dialog,
+  .birthday-card-book,
+  .birthday-card-cover-sheet,
+  .birthday-card-continue {
+    transition-duration: 0.01ms !important;
+  }
+
+  .birthday-card-tap-heart {
+    animation: none !important;
+  }
+}
+

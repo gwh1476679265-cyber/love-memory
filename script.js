@@ -13,7 +13,10 @@ const backBtn = document.getElementById("backBtn");
 enterBtn.addEventListener("click", () => {
   homePage.classList.remove("active");
   memoryPage.classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: "instant" });
+
+  // 先展示生日贺卡，完成后再正常浏览时间轴
+  openBirthdayCardIntro();
 });
 
 backBtn.addEventListener("click", () => {
@@ -22,6 +25,134 @@ backBtn.addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
+
+
+// ===============================
+// 进入恋爱回忆前：生日贺卡展开动画
+// ===============================
+
+const birthdayCardIntro = document.getElementById("birthdayCardIntro");
+const birthdayCardBook = document.getElementById("birthdayCardBook");
+const birthdayCardHint = document.getElementById("birthdayCardHint");
+const birthdayCardContinueBtn = document.getElementById("birthdayCardContinueBtn");
+const skipBirthdayCardBtn = document.getElementById("skipBirthdayCardBtn");
+
+let birthdayCardOpened = false;
+let birthdayCardClosing = false;
+let birthdayCardPreviousFocus = null;
+
+function resetBirthdayCardIntro() {
+  birthdayCardOpened = false;
+  birthdayCardClosing = false;
+
+  if (birthdayCardBook) {
+    birthdayCardBook.classList.remove("opened");
+    birthdayCardBook.setAttribute("aria-expanded", "false");
+    birthdayCardBook.setAttribute("aria-label", "点击展开生日贺卡");
+  }
+
+  if (birthdayCardHint) {
+    birthdayCardHint.textContent = "点击贺卡，拆开这份生日惊喜";
+  }
+
+  if (birthdayCardContinueBtn) {
+    birthdayCardContinueBtn.hidden = true;
+  }
+}
+
+function openBirthdayCardIntro() {
+  if (!birthdayCardIntro) return;
+
+  birthdayCardPreviousFocus = document.activeElement;
+  resetBirthdayCardIntro();
+
+  birthdayCardIntro.classList.remove("closing");
+  birthdayCardIntro.classList.add("show");
+  birthdayCardIntro.setAttribute("aria-hidden", "false");
+  document.body.classList.add("birthday-card-lock");
+
+  // 等弹窗动画开始后再聚焦，键盘用户也可以按 Enter / 空格打开
+  window.setTimeout(() => {
+    if (birthdayCardBook) birthdayCardBook.focus({ preventScroll: true });
+  }, 220);
+}
+
+function unfoldBirthdayCard() {
+  if (!birthdayCardBook || birthdayCardOpened || birthdayCardClosing) return;
+
+  birthdayCardOpened = true;
+  birthdayCardBook.classList.add("opened");
+  birthdayCardBook.setAttribute("aria-expanded", "true");
+  birthdayCardBook.setAttribute("aria-label", "生日贺卡已展开，再点一下进入恋爱回忆");
+
+  if (birthdayCardHint) {
+    birthdayCardHint.textContent = "贺卡已经展开啦，再点一下贺卡，或点击下方按钮进入回忆";
+  }
+
+  if (birthdayCardContinueBtn) {
+    birthdayCardContinueBtn.hidden = false;
+    window.setTimeout(() => {
+      birthdayCardContinueBtn.classList.add("show");
+    }, 520);
+  }
+}
+
+function finishBirthdayCardIntro() {
+  if (!birthdayCardIntro || birthdayCardClosing) return;
+
+  birthdayCardClosing = true;
+  birthdayCardIntro.classList.add("closing");
+
+  window.setTimeout(() => {
+    birthdayCardIntro.classList.remove("show", "closing");
+    birthdayCardIntro.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("birthday-card-lock");
+
+    if (birthdayCardContinueBtn) {
+      birthdayCardContinueBtn.classList.remove("show");
+    }
+
+    updateDateTag();
+
+    if (birthdayCardPreviousFocus && typeof birthdayCardPreviousFocus.focus === "function") {
+      birthdayCardPreviousFocus.focus({ preventScroll: true });
+    }
+  }, 520);
+}
+
+function handleBirthdayCardAction() {
+  if (!birthdayCardOpened) {
+    unfoldBirthdayCard();
+  } else {
+    finishBirthdayCardIntro();
+  }
+}
+
+if (birthdayCardBook) {
+  birthdayCardBook.addEventListener("click", handleBirthdayCardAction);
+
+  birthdayCardBook.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleBirthdayCardAction();
+    }
+  });
+}
+
+if (birthdayCardContinueBtn) {
+  birthdayCardContinueBtn.addEventListener("click", finishBirthdayCardIntro);
+}
+
+if (skipBirthdayCardBtn) {
+  skipBirthdayCardBtn.addEventListener("click", finishBirthdayCardIntro);
+}
+
+// Esc 可随时关闭，避免用户被弹窗困住
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && birthdayCardIntro?.classList.contains("show")) {
+    finishBirthdayCardIntro();
+  }
+});
 
 
 // ===============================

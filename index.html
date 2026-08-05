@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>我们的恋爱小屋</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=20260805-card-center-fix" />
 </head>
 <body>
 
@@ -62,6 +62,53 @@
   </button>
    </main>
 </section>
+
+
+  <!-- 进入“恋爱回忆”前展示的生日贺卡 -->
+  <div id="birthdayCardIntro" class="birthday-card-intro" aria-hidden="true">
+    <div class="birthday-card-mask"></div>
+
+    <div class="birthday-card-dialog" role="dialog" aria-modal="true" aria-labelledby="birthdayCardTitle">
+      <button id="skipBirthdayCardBtn" class="birthday-card-skip" type="button" aria-label="跳过生日贺卡">跳过</button>
+
+      <div class="birthday-card-copy">
+        <div class="birthday-card-kicker">A little birthday surprise</div>
+        <h2 id="birthdayCardTitle">送给芸芸的生日贺卡</h2>
+      </div>
+
+      <div
+        id="birthdayCardBook"
+        class="birthday-card-book"
+        role="button"
+        tabindex="0"
+        aria-label="点击展开生日贺卡"
+        aria-expanded="false"
+      >
+        <!-- 展开后右侧显示内页 -->
+        <div class="birthday-card-page birthday-card-inside-page">
+          <img src="birthday-card-inside.png" alt="生日贺卡内页">
+        </div>
+
+        <!-- 封面沿左侧书脊翻开 -->
+        <div class="birthday-card-cover-sheet">
+          <div class="birthday-card-face birthday-card-front-face">
+            <img src="birthday-card-cover.png" alt="生日贺卡封面">
+          </div>
+          <div class="birthday-card-face birthday-card-back-face">
+            <img src="birthday-card-cover.png" alt="展开后的生日贺卡左页">
+          </div>
+        </div>
+
+        <span class="birthday-card-hinge" aria-hidden="true"></span>
+        <span class="birthday-card-tap-heart" aria-hidden="true">♡</span>
+      </div>
+
+      <p id="birthdayCardHint" class="birthday-card-hint">点击贺卡，拆开这份生日惊喜</p>
+      <button id="birthdayCardContinueBtn" class="birthday-card-continue" type="button" hidden>
+        进入恋爱回忆 →
+      </button>
+    </div>
+  </div>
 
 
  <!-- 第二页：恋爱回忆 -->
@@ -304,6 +351,6 @@
   </section>
 
   <!-- 引入控制页面跳转、天数计算、吃喝雷达及卡片翻转的 JS 逻辑文件 -->
-  <script src="script.js"></script>
+  <script src="script.js?v=20260805-card-center-fix"></script>
 </body>
 </html>
