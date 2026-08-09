@@ -28,7 +28,7 @@ backBtn.addEventListener("click", () => {
 
 
 // ===============================
-// 进入恋爱回忆前：生日贺卡 + 三个礼物提示
+// 进入恋爱回忆前：生日贺卡
 // ===============================
 
 const birthdayCardIntro = document.getElementById("birthdayCardIntro");
@@ -37,16 +37,9 @@ const birthdayCardHint = document.getElementById("birthdayCardHint");
 const birthdayCardContinueBtn = document.getElementById("birthdayCardContinueBtn");
 const skipBirthdayCardBtn = document.getElementById("skipBirthdayCardBtn");
 
-const birthdayGiftIntro = document.getElementById("birthdayGiftIntro");
-const birthdayGiftBoxes = document.querySelectorAll(".birthday-gift-box");
-const birthdayGiftStatus = document.getElementById("birthdayGiftStatus");
-const birthdayGiftContinueBtn = document.getElementById("birthdayGiftContinueBtn");
-const skipBirthdayGiftBtn = document.getElementById("skipBirthdayGiftBtn");
-
 let birthdayCardOpened = false;
 let birthdayExperienceClosing = false;
 let birthdayCardPreviousFocus = null;
-let openedBirthdayGifts = new Set();
 
 function resetBirthdayCardIntro() {
   birthdayCardOpened = false;
@@ -68,40 +61,11 @@ function resetBirthdayCardIntro() {
   }
 }
 
-function resetBirthdayGiftIntro() {
-  openedBirthdayGifts = new Set();
-
-  birthdayGiftBoxes.forEach((giftBox) => {
-    giftBox.classList.remove("opened");
-    giftBox.disabled = false;
-    giftBox.setAttribute("aria-pressed", "false");
-
-    const giftIndex = giftBox.dataset.giftIndex || "";
-    giftBox.setAttribute("aria-label", `打开礼盒${giftIndex}`);
-
-    const clue = giftBox.querySelector(".birthday-gift-clue");
-    if (clue) clue.textContent = "";
-  });
-
-  if (birthdayGiftStatus) {
-    birthdayGiftStatus.textContent = "依次点开三个摇晃的礼盒吧";
-  }
-
-  if (birthdayGiftContinueBtn) {
-    birthdayGiftContinueBtn.hidden = true;
-    birthdayGiftContinueBtn.classList.remove("show");
-  }
-}
-
 function openBirthdayCardIntro() {
   if (!birthdayCardIntro) return;
 
   birthdayCardPreviousFocus = document.activeElement;
   resetBirthdayCardIntro();
-  resetBirthdayGiftIntro();
-
-  birthdayGiftIntro?.classList.remove("show", "closing");
-  birthdayGiftIntro?.setAttribute("aria-hidden", "true");
 
   birthdayCardIntro.classList.remove("closing");
   birthdayCardIntro.classList.add("show");
@@ -119,10 +83,11 @@ function unfoldBirthdayCard() {
   birthdayCardOpened = true;
   birthdayCardBook.classList.add("opened");
   birthdayCardBook.setAttribute("aria-expanded", "true");
-  birthdayCardBook.setAttribute("aria-label", "生日贺卡已展开，请点击下方按钮查收礼物");
+  birthdayCardBook.setAttribute("aria-label", "生日贺卡已展开，请点击下方按钮进入我们的回忆");
 
+  // 展开后只保留生日祝福，不再出现礼物提示
   if (birthdayCardHint) {
-    birthdayCardHint.textContent = "贺卡已经展开啦，点击下方按钮继续拆礼物";
+    birthdayCardHint.textContent = "祝这个小女孩生日快乐！";
   }
 
   if (birthdayCardContinueBtn) {
@@ -134,82 +99,18 @@ function unfoldBirthdayCard() {
   }
 }
 
-function openBirthdayGiftIntro() {
-  if (!birthdayCardIntro || !birthdayGiftIntro || birthdayExperienceClosing) return;
+function finishBirthdayExperience() {
+  if (birthdayExperienceClosing || !birthdayCardIntro) return;
 
-  resetBirthdayGiftIntro();
+  birthdayExperienceClosing = true;
   birthdayCardIntro.classList.add("closing");
 
   window.setTimeout(() => {
     birthdayCardIntro.classList.remove("show", "closing");
     birthdayCardIntro.setAttribute("aria-hidden", "true");
-
-    birthdayGiftIntro.classList.remove("closing");
-    birthdayGiftIntro.classList.add("show");
-    birthdayGiftIntro.setAttribute("aria-hidden", "false");
-
-    window.setTimeout(() => {
-      birthdayGiftBoxes[0]?.focus({ preventScroll: true });
-    }, 180);
-  }, 360);
-}
-
-function openBirthdayGift(giftBox) {
-  if (!giftBox || giftBox.classList.contains("opened") || birthdayExperienceClosing) return;
-
-  const giftIndex = giftBox.dataset.giftIndex || "";
-  const clueText = giftBox.dataset.clue || "提示：有惊喜";
-  const clue = giftBox.querySelector(".birthday-gift-clue");
-
-  openedBirthdayGifts.add(giftIndex);
-  giftBox.classList.add("opened");
-  giftBox.disabled = true;
-  giftBox.setAttribute("aria-pressed", "true");
-  giftBox.setAttribute("aria-label", `礼盒${giftIndex}已打开，${clueText}`);
-
-  window.setTimeout(() => {
-    if (clue) clue.textContent = clueText;
-  }, 360);
-
-  if (openedBirthdayGifts.size === birthdayGiftBoxes.length) {
-    if (birthdayGiftStatus) {
-      birthdayGiftStatus.textContent = "三个礼盒都打开啦，礼物提示已全部查收！";
-    }
-
-    if (birthdayGiftContinueBtn) {
-      birthdayGiftContinueBtn.hidden = false;
-      window.setTimeout(() => {
-        birthdayGiftContinueBtn.classList.add("show");
-        birthdayGiftContinueBtn.focus({ preventScroll: true });
-      }, 650);
-    }
-  } else if (birthdayGiftStatus) {
-    const remaining = birthdayGiftBoxes.length - openedBirthdayGifts.size;
-    birthdayGiftStatus.textContent = `还剩 ${remaining} 个礼盒没有打开`;
-  }
-}
-
-function finishBirthdayExperience() {
-  if (birthdayExperienceClosing) return;
-
-  const activeIntro = birthdayGiftIntro?.classList.contains("show")
-    ? birthdayGiftIntro
-    : birthdayCardIntro;
-
-  if (!activeIntro) return;
-
-  birthdayExperienceClosing = true;
-  activeIntro.classList.add("closing");
-
-  window.setTimeout(() => {
-    birthdayCardIntro?.classList.remove("show", "closing");
-    birthdayCardIntro?.setAttribute("aria-hidden", "true");
-    birthdayGiftIntro?.classList.remove("show", "closing");
-    birthdayGiftIntro?.setAttribute("aria-hidden", "true");
     document.body.classList.remove("birthday-card-lock");
 
     birthdayCardContinueBtn?.classList.remove("show");
-    birthdayGiftContinueBtn?.classList.remove("show");
     birthdayExperienceClosing = false;
 
     updateDateTag();
@@ -235,23 +136,13 @@ if (birthdayCardBook) {
   });
 }
 
-birthdayCardContinueBtn?.addEventListener("click", openBirthdayGiftIntro);
+// 展开贺卡后，按钮直接进入恋爱回忆
+birthdayCardContinueBtn?.addEventListener("click", finishBirthdayExperience);
 skipBirthdayCardBtn?.addEventListener("click", finishBirthdayExperience);
 
-birthdayGiftBoxes.forEach((giftBox) => {
-  giftBox.addEventListener("click", () => openBirthdayGift(giftBox));
-});
-
-birthdayGiftContinueBtn?.addEventListener("click", finishBirthdayExperience);
-skipBirthdayGiftBtn?.addEventListener("click", finishBirthdayExperience);
-
-// Esc 可随时退出整个生日流程，避免用户被弹窗困住
+// Esc 可退出贺卡弹窗，避免用户被弹窗困住
 window.addEventListener("keydown", (event) => {
-  const birthdayLayerOpen =
-    birthdayCardIntro?.classList.contains("show") ||
-    birthdayGiftIntro?.classList.contains("show");
-
-  if (event.key === "Escape" && birthdayLayerOpen) {
+  if (event.key === "Escape" && birthdayCardIntro?.classList.contains("show")) {
     finishBirthdayExperience();
   }
 });
@@ -450,7 +341,18 @@ const memories = {
     text: "进行一个小小的拆箱吧✔外貌check！✔✔✔"
   },
 
-
+ "2026-08-08": {
+    title: "给你庆生！",
+    images: ["images/20260808-1.jpg",
+	 "images/20260808-2.jpg",
+	 "images/20260808-3.jpg",
+	 "images/20260808-4.jpg",
+	 "images/20260808-5.jpg",
+	 "images/20260808-6.jpg",
+	 "images/20260808-7.jpg",
+	    ],
+   text: "非常之美丽非常之美味的小蛋糕👸和小蛋糕🎂"
+  },
 
 };
 
