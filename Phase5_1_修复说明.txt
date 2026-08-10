@@ -1,0 +1,14 @@
+Phase 5.1 修复说明
+
+你截图里的“请先开启 CloudBase 匿名登录”是前端旧同步逻辑造成的误导。
+CloudBase 当前官方支持直接用 Publishable Key 初始化 Web SDK，以 anon 身份访问 PostgreSQL。
+本修复不再显式 signInAnonymously()，因此不依赖匿名登录 session。
+
+操作顺序：
+1. 在 SQL 型数据库执行 05_1_修复客厅留言板与约定云同步.sql
+2. GitHub cloud 分支覆盖 index.html、script.js（style.css 可不换）
+3. Commit + Push，等待 CloudBase 自动部署
+4. 刷新网站测试留言、新建约定、共同打勾
+
+cloudbase-config.js 不用改，继续保留已有 envId / publishableKey。
+访问提醒云函数、VAPID、sw.js 都不用动。

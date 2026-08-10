@@ -1310,20 +1310,29 @@ async function initCloudHomeSync() {
   setMessageSyncStatus('connecting', '正在连接留言板…');
 
   try {
-    cloudTodoApp = window.cloudbase.init({ env: envId });
-    const auth = cloudTodoApp.auth;
-    if (!auth) throw new Error('CloudBase Auth 模块未加载');
+    const publishableKey = String(config.publishableKey || '').trim();
+    if (!publishableKey) {
+      throw new Error('缺少 CloudBase Publishable Key');
+    }
 
-    cloudTodoUid = await ensureAnonymousCloudLogin(auth);
+    // Phase 5.1：数据库直接使用 Publishable Key 以 anon 身份访问。
+    // 不再显式调用匿名登录，避免匿名会话在不同浏览器 / PWA 环境里失效。
+    // “我 / TA”的区分改用每台设备自己的长期 deviceId。
+    cloudTodoApp = window.cloudbase.init({
+      env: envId,
+      accessKey: publishableKey
+    });
+
+    cloudTodoUid = getLoveHouseDeviceId();
 
     if (cloudTodoUid && copyCloudUidBtn) {
       copyCloudUidBtn.hidden = false;
       copyCloudUidBtn.dataset.uid = cloudTodoUid;
-      console.log('[小屋 CloudBase] 本设备 UID:', cloudTodoUid);
+      console.log('[小屋 CloudBase] 本设备 ID:', cloudTodoUid);
     }
 
     if (typeof cloudTodoApp.rdb !== 'function') {
-      throw new Error('当前 CloudBase SDK 没有 rdb()，请确认使用新版 SDK');
+      throw new Error('当前 CloudBase SDK 没有 rdb()，请确认 SDK 已正确加载');
     }
 
     cloudTodoDb = cloudTodoApp.rdb();
@@ -1341,12 +1350,12 @@ async function initCloudHomeSync() {
     setCloudComposerEnabled(false);
 
     const message = String(error?.message || error || '');
-    if (/anonymous|匿名|sign.?in/i.test(message)) {
-      setTodoSyncStatus('error', '请先在 CloudBase 身份认证里开启匿名登录');
-      setMessageSyncStatus('error', '请先开启 CloudBase 匿名登录');
+    if (/publishable|access.?key|api.?key/i.test(message)) {
+      setTodoSyncStatus('error', 'CloudBase Publishable Key 配置有误');
+      setMessageSyncStatus('error', 'CloudBase Publishable Key 配置有误');
     } else if (/permission|denied|unauthorized|rls|403/i.test(message)) {
-      setTodoSyncStatus('error', 'SQL 权限还没配置好，请执行 Phase 5 SQL');
-      setMessageSyncStatus('error', '留言板权限还没配置好，请执行 Phase 5 SQL');
+      setTodoSyncStatus('error', 'SQL 权限还没配置好，请执行 Phase 5.1 修复 SQL');
+      setMessageSyncStatus('error', '留言板权限还没配置好，请执行 Phase 5.1 修复 SQL');
     } else {
       setTodoSyncStatus('error', '云同步连接失败，请稍后再试');
       setMessageSyncStatus('error', '留言板连接失败，请稍后再试');
@@ -1578,7 +1587,7 @@ async function callLoveHouseNotify(action, data = {}) {
 
   // 通知云函数使用 Publishable Key 调 HTTP API。
   // Publishable Key 是 CloudBase 专门允许放在浏览器中的客户端 Key；
-  // “我们的约定”仍然保留独立的匿名登录，因此两套用途互不影响。
+  // 数据库与通知都使用 Publishable Key，但数据库通过 RLS 限制可读写内容。
   const url = `https://${envId}.api.tcloudbasegateway.com/v1/functions/${encodeURIComponent(name)}`;
   const requestBody = {
     action,
