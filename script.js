@@ -1293,18 +1293,78 @@ initCloudTodoSync().then(() => {
 
 const VISIT_CLIENT_COOLDOWN_MS = 20 * 60 * 1000;
 
-async function callLoveHouseNotify(action, data = {}) {
-  const config = window.LOVE_HOUSE_CLOUD || {};
-  if (!cloudTodoApp || typeof cloudTodoApp.callFunction !== 'function') {
-    throw new Error('CloudBase 尚未连接');
+async function getCloudBaseAccessToken() {
+  if (!cloudTodoApp?.auth || typeof cloudTodoApp.auth.getSession !== 'function') {
+    throw new Error('CloudBase 登录会话不可用');
   }
 
+  let { data, error } = await cloudTodoApp.auth.getSession();
+  if (error) throw error;
+
+  let token = data?.session?.access_token || '';
+  if (!token && typeof cloudTodoApp.auth.refreshSession === 'function') {
+    const refreshed = await cloudTodoApp.auth.refreshSession();
+    if (refreshed?.error) throw refreshed.error;
+    token = refreshed?.data?.session?.access_token || '';
+  }
+
+  if (!token) throw new Error('没有取得 CloudBase access token');
+  return token;
+}
+
+async function callLoveHouseNotify(action, data = {}) {
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const envId = String(config.envId || '').trim();
   const name = String(config.visitFunction || 'love-house-notify').trim();
-  const response = await cloudTodoApp.callFunction({
-    name,
-    data: { action, ...data }
+
+  if (!envId) throw new Error('缺少 CloudBase 环境 ID');
+  if (!name) throw new Error('缺少通知云函数名称');
+
+  // 这里故意不再使用 app.callFunction()。
+  // 当前这套 PG 环境 + v2 Web SDK 在部分浏览器中会在调用云函数时抛出
+  // "Cannot read properties of null (reading scope)"。CloudBase 官方同时提供
+  // HTTP API 调用普通云函数，因此直接用当前匿名登录会话的 access_token 请求，
+  // 可绕开 SDK 内部适配层，不影响 PostgreSQL 的现有代码。
+  const token = await getCloudBaseAccessToken();
+  const url = `https://${envId}.api.tcloudbasegateway.com/v1/functions/${encodeURIComponent(name)}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({ action, ...data }),
+    cache: 'no-store'
   });
-  return response?.result || response || {};
+
+  let payload = null;
+  const raw = await response.text();
+  if (raw) {
+    try {
+      payload = JSON.parse(raw);
+    } catch (_) {
+      payload = { message: raw };
+    }
+  } else {
+    payload = {};
+  }
+
+  if (!response.ok) {
+    const message = payload?.message || payload?.error || `HTTP ${response.status}`;
+    const error = new Error(`云函数请求失败：${message}`);
+    error.status = response.status;
+    error.payload = payload;
+    throw error;
+  }
+
+  let result = payload?.result ?? payload;
+  // 某些函数调用链会把对象序列化成 JSON 字符串，这里兼容解析。
+  if (typeof result === 'string') {
+    try { result = JSON.parse(result); } catch (_) {}
+  }
+  return result || {};
 }
 
 async function initVisitTracking() {
@@ -1602,12 +1662,14 @@ async function enableLoveHousePush(panel) {
 
     const message = String(error?.message || error || '未知错误');
 
-    if (/reading ['"]scope['"]|scope.*null|null.*scope/i.test(message)) {
-      // 某些浏览器在 SW 刚部署/更新后可能残留一个没有完整内部 registration 的记录。
-      // 清掉后让用户再点一次，比让页面永久卡住更可靠。
+    if (/reading ['"]scope['"]|scope.*null|null.*scope/i.test(message) && currentStage !== '第 4/4 步') {
+      // 只有在 Service Worker / Push 阶段出现 scope 异常时才清理注册记录。
+      // 第 4 步已经取得 PushSubscription，再清理只会造成“无限重来”。
       await clearBrokenLoveHouseServiceWorkers();
       status.textContent = `${currentStage}：检测到浏览器里的通知服务记录异常，已自动清理。请再点一次“重新开启访问提醒”。`;
       enableBtn.textContent = '重新开启访问提醒';
+    } else if (currentStage === '第 4/4 步') {
+      status.textContent = `第 4/4 步失败：浏览器通知订阅已经成功，但保存到 CloudBase 云函数失败。${message}`;
     } else if (error?.code === 'PUSH_SUBSCRIBE_TIMEOUT') {
       status.textContent = `${currentStage}：系统通知权限已成功，但浏览器推送服务连接超时。若你现在用 Chrome，可先换 Edge 测试；iPhone 请使用“添加到主屏幕”后的 Safari Web App。`;
     } else {
