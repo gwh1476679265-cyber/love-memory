@@ -3223,3 +3223,119 @@ body.birthday-card-lock {
 .site-update-btn:active {
   transform: scale(0.96);
 }
+
+/* ==========================================
+   第四步：仅管理员可见的访问提醒设置面板
+========================================== */
+.notify-setup-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(74, 53, 68, 0.48);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.notify-setup-card {
+  position: relative;
+  width: min(88vw, 380px);
+  padding: 30px 22px 24px;
+  border-radius: 30px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 16% 8%, rgba(255, 224, 238, 0.9), transparent 36%),
+    radial-gradient(circle at 88% 18%, rgba(216, 243, 255, 0.9), transparent 38%),
+    #fffafd;
+  border: 1.5px solid #ffd3e4;
+  box-shadow: 0 24px 60px rgba(83, 52, 70, 0.28);
+}
+
+.notify-setup-close {
+  position: absolute;
+  right: 13px;
+  top: 11px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  color: #ff78a6;
+  font-size: 24px;
+  background: #fff0f7;
+  cursor: pointer;
+}
+
+.notify-setup-heart {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 10px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #ff78a6;
+  font-size: 30px;
+  background: linear-gradient(135deg, #fff1f8, #e4f6ff);
+  border: 1.5px solid #ffd1e3;
+}
+
+.notify-setup-card h3 {
+  margin: 0 0 9px;
+  color: #ff78a6;
+  font-size: 21px;
+}
+
+.notify-setup-card p {
+  margin: 0 0 18px;
+  color: #735d69;
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.notify-setup-card code {
+  padding: 2px 5px;
+  border-radius: 6px;
+  color: #ff4a86;
+  background: #fff0f6;
+}
+
+.notify-setup-main-btn,
+.notify-setup-test-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 999px;
+  font-family: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.notify-setup-main-btn {
+  padding: 12px 18px;
+  color: #fff;
+  font-size: 14px;
+  background: linear-gradient(135deg, #ff8db8, #8bcfff);
+  box-shadow: 0 10px 22px rgba(255, 115, 167, 0.28);
+}
+
+.notify-setup-main-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.notify-setup-test-btn {
+  margin-top: 9px;
+  padding: 10px 18px;
+  color: #ff78a6;
+  font-size: 13px;
+  background: #fff;
+  border: 1.5px solid #ffd3e4;
+}
+
+.notify-setup-status {
+  min-height: 20px;
+  margin-top: 12px;
+  color: #8a7280;
+  font-size: 12px;
+  line-height: 1.6;
+}

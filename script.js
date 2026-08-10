@@ -892,29 +892,7 @@ function updateLoveDays() {
 // 页面加载完成后立即自动执行一次
 updateLoveDays();
 // ===============================
-// 🆕 新增：访客开门暗中提醒功能
-// ===============================
-function sendVisitNotification() {
-  // 替换成你在Server酱复制的专属 SendKey
-  const SEND_KEY = "SCT379244TZtLhXn7GKU9Macjf8jWQV9xl"; 
-  
-  // 组装推送的内容
-  const title = encodeURIComponent("有人敲开鱼鱼和獭獭的小屋门啦！");
-  const desp = encodeURIComponent(`访问时间：${new Date().toLocaleString()}\n快去看看是不是宝宝来看回忆了~`);
-  
-  // 利用浏览器自带的 fetch 暗中发送请求，不影响网页本身的正常加载
-  fetch(`https://sctapi.ftqq.com/${SEND_KEY}.send?title=${title}&desp=${desp}`, {
-    method: "POST",
-    mode: "no-cors" // 采用no-cors模式防止跨域报错阻碍网页运行
-  })
-  .then(() => console.log("欢迎回家~"))
-  .catch((err) => console.log("网络开小差啦"));
-}
-
-// 只要网页一加载，立刻触发提醒
-sendVisitNotification();
-// ===============================
-// 🆕 最终完美兼容版：小狗摇晃及弹出气泡逻辑（兼容手机与电脑）
+// 🐶 小狗摇晃及弹出气泡逻辑（兼容手机与电脑）
 // ===============================
 document.querySelectorAll('.dog-container').forEach(dog => {
   let timer = null;
@@ -1302,7 +1280,216 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('focus', () => refreshCloudTodos({ silent: true }));
 
 // 网站加载后连接一次；之后只在需要时轻量轮询。
-initCloudTodoSync();
+initCloudTodoSync().then(() => {
+  initVisitTracking();
+  initNotificationSetup();
+});
+// ===============================
+// 第四步：访客记录 + 免费 Web Push 提醒
+// ===============================
+// 普通访客不会看到任何新增 UI。
+// 只有你自己用 ?notify=setup 打开网站时，才会出现“访问提醒设置”。
+// Server酱 SendKey 已从前端彻底移除。
+
+const VISIT_CLIENT_COOLDOWN_MS = 20 * 60 * 1000;
+
+async function callLoveHouseNotify(action, data = {}) {
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  if (!cloudTodoApp || typeof cloudTodoApp.callFunction !== 'function') {
+    throw new Error('CloudBase 尚未连接');
+  }
+
+  const name = String(config.visitFunction || 'love-house-notify').trim();
+  const response = await cloudTodoApp.callFunction({
+    name,
+    data: { action, ...data }
+  });
+  return response?.result || response || {};
+}
+
+async function initVisitTracking() {
+  if (!cloudTodoApp || !cloudTodoUid) return;
+
+  try {
+    const key = 'love_house_visit_ping_at';
+    const last = Number(localStorage.getItem(key) || 0);
+    const now = Date.now();
+    if (last && now - last < VISIT_CLIENT_COOLDOWN_MS) return;
+
+    localStorage.setItem(key, String(now));
+    await callLoveHouseNotify('visit', {
+      path: window.location.pathname || '/',
+      title: document.title || '我们的恋爱小屋',
+      userAgent: navigator.userAgent || ''
+    });
+  } catch (error) {
+    // 访问提醒失败绝不能影响网站本身。
+    console.warn('[访客记录] 云函数暂时不可用：', error);
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+}
+
+function isIOSDevice() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function isStandaloneWebApp() {
+  return window.matchMedia?.('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+}
+
+function ensureNotifySetupPanel() {
+  let panel = document.getElementById('notifySetupPanel');
+  if (panel) return panel;
+
+  panel = document.createElement('div');
+  panel.id = 'notifySetupPanel';
+  panel.className = 'notify-setup-panel';
+  panel.innerHTML = `
+    <div class="notify-setup-card">
+      <button id="closeNotifySetupBtn" class="notify-setup-close" type="button" aria-label="关闭">×</button>
+      <div class="notify-setup-heart">♡</div>
+      <h3>小屋访问提醒</h3>
+      <p id="notifySetupText">正在检查这台设备是否支持通知…</p>
+      <button id="enableNotifyBtn" class="notify-setup-main-btn" type="button">开启访问提醒</button>
+      <button id="testNotifyBtn" class="notify-setup-test-btn" type="button" hidden>发送一条测试提醒</button>
+      <div id="notifySetupStatus" class="notify-setup-status" aria-live="polite"></div>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  panel.querySelector('#closeNotifySetupBtn')?.addEventListener('click', () => panel.remove());
+  return panel;
+}
+
+async function registerLoveHouseServiceWorker() {
+  if (!('serviceWorker' in navigator)) {
+    throw new Error('当前浏览器不支持 Service Worker');
+  }
+  return navigator.serviceWorker.register('./sw.js', { scope: './' });
+}
+
+async function savePushSubscription(subscription) {
+  const json = subscription.toJSON();
+  return callLoveHouseNotify('subscribe', {
+    subscription: {
+      endpoint: json.endpoint,
+      expirationTime: json.expirationTime || null,
+      keys: json.keys || {}
+    },
+    userAgent: navigator.userAgent || ''
+  });
+}
+
+async function enableLoveHousePush(panel) {
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const publicKey = String(config.vapidPublicKey || '').trim();
+  const status = panel.querySelector('#notifySetupStatus');
+  const enableBtn = panel.querySelector('#enableNotifyBtn');
+  const testBtn = panel.querySelector('#testNotifyBtn');
+
+  if (!publicKey) {
+    status.textContent = '缺少 VAPID 公钥，请检查 cloudbase-config.js。';
+    return;
+  }
+
+  try {
+    enableBtn.disabled = true;
+    status.textContent = '正在申请系统通知权限…';
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      throw new Error('你没有允许通知权限');
+    }
+
+    const registration = await registerLoveHouseServiceWorker();
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+      });
+    }
+
+    const result = await savePushSubscription(subscription);
+    if (result?.ok === false) throw new Error(result.message || '云端保存失败');
+
+    status.textContent = '已开启 ♡ 以后别人打开小屋，你这台设备会收到提醒。';
+    enableBtn.textContent = '访问提醒已开启';
+    testBtn.hidden = false;
+  } catch (error) {
+    console.error('[访问提醒设置]', error);
+    status.textContent = `开启失败：${error?.message || error}`;
+    enableBtn.disabled = false;
+  }
+}
+
+async function testLoveHousePush(panel) {
+  const status = panel.querySelector('#notifySetupStatus');
+  const testBtn = panel.querySelector('#testNotifyBtn');
+  try {
+    testBtn.disabled = true;
+    status.textContent = '正在发送测试提醒…';
+    const result = await callLoveHouseNotify('test');
+    if (result?.ok === false) throw new Error(result.message || '测试发送失败');
+    status.textContent = '测试提醒已发送，请看手机通知栏 ♡';
+  } catch (error) {
+    status.textContent = `测试失败：${error?.message || error}`;
+  } finally {
+    testBtn.disabled = false;
+  }
+}
+
+async function initNotificationSetup() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('notify') !== 'setup') return;
+
+  const panel = ensureNotifySetupPanel();
+  const text = panel.querySelector('#notifySetupText');
+  const status = panel.querySelector('#notifySetupStatus');
+  const enableBtn = panel.querySelector('#enableNotifyBtn');
+  const testBtn = panel.querySelector('#testNotifyBtn');
+
+  if (!('Notification' in window) || !('PushManager' in window) || !('serviceWorker' in navigator)) {
+    text.textContent = '这台浏览器暂时不支持网页推送。可以换 Chrome / Edge，或在 iPhone 上添加到主屏幕后再试。';
+    enableBtn.disabled = true;
+    return;
+  }
+
+  if (isIOSDevice() && !isStandaloneWebApp()) {
+    text.innerHTML = 'iPhone 需要先把这个页面 <b>添加到主屏幕</b>，再从主屏幕图标打开后开启通知。地址里的 <code>?notify=setup</code> 请保留。';
+    enableBtn.disabled = true;
+    status.textContent = 'Safari：分享 → 添加到主屏幕 → 从主屏幕打开';
+    return;
+  }
+
+  text.textContent = '这个设置页只给你自己使用。开启后，普通访客不会看到它。';
+
+  try {
+    const registration = await registerLoveHouseServiceWorker();
+    const existing = await registration.pushManager.getSubscription();
+    if (existing && Notification.permission === 'granted') {
+      await savePushSubscription(existing);
+      enableBtn.textContent = '访问提醒已开启';
+      testBtn.hidden = false;
+      status.textContent = '这台设备已经订阅通知 ♡';
+    }
+  } catch (error) {
+    console.warn('[Service Worker]', error);
+  }
+
+  enableBtn.addEventListener('click', () => enableLoveHousePush(panel));
+  testBtn.addEventListener('click', () => testLoveHousePush(panel));
+}
+
 // ===============================
 // Git -> CloudBase 新版本自动发现
 // 页面一直开着也会知道网站已经重新部署。

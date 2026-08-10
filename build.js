@@ -4,7 +4,7 @@ const path = require('path');
 const root = __dirname;
 const out = path.join(root, 'dist');
 const skipNames = new Set([
-  '.git', '.github', 'dist', 'node_modules', 'tools',
+  '.git', '.github', 'dist', 'node_modules', 'tools', 'cloudfunctions',
   'build.js', 'package.json', 'package-lock.json'
 ]);
 const skipExtensions = new Set(['.md', '.txt', '.sql', '.zip', '.py']);
