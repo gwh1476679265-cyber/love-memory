@@ -152,33 +152,33 @@ window.addEventListener("keydown", (event) => {
 // 回忆数据区
 // 之后你主要改这里就可以
 // 日期格式必须是：YYYY-MM-DD
-// image 写你的图片路径，例如：images/2026-04-01.jpg
+// image 写你的图片路径，例如：images/2026-04-01.webp
 // ===============================
 
 const memories = {
   "2026-03-31": {
     title: "那一天你走进了我的生命",
-    image: "images/20260331.jpg",
+    image: "images/20260331.webp",
     text: "小众姓联盟成立！"
   },
 
 
  "2026-04-14": {
     title: "第一次见面",
-    images: ["images/20260414-1.jpg",
-	"images/20260414-2.jpg",
-	"images/20260414-3.jpg",
-	"images/20260414-4.jpg",
+    images: ["images/20260414-1.webp",
+	"images/20260414-2.webp",
+	"images/20260414-3.webp",
+	"images/20260414-4.webp",
     ],
     text: "暴走西湖🚶"
   },
 
  "2026-04-25": {
     title: "边总莅临和山，意欲收购工大",
-    images: ["images/20260425-1.jpg",
-	"images/20260425-2.jpg",
-	"images/20260425-3.jpg",
-	"images/20260425-4.jpg",
+    images: ["images/20260425-1.webp",
+	"images/20260425-2.webp",
+	"images/20260425-3.webp",
+	"images/20260425-4.webp",
     ],
     text: "可惜没有多拍几张照片"
   },
@@ -186,43 +186,43 @@ const memories = {
 
  "2026-04-28": {
     title: "小狗假意收伞，趁机智取小手",
-    images: ["images/20260428-1.jpg",
-	"images/20260428-2.jpg",
-	"images/20260428-3.jpg",
-	"images/20260428-4.jpg",
+    images: ["images/20260428-1.webp",
+	"images/20260428-2.webp",
+	"images/20260428-3.webp",
+	"images/20260428-4.webp",
     ],
     text: "你的伞小，打你的伞"
   },
 
  "2026-05-04": {
     title: "🌄 💐 ✉️ ",
-    images: ["images/20260504-1.jpg",
-	"images/20260504-2.jpg",
-	"images/20260504-3.jpg",
-	"images/20260504-4.jpg",
-	"images/20260504-5.jpg",
-	"images/20260504-6.jpg",
+    images: ["images/20260504-1.webp",
+	"images/20260504-2.webp",
+	"images/20260504-3.webp",
+	"images/20260504-4.webp",
+	"images/20260504-5.webp",
+	"images/20260504-6.webp",
     ],
     text: "谈很久很久的恋爱"
   },
 
  "2026-05-07": {
     title: "给我庆生🎂",
-    images: ["images/20260507-1.jpg",
-	"images/20260507-2.jpg",
-	"images/20260507-3.jpg",
-	"images/20260507-4.jpg",
-	"images/20260507-5.jpg",
+    images: ["images/20260507-1.webp",
+	"images/20260507-2.webp",
+	"images/20260507-3.webp",
+	"images/20260507-4.webp",
+	"images/20260507-5.webp",
 	    ],
     text: "谢谢宝宝，过得很开心的一个生日"
   },
 
   "2026-05-09": {
     title: "在一起",
-    images: ["images/20260509-1.jpg",
-	 "images/20260509-2.jpg",
-	 "images/20260509-3.jpg",
-	 "images/20260509-4.jpg",
+    images: ["images/20260509-1.webp",
+	 "images/20260509-2.webp",
+	 "images/20260509-3.webp",
+	 "images/20260509-4.webp",
 	    ],
 
     text: "城市阳台的风缓缓的，我们坐在长椅上聊着有的没的，贴在一起的时候，感到无比安心和放松"
@@ -230,11 +230,11 @@ const memories = {
 
 "2026-05-17": {
     title: "提前过520",
-    images: ["images/20260517-1.jpg",
-	 "images/20260517-2.jpg",
-	 "images/20260517-3.jpg",
-	 "images/20260517-4.jpg",
-	 "images/20260517-5.jpg",
+    images: ["images/20260517-1.webp",
+	 "images/20260517-2.webp",
+	 "images/20260517-3.webp",
+	 "images/20260517-4.webp",
+	 "images/20260517-5.webp",
 	    ],
 
     text: "拍立得万岁！"
@@ -242,13 +242,13 @@ const memories = {
 
 "2026-05-22": {
     title: "拼豆＆牛肉火锅",
-    images: ["images/20260522-1.jpg",
-	 "images/20260522-2.jpg",
-	 "images/20260522-3.jpg",
-	 "images/20260522-4.jpg",
-	 "images/20260522-5.jpg",
-	 "images/20260522-6.jpg",
-	 "images/20260522-7.jpg",
+    images: ["images/20260522-1.webp",
+	 "images/20260522-2.webp",
+	 "images/20260522-3.webp",
+	 "images/20260522-4.webp",
+	 "images/20260522-5.webp",
+	 "images/20260522-6.webp",
+	 "images/20260522-7.webp",
 	    ],
 
     text: "拼豆超级放松，很好吃的一顿牛肉"
@@ -256,13 +256,13 @@ const memories = {
 
   "2026-06-01": {
     title: "儿童节特辑",
-    images: ["images/20260601-1.jpg",
-	 "images/20260601-2.jpg",
-	 "images/20260601-3.jpg",
-	 "images/20260601-4.jpg",
-	 "images/20260601-5.jpg",
-	 "images/20260601-6.jpg",
-	 "images/20260601-7.jpg",
+    images: ["images/20260601-1.webp",
+	 "images/20260601-2.webp",
+	 "images/20260601-3.webp",
+	 "images/20260601-4.webp",
+	 "images/20260601-5.webp",
+	 "images/20260601-6.webp",
+	 "images/20260601-7.webp",
 	    ],
     text: "不要放过这个小年糕小豆腐小大福"
  },
@@ -270,16 +270,16 @@ const memories = {
 
   "2026-06-06": {
     title: "穿上我买的睡衣了",
-    image: "images/20260606-1.jpg",
+    image: "images/20260606-1.webp",
     text: "超级适配、轻松驾驭、美衣配美人"
  },
 
 
 "2026-06-09": {
     title: "小蛋糕屏保生成中...",
-    images: ["images/20260609-1.jpg",
-	 "images/20260609-2.jpg",
-	 "images/20260609-3.jpg",
+    images: ["images/20260609-1.webp",
+	 "images/20260609-2.webp",
+	 "images/20260609-3.webp",
 	    ],
 
     text: "超多口味的小蛋糕供我选择，最喜欢的三张"
@@ -287,9 +287,9 @@ const memories = {
 
 "2026-06-10": {
     title: "被宝宝投喂杨梅了",
-    images: ["images/20260610-1.jpg",
-	 "images/20260610-2.jpg",
-	 "images/20260610-3.jpg",
+    images: ["images/20260610-1.webp",
+	 "images/20260610-2.webp",
+	 "images/20260610-3.webp",
 	    ],
 
     text: "乒乓球一样大的杨梅，没吃过这么大的，而且很甜很新鲜"
@@ -297,59 +297,59 @@ const memories = {
 
 "2026-06-14": {
     title: "爱上泉市果切♥",
-    images: ["images/20260614-1.jpg",
-	 "images/20260614-2.jpg",
-	 "images/20260614-3.jpg",
-	 "images/20260614-4.jpg",
-	 "images/20260614-5.jpg",
+    images: ["images/20260614-1.webp",
+	 "images/20260614-2.webp",
+	 "images/20260614-3.webp",
+	 "images/20260614-4.webp",
+	 "images/20260614-5.webp",
 	    ],
     text: "超鲜的牛肉，意外爱上的果切，美味的蛋糕"
   },
 
 "2026-06-20": {
     title: "一个臭美的女子",
-    images: ["images/20260620-1.jpg",
-	 "images/20260620-2.jpg",
-	 "images/20260620-3.jpg",
-	 "images/20260620-4.jpg",
-	 "images/20260620-5.jpg",
+    images: ["images/20260620-1.webp",
+	 "images/20260620-2.webp",
+	 "images/20260620-3.webp",
+	 "images/20260620-4.webp",
+	 "images/20260620-5.webp",
 	    ],
     text: "臭美？绝美！退可萌得钥匙，进可姐得勾人"
   },
 
 "2026-07-22": {
     title: "欠你的一张照片",
-    images: ["images/20260722-1.jpg",
-	 "images/20260722-2.jpg",
+    images: ["images/20260722-1.webp",
+	 "images/20260722-2.webp",
 	 	    ],
     text: "乌漆嘛黑但意外是最好的一张，萌萌的很安心~"
   },
 
   "2026-07-25": {
     title: "你怎么知道我要吃木屋烧烤",
-    image: "images/20260725.jpg",
+    image: "images/20260725.webp",
     text: "鸡肫...娃娃菜...香肠...绿豆汤...柠檬茶...啤酒...🤤🤤"
   },
 
   "2026-08-01": {
     title: "🎀🎂",
-    images: ["images/20260801-1.jpg",
-	 "images/20260801-2.jpg",
-	  "images/20260801-3.jpg",
- 	"images/20260801-4.jpg",
- 	"images/20260801-5.jpg",	    ],
+    images: ["images/20260801-1.webp",
+	 "images/20260801-2.webp",
+	  "images/20260801-3.webp",
+ 	"images/20260801-4.webp",
+ 	"images/20260801-5.webp",	    ],
     text: "进行一个小小的拆箱吧✔外貌check！✔✔✔"
   },
 
  "2026-08-08": {
     title: "给你庆生！",
-    images: ["images/20260808-1.jpg",
-	 "images/20260808-2.jpg",
-	 "images/20260808-3.jpg",
-	 "images/20260808-4.jpg",
-	 "images/20260808-5.jpg",
-	 "images/20260808-6.jpg",
-	 "images/20260808-7.jpg",
+    images: ["images/20260808-1.webp",
+	 "images/20260808-2.webp",
+	 "images/20260808-3.webp",
+	 "images/20260808-4.webp",
+	 "images/20260808-5.webp",
+	 "images/20260808-6.webp",
+	 "images/20260808-7.webp",
 	    ],
    text: "非常之美丽非常之美味的小蛋糕👸和小蛋糕🎂"
   },
@@ -365,6 +365,54 @@ const today = new Date();
 today.setHours(0, 0, 0, 0);
 
 const timelineList = document.getElementById("timelineList");
+
+
+// ===============================
+// 🚀 第一阶段性能优化：时间轴图片按需加载
+// 只加载视口附近的图片，避免一打开网站就把几十张照片全部下载。
+// ===============================
+const timelineImageObserver = "IntersectionObserver" in window
+  ? new IntersectionObserver((entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+
+        const img = entry.target;
+        const src = img.dataset.src;
+        if (src) {
+          img.src = src;
+          img.removeAttribute("data-src");
+        }
+        observer.unobserve(img);
+      });
+    }, {
+      // 提前约一屏开始下载，滑到照片时更容易已经加载完成
+      rootMargin: "700px 0px",
+      threshold: 0.01
+    })
+  : null;
+
+function setTimelineImageSource(img, src, immediate = false) {
+  if (!img || !src) return;
+
+  const photo = img.closest(".memory-photo");
+  if (photo) photo.classList.add("is-loading");
+
+  if (timelineImageObserver) {
+    timelineImageObserver.unobserve(img);
+  }
+
+  img.removeAttribute("src");
+  img.dataset.src = src;
+
+  // 用户主动点了上一张 / 下一张时立即加载，不再等待观察器。
+  if (immediate || !timelineImageObserver) {
+    img.src = src;
+    img.removeAttribute("data-src");
+    return;
+  }
+
+  timelineImageObserver.observe(img);
+}
 
 function pad(num) {
   return String(num).padStart(2, "0");
@@ -392,6 +440,22 @@ function getMemoryImages(memory) {
   }
 
   return [];
+}
+
+// 时间轴只加载 480px 左右的缩略图；点击照片后弹窗再加载高清图。
+// 这样即使把整条时间轴滑一遍，手机也不会把所有高清照片都下载下来。
+function getThumbnailPath(imagePath) {
+  if (!imagePath) return "";
+
+  const parts = imagePath.split("/");
+  const filename = parts.pop();
+
+  // 当前回忆照片统一放在 images/ 下，缩略图放在 images/thumbs/ 下。
+  if (parts.join("/") === "images") {
+    return `images/thumbs/${filename}`;
+  }
+
+  return imagePath;
 }
 
 function createTimeline() {
@@ -443,9 +507,18 @@ if (imageList.length > 0) {
   photo.classList.add("has-image");
 
   const img = document.createElement("img");
-  img.src = imageList[currentImageIndex];
   img.alt = memory.title || dateText;
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.setAttribute("fetchpriority", "low");
+
+  // 让卡片在图片真正加载前保留一个柔和占位，避免页面突然跳动。
+  photo.classList.add("is-loading");
+  img.addEventListener("load", () => photo.classList.remove("is-loading"));
+  img.addEventListener("error", () => photo.classList.remove("is-loading"));
+
   photo.appendChild(img);
+  setTimelineImageSource(img, getThumbnailPath(imageList[currentImageIndex]));
 
   if (imageList.length > 1) {
     photo.classList.add("has-multiple");
@@ -468,7 +541,7 @@ if (imageList.length > 0) {
     });
 
     function updateSlide() {
-      img.src = imageList[currentImageIndex];
+      setTimelineImageSource(img, getThumbnailPath(imageList[currentImageIndex]), true);
 
       const dotList = dots.querySelectorAll(".dot");
       dotList.forEach((dot, dotIndex) => {
@@ -733,7 +806,7 @@ function createAlbumList() {
 
     item.innerHTML = `
       <div class="album-cover">
-        <img src="${music.cover}" alt="${music.title}">
+        <img src="${music.cover}" alt="${music.title}" loading="lazy" decoding="async">
       </div>
       <div class="album-title">${music.title}</div>
     `;
@@ -891,6 +964,10 @@ function handleToAboutTransition(e) {
     memoryPageEl.classList.remove("active");
     aboutPageEl.classList.add("active");
     window.scrollTo({ top: 0, behavior: "instant" }); // 手机端使用 instant 响应更快防止白屏
+    // 如果 SQL 云同步已经连接，进入约定页面时立即拉取最新状态。
+    if (typeof refreshCloudTodos === "function") {
+      refreshCloudTodos({ silent: true });
+    }
   }
 }
 
@@ -941,18 +1018,367 @@ document.querySelectorAll('.flip-card').forEach(card => {
   });
 });
 
-// 3. 浪漫约定清单小钩钩点击切换（可选附加）
-document.querySelectorAll('.todo-item').forEach(item => {
-  item.addEventListener('click', () => {
-    const checkbox = item.querySelector('.checkbox');
-    if (item.classList.contains('done')) {
-      item.classList.remove('done');
-      if (checkbox) checkbox.innerHTML = '';
-      if (checkbox) checkbox.classList.remove('checked');
+// ==========================================
+// 3. 我们的约定：CloudBase SQL(PostgreSQL) 双人云同步
+// ==========================================
+// CloudBase PG 当前没有内置 Realtime，因此这里采用“轻量轮询”：
+// 1) 浏览器静默匿名登录；
+// 2) 从 public.couple_todos 读取共同状态；
+// 3) 任意一台设备点击后立即写入 SQL 数据库；
+// 4) 另一台设备停留在“关于芸芸”页面时，每几秒自动拉取一次。
+//
+// 这样刷新后状态仍然保留，而且另一台设备无需手动刷新。
+
+const todoItems = Array.from(document.querySelectorAll('.todo-item[data-todo-id]'));
+const todoSyncBar = document.getElementById('todoSyncBar');
+const todoSyncText = document.getElementById('todoSyncText');
+const copyCloudUidBtn = document.getElementById('copyCloudUidBtn');
+
+let cloudTodoApp = null;
+let cloudTodoDb = null;
+let cloudTodoUid = '';
+let cloudTodoReady = false;
+let cloudTodoPollingTimer = null;
+let cloudTodoRefreshing = false;
+let cloudTodoLastFingerprint = '';
+
+function setTodoSyncStatus(state, text) {
+  if (todoSyncBar) todoSyncBar.dataset.state = state;
+  if (todoSyncText) todoSyncText.textContent = text;
+}
+
+function setTodoVisual(item, done) {
+  if (!item) return;
+
+  const checkbox = item.querySelector('.checkbox');
+  item.classList.toggle('done', Boolean(done));
+  item.setAttribute('aria-pressed', done ? 'true' : 'false');
+
+  if (checkbox) {
+    checkbox.innerHTML = done ? '✔' : '';
+    checkbox.classList.toggle('checked', Boolean(done));
+  }
+}
+
+function applyCloudTodoRows(rows = []) {
+  const cloudMap = new Map();
+  rows.forEach((row) => {
+    if (row && row.id) cloudMap.set(String(row.id), row);
+  });
+
+  todoItems.forEach((item) => {
+    const row = cloudMap.get(item.dataset.todoId);
+    if (row && typeof row.done === 'boolean') {
+      setTodoVisual(item, row.done);
+    }
+  });
+}
+
+function fingerprintTodoRows(rows = []) {
+  return rows
+    .map((row) => `${row.id}:${row.done ? 1 : 0}:${row.updated_at || ''}`)
+    .sort()
+    .join('|');
+}
+
+async function ensureAnonymousCloudLogin(auth) {
+  if (!auth || typeof auth.signInAnonymously !== 'function') {
+    throw new Error('当前 CloudBase SDK 不支持匿名登录');
+  }
+
+  const signInResult = await auth.signInAnonymously();
+  if (signInResult?.error) throw signInResult.error;
+
+  // 使用官方推荐的 getSession() 读取真正的匿名用户 UID。
+  if (typeof auth.getSession === 'function') {
+    const sessionResult = await auth.getSession();
+    if (sessionResult?.error) throw sessionResult.error;
+
+    return (
+      sessionResult?.data?.user?.id ||
+      sessionResult?.data?.session?.sub ||
+      sessionResult?.data?.session?.user?.id ||
+      ''
+    );
+  }
+
+  return signInResult?.data?.user?.id || signInResult?.user?.id || '';
+}
+
+async function refreshCloudTodos({ silent = false } = {}) {
+  if (!cloudTodoReady || !cloudTodoDb || cloudTodoRefreshing) return;
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.table || 'couple_todos').trim();
+  cloudTodoRefreshing = true;
+
+  try {
+    const { data, error } = await cloudTodoDb
+      .from(tableName)
+      .select('id,title,done,sort_order,updated_at,updated_by')
+      .order('sort_order', { ascending: true });
+
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    const nextFingerprint = fingerprintTodoRows(rows);
+
+    if (nextFingerprint !== cloudTodoLastFingerprint) {
+      applyCloudTodoRows(rows);
+      cloudTodoLastFingerprint = nextFingerprint;
+    }
+
+    if (!silent) {
+      const seconds = Math.max(1, Math.round(Number(config.pollMs || 4000) / 1000));
+      setTodoSyncStatus('online', `云端同步已连接 · 约 ${seconds} 秒自动同步一次 ♡`);
+    }
+  } catch (error) {
+    console.error('[约定同步] SQL 读取失败：', error);
+    setTodoSyncStatus('error', '云同步读取失败，请检查 SQL 表或权限');
+  } finally {
+    cloudTodoRefreshing = false;
+  }
+}
+
+function shouldPollCloudTodos() {
+  return (
+    document.visibilityState === 'visible' &&
+    aboutPageEl &&
+    aboutPageEl.classList.contains('active')
+  );
+}
+
+function startCloudTodoPolling() {
+  stopCloudTodoPolling();
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const pollMs = Math.max(2500, Number(config.pollMs || 4000));
+
+  cloudTodoPollingTimer = window.setInterval(() => {
+    if (shouldPollCloudTodos()) {
+      refreshCloudTodos({ silent: true });
+    }
+  }, pollMs);
+}
+
+function stopCloudTodoPolling() {
+  if (cloudTodoPollingTimer) {
+    window.clearInterval(cloudTodoPollingTimer);
+    cloudTodoPollingTimer = null;
+  }
+}
+
+async function initCloudTodoSync() {
+  if (todoItems.length === 0) return;
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const envId = String(config.envId || '').trim();
+
+  if (!envId || envId === 'YOUR_CLOUDBASE_ENV_ID') {
+    setTodoSyncStatus('setup', '还差一步：请在 cloudbase-config.js 填入环境 ID');
+    return;
+  }
+
+  if (!window.cloudbase || typeof window.cloudbase.init !== 'function') {
+    setTodoSyncStatus('error', 'CloudBase SDK 加载失败，请检查网络');
+    return;
+  }
+
+  setTodoSyncStatus('connecting', '正在连接两个人的小屋…');
+
+  try {
+    cloudTodoApp = window.cloudbase.init({ env: envId });
+    const auth = cloudTodoApp.auth;
+
+    if (!auth) throw new Error('CloudBase Auth 模块未加载');
+
+    cloudTodoUid = await ensureAnonymousCloudLogin(auth);
+
+    if (cloudTodoUid && copyCloudUidBtn) {
+      copyCloudUidBtn.hidden = false;
+      copyCloudUidBtn.dataset.uid = cloudTodoUid;
+      console.log('[小屋 CloudBase] 本设备 UID:', cloudTodoUid);
+    }
+
+    if (typeof cloudTodoApp.rdb !== 'function') {
+      throw new Error('当前 CloudBase SDK 没有 rdb()，请确认使用新版 SDK');
+    }
+
+    cloudTodoDb = cloudTodoApp.rdb();
+    cloudTodoReady = true;
+
+    await refreshCloudTodos();
+    startCloudTodoPolling();
+  } catch (error) {
+    console.error('[约定同步] CloudBase SQL 初始化失败：', error);
+    cloudTodoReady = false;
+
+    const message = String(error?.message || error || '');
+    if (/anonymous|匿名|sign.?in/i.test(message)) {
+      setTodoSyncStatus('error', '请先在 CloudBase 身份认证里开启匿名登录');
+    } else if (/relation|table|schema|不存在|does not exist/i.test(message)) {
+      setTodoSyncStatus('error', '请先执行我给你的 SQL，创建 couple_todos 表');
+    } else if (/permission|denied|unauthorized|rls|403/i.test(message)) {
+      setTodoSyncStatus('error', 'SQL 权限还没配置好，请重新执行权限 SQL');
+    } else if (/cors|domain|origin/i.test(message)) {
+      setTodoSyncStatus('error', '请把当前网站域名加入 CloudBase 安全域名');
     } else {
-      item.classList.add('done');
-      if (checkbox) checkbox.innerHTML = '✔';
-      if (checkbox) checkbox.classList.add('checked');
+      setTodoSyncStatus('error', '云同步连接失败，打开浏览器控制台看具体原因');
+    }
+  }
+}
+
+async function toggleCloudTodo(item) {
+  if (!item || item.classList.contains('syncing')) return;
+
+  if (!cloudTodoReady || !cloudTodoDb) {
+    setTodoSyncStatus('error', '现在还没连上云端，暂时不能保存这个勾');
+    return;
+  }
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.table || 'couple_todos').trim();
+  const id = item.dataset.todoId;
+  const oldDone = item.classList.contains('done');
+  const nextDone = !oldDone;
+
+  item.classList.add('syncing');
+  setTodoVisual(item, nextDone);
+  setTodoSyncStatus('syncing', '正在保存这个小约定…');
+
+  try {
+    // updated_at / updated_by 由数据库触发器自动记录。
+    const { error } = await cloudTodoDb
+      .from(tableName)
+      .update({ done: nextDone })
+      .eq('id', id);
+
+    if (error) throw error;
+
+    cloudTodoLastFingerprint = ''; // 强制下一次读取重新应用云端状态
+    await refreshCloudTodos({ silent: true });
+    setTodoSyncStatus('online', '已保存 · 另一台设备会自动同步 ♡');
+  } catch (error) {
+    console.error(`[约定同步] ${id} 保存失败：`, error);
+    setTodoVisual(item, oldDone);
+    item.classList.add('sync-error');
+    window.setTimeout(() => item.classList.remove('sync-error'), 700);
+    setTodoSyncStatus('error', '这次没有保存成功，请检查网络后再点一次');
+  } finally {
+    item.classList.remove('syncing');
+  }
+}
+
+todoItems.forEach((item) => {
+  item.addEventListener('click', () => toggleCloudTodo(item));
+  item.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleCloudTodo(item);
     }
   });
 });
+
+copyCloudUidBtn?.addEventListener('click', async () => {
+  const uid = copyCloudUidBtn.dataset.uid || cloudTodoUid;
+  if (!uid) return;
+
+  try {
+    await navigator.clipboard.writeText(uid);
+    const oldText = copyCloudUidBtn.textContent;
+    copyCloudUidBtn.textContent = '已复制';
+    window.setTimeout(() => {
+      copyCloudUidBtn.textContent = oldText;
+    }, 1200);
+  } catch (_) {
+    window.prompt('复制这个设备 ID：', uid);
+  }
+});
+
+// 切回网页/进入“关于芸芸”时立刻同步一次，不必等待轮询周期。
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') refreshCloudTodos({ silent: true });
+});
+window.addEventListener('focus', () => refreshCloudTodos({ silent: true }));
+
+// 网站加载后连接一次；之后只在需要时轻量轮询。
+initCloudTodoSync();
+// ===============================
+// Git -> CloudBase 新版本自动发现
+// 页面一直开着也会知道网站已经重新部署。
+// ===============================
+const SITE_VERSION_CHECK_MS = 60 * 1000;
+let currentSiteBuildVersion = '';
+let siteVersionTimer = null;
+let siteUpdateAlreadyFound = false;
+
+function ensureSiteUpdateToast() {
+  let toast = document.getElementById('siteUpdateToast');
+  if (toast) return toast;
+
+  toast = document.createElement('div');
+  toast.id = 'siteUpdateToast';
+  toast.className = 'site-update-toast';
+  toast.setAttribute('role', 'status');
+  toast.setAttribute('aria-live', 'polite');
+  toast.innerHTML = `
+    <div class="site-update-copy">
+      <div class="site-update-title">♡ 小屋有新变化啦</div>
+      <div class="site-update-desc">新版本已经上线，点一下就能看到最新内容。</div>
+    </div>
+    <button id="siteUpdateBtn" class="site-update-btn" type="button">点击更新</button>
+  `;
+  document.body.appendChild(toast);
+
+  toast.querySelector('#siteUpdateBtn')?.addEventListener('click', () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('_refresh', Date.now().toString());
+    window.location.href = url.toString();
+  });
+
+  return toast;
+}
+
+async function readSiteBuildVersion() {
+  try {
+    const response = await fetch(`site-version.json?_=${Date.now()}`, {
+      cache: 'no-store',
+      credentials: 'same-origin'
+    });
+    if (!response.ok) return '';
+    const data = await response.json();
+    return data && data.version ? String(data.version) : '';
+  } catch (_) {
+    return '';
+  }
+}
+
+async function checkForSiteUpdate({ initial = false } = {}) {
+  if (siteUpdateAlreadyFound) return;
+  const latestVersion = await readSiteBuildVersion();
+  if (!latestVersion) return;
+
+  if (initial || !currentSiteBuildVersion) {
+    currentSiteBuildVersion = latestVersion;
+    return;
+  }
+
+  if (latestVersion !== currentSiteBuildVersion) {
+    siteUpdateAlreadyFound = true;
+    ensureSiteUpdateToast().classList.add('show');
+  }
+}
+
+async function initSiteVersionWatcher() {
+  await checkForSiteUpdate({ initial: true });
+  siteVersionTimer = window.setInterval(() => {
+    if (document.visibilityState === 'visible') checkForSiteUpdate();
+  }, SITE_VERSION_CHECK_MS);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') checkForSiteUpdate();
+});
+window.addEventListener('focus', () => checkForSiteUpdate());
+
+initSiteVersionWatcher();

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>我们的恋爱小屋</title>
-  <link rel="stylesheet" href="style.css?v=20260809-card-only" />
+  <link rel="stylesheet" href="style.css?v=20260810-phase2-pg-easy" />
 </head>
 <body>
 
@@ -86,16 +86,16 @@
       >
         <!-- 展开后右侧显示内页 -->
         <div class="birthday-card-page birthday-card-inside-page">
-          <img src="birthday-card-inside.png" alt="生日贺卡内页">
+          <img src="birthday-card-inside.webp" alt="生日贺卡内页">
         </div>
 
         <!-- 封面沿左侧书脊翻开 -->
         <div class="birthday-card-cover-sheet">
           <div class="birthday-card-face birthday-card-front-face">
-            <img src="birthday-card-cover.png" alt="生日贺卡封面">
+            <img src="birthday-card-cover.webp" alt="生日贺卡封面">
           </div>
           <div class="birthday-card-face birthday-card-back-face">
-            <img src="birthday-card-cover.png" alt="展开后的生日贺卡左页">
+            <img src="birthday-card-cover.webp" alt="展开后的生日贺卡左页">
           </div>
         </div>
 
@@ -156,10 +156,10 @@
 
 
     <!-- 第二页贴纸 -->
-    <img src="kitty.png" class="memory-sticker memory-kitty" alt="kitty">
-    <img src="bingbing.png" class="memory-sticker memory-bingbing" alt="bingbing">
-    <img src="linabell.png" class="memory-sticker memory-linabell" alt="linabell">
-    <img src="otter.png" class="memory-sticker memory-otter" alt="otter">
+    <img src="kitty.png" loading="lazy" decoding="async" class="memory-sticker memory-kitty" alt="kitty">
+    <img src="bingbing.png" loading="lazy" decoding="async" class="memory-sticker memory-bingbing" alt="bingbing">
+    <img src="linabell.png" loading="lazy" decoding="async" class="memory-sticker memory-linabell" alt="linabell">
+    <img src="otter.png" loading="lazy" decoding="async" class="memory-sticker memory-otter" alt="otter">
 
 
   <!-- 时间轴 -->
@@ -316,41 +316,50 @@
      <!-- 模块三：浪漫约定清单 -->
       <section class="yunyaun-section">
         <div class="section-title">📌 我们的约定 (要记得)</div>
+        <div id="todoSyncBar" class="todo-sync-bar" aria-live="polite">
+          <span class="todo-sync-dot" aria-hidden="true"></span>
+          <span id="todoSyncText">正在连接两个人的小屋…</span>
+          <button id="copyCloudUidBtn" class="copy-cloud-uid-btn" type="button" hidden>复制设备ID</button>
+        </div>
         <div class="todo-notebook">
           <!-- 一起去爬山 ⛰️（原本自带的） -->
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">一起去爬山 ⛰️</span></div>
+          <div class="todo-item" data-todo-id="todo_01_mountain" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">一起去爬山 ⛰️</span></div>
           
           <!-- 以下为新增备忘录内容 -->
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">来余姚开车 🚗</span></div>
-          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">来杭州送花 💐</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">来余姚送花 🌸</span></div>
-          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">洞庭 3000 里吃饭 🍲</span></div>
-          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">一起看 live 🎵</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">一起吃小和山 🥞</span></div>
-          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">来工大 🏫</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">纯 k 卤肉饭 🍚</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">给她调调料 🥢</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">吃周黑鸭 黑鸭煲 🦆</span></div>
-          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">看电量（下次见面看看🔋）</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">良渚小鹿 🦌</span></div>
-          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">木屋烧烤🍢</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">鸭血粉丝（温州瘦肉丸 🥣）</span></div>
-          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">胸式呼吸 腹式呼吸 😮‍💨</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">俯视仰视 👀</span></div>
-          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">智取发绳 🎀</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">补一个草坪音乐会 🎸</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">补一个线下观影 🎬</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">给她做蛋糕 🍰</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">给她画画 🎨</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">带我吃点都德</span></div>
-          <div class="todo-item"><span class="checkbox"></span> <span class="todo-text">吃夏序gelato</span></div>
-          <div class="todo-item done"><span class="checkbox checked">✔</span> <span class="todo-text">线下一起看我们的网站</span></div>
+          <div class="todo-item" data-todo-id="todo_02_yuyao_drive" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">来余姚开车 🚗</span></div>
+          <div class="todo-item done" data-todo-id="todo_03_hangzhou_flowers" role="button" tabindex="0" aria-pressed="true"><span class="checkbox checked">✔</span> <span class="todo-text">来杭州送花 💐</span></div>
+          <div class="todo-item" data-todo-id="todo_04_yuyao_flowers" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">来余姚送花 🌸</span></div>
+          <div class="todo-item done" data-todo-id="todo_05_dongting3000" role="button" tabindex="0" aria-pressed="true"><span class="checkbox checked">✔</span> <span class="todo-text">洞庭 3000 里吃饭 🍲</span></div>
+          <div class="todo-item done" data-todo-id="todo_06_live" role="button" tabindex="0" aria-pressed="true"><span class="checkbox checked">✔</span> <span class="todo-text">一起看 live 🎵</span></div>
+          <div class="todo-item" data-todo-id="todo_07_xiaoheshan" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">一起吃小和山 🥞</span></div>
+          <div class="todo-item done" data-todo-id="todo_08_gongda" role="button" tabindex="0" aria-pressed="true"><span class="checkbox checked">✔</span> <span class="todo-text">来工大 🏫</span></div>
+          <div class="todo-item" data-todo-id="todo_09_purek_rice" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">纯 k 卤肉饭 🍚</span></div>
+          <div class="todo-item" data-todo-id="todo_10_mix_sauce" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">给她调调料 🥢</span></div>
+          <div class="todo-item" data-todo-id="todo_11_zhouheiya" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">吃周黑鸭 黑鸭煲 🦆</span></div>
+          <div class="todo-item done" data-todo-id="todo_12_battery" role="button" tabindex="0" aria-pressed="true"><span class="checkbox checked">✔</span> <span class="todo-text">看电量（下次见面看看🔋）</span></div>
+          <div class="todo-item" data-todo-id="todo_13_liangzhu_deer" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">良渚小鹿 🦌</span></div>
+          <div class="todo-item done" data-todo-id="todo_14_muwu_bbq" role="button" tabindex="0" aria-pressed="true"><span class="checkbox checked">✔</span> <span class="todo-text">木屋烧烤🍢</span></div>
+          <div class="todo-item" data-todo-id="todo_15_duck_blood_noodles" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">鸭血粉丝（温州瘦肉丸 🥣）</span></div>
+          <div class="todo-item done" data-todo-id="todo_16_breathing" role="button" tabindex="0" aria-pressed="true"><span class="checkbox checked">✔</span> <span class="todo-text">胸式呼吸 腹式呼吸 😮‍💨</span></div>
+          <div class="todo-item" data-todo-id="todo_17_view_angles" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">俯视仰视 👀</span></div>
+          <div class="todo-item done" data-todo-id="todo_18_hair_tie" role="button" tabindex="0" aria-pressed="true"><span class="checkbox checked">✔</span> <span class="todo-text">智取发绳 🎀</span></div>
+          <div class="todo-item" data-todo-id="todo_19_lawn_concert" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">补一个草坪音乐会 🎸</span></div>
+          <div class="todo-item" data-todo-id="todo_20_offline_movie" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">补一个线下观影 🎬</span></div>
+          <div class="todo-item" data-todo-id="todo_21_make_cake" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">给她做蛋糕 🍰</span></div>
+          <div class="todo-item" data-todo-id="todo_22_draw_picture" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">给她画画 🎨</span></div>
+          <div class="todo-item" data-todo-id="todo_23_dim_sum" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">带我吃点都德</span></div>
+          <div class="todo-item" data-todo-id="todo_24_xiaxu_gelato" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">吃夏序gelato</span></div>
+          <div class="todo-item done" data-todo-id="todo_25_watch_website" role="button" tabindex="0" aria-pressed="true"><span class="checkbox checked">✔</span> <span class="todo-text">线下一起看我们的网站</span></div>
         </div>
      </section>
 </main>
   </section>
 
-  <!-- 引入控制页面跳转、天数计算、吃喝雷达及卡片翻转的 JS 逻辑文件 -->
-  <script src="script.js?v=20260809-card-only"></script>
+  <!-- CloudBase：匿名身份 + PostgreSQL(SQL 型数据库) -->
+  <script src="https://static.cloudbase.net/cloudbase-js-sdk/2.27.1/cloudbase.full.js"></script>
+  <script src="cloudbase-config.js?v=20260810-phase2-pg-easy"></script>
+
+  <!-- 页面逻辑 -->
+  <script src="script.js?v=20260810-phase2-pg-easy"></script>
 </body>
 </html>

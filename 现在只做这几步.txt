@@ -1,0 +1,14 @@
+现在你可以跳过“安全域名”和“手填环境 ID”两步。
+
+原因：
+1. 你现在使用 CloudBase 自带的静态网站托管默认域名，它属于系统自动配置的安全域名。以后如果换成自己的自定义域名，再去“环境管理 / 环境配置 → 安全来源”添加即可。
+2. 已从你截图中的控制台地址确认当前 EnvId，并已写入 cloudbase-config.js：
+   yuyutata-d1gp5z51kb54273a
+3. 新版 script.js 初始化 CloudBase 时只使用 env，不再要求你填写 region。
+
+你现在只需要：
+A. SQL 建表脚本已经执行成功；
+B. 左侧“身份认证”里开启匿名登录；
+C. 上传并覆盖 index.html、script.js、style.css、cloudbase-config.js。
+
+然后打开网站 → 关于边芸芸的一切 → 我们的约定，查看同步状态。
