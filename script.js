@@ -927,44 +927,44 @@ document.querySelectorAll('.dog-container').forEach(dog => {
   dog.addEventListener('click', triggerDogSticker);
 });
 // ==========================================
-// 📱 完美移动端兼容：点击恋爱回忆牌子跳转逻辑
+// 客厅 ↔ 卧室 页面切换
 // ==========================================
 const aboutPageEl = document.getElementById("aboutPage");
-const toAboutBtnEl = document.getElementById("toAboutBtn");
 const memoryPageEl = document.getElementById("memoryPage");
+const enterBedroomBtn = document.getElementById("enterBedroomBtn");
+const backToMemoryBtnEl = document.getElementById("backToMemoryBtn");
 
-function handleToAboutTransition(e) {
+function openBedroomPage(e) {
   if (e) {
     e.preventDefault();
     e.stopPropagation();
   }
-  if (aboutPageEl && memoryPageEl) {
-    memoryPageEl.classList.remove("active");
-    aboutPageEl.classList.add("active");
-    window.scrollTo({ top: 0, behavior: "instant" }); // 手机端使用 instant 响应更快防止白屏
-    // 如果 SQL 云同步已经连接，进入约定页面时立即拉取最新状态。
-    if (typeof refreshCloudTodos === "function") {
-      refreshCloudTodos({ silent: true });
-    }
+
+  if (!aboutPageEl || !memoryPageEl) return;
+
+  memoryPageEl.classList.remove("active");
+  aboutPageEl.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "instant" });
+
+  if (typeof refreshCloudTodos === "function") {
+    refreshCloudTodos({ silent: true });
   }
 }
 
-if (toAboutBtnEl) {
-  // 同时监听触屏与常规点击，完美解决移动端失效问题
-  toAboutBtnEl.addEventListener("touchstart", handleToAboutTransition, { passive: false });
-  toAboutBtnEl.addEventListener("click", handleToAboutTransition);
-}
+enterBedroomBtn?.addEventListener("click", openBedroomPage);
 
-// 从关于芸芸新页面 -> 返回第二页恋爱回忆
-if (backToMemoryBtn) {
-  backToMemoryBtn.addEventListener("click", () => {
-    if (aboutPage) aboutPage.classList.remove("active");
-    document.getElementById("memoryPage").classList.add("active");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-}
+backToMemoryBtnEl?.addEventListener("click", () => {
+  aboutPageEl?.classList.remove("active");
+  memoryPageEl?.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  if (typeof refreshCloudMessages === "function") {
+    refreshCloudMessages({ silent: true });
+  }
+});
+
 // ==========================================
-// 🆕 新增：第三页（关于边芸芸的一切）交互逻辑
+// 卧室页面交互逻辑
 // ==========================================
 
 // 1. 选项卡切换（超爱 vs 退散）
@@ -997,35 +997,63 @@ document.querySelectorAll('.flip-card').forEach(card => {
 });
 
 // ==========================================
-// 3. 我们的约定：CloudBase SQL(PostgreSQL) 双人云同步
+// 3. 两个人的小屋云同步：约定 + 客厅留言板
 // ==========================================
-// CloudBase PG 当前没有内置 Realtime，因此这里采用“轻量轮询”：
-// 1) 浏览器静默匿名登录；
-// 2) 从 public.couple_todos 读取共同状态；
-// 3) 任意一台设备点击后立即写入 SQL 数据库；
-// 4) 另一台设备停留在“关于芸芸”页面时，每几秒自动拉取一次。
-//
-// 这样刷新后状态仍然保留，而且另一台设备无需手动刷新。
+// CloudBase PostgreSQL 当前用轻量轮询保持两台设备同步：
+// - 卧室：共同约定可以打勾，也可以新建；
+// - 客厅：留言板双方都可以写、都可以看；
+// - 所有内容都保存到 PostgreSQL，刷新/换设备仍然存在。
 
-const todoItems = Array.from(document.querySelectorAll('.todo-item[data-todo-id]'));
+const todoList = document.getElementById('todoList');
 const todoSyncBar = document.getElementById('todoSyncBar');
 const todoSyncText = document.getElementById('todoSyncText');
 const copyCloudUidBtn = document.getElementById('copyCloudUidBtn');
+const todoCreateForm = document.getElementById('todoCreateForm');
+const todoCreateInput = document.getElementById('todoCreateInput');
+const todoCreateBtn = document.getElementById('todoCreateBtn');
+
+const messageBoard = document.getElementById('messageBoard');
+const messageList = document.getElementById('messageList');
+const messageSyncBar = document.getElementById('messageSyncBar');
+const messageSyncText = document.getElementById('messageSyncText');
+const messageForm = document.getElementById('messageForm');
+const messageInput = document.getElementById('messageInput');
+const messageSendBtn = document.getElementById('messageSendBtn');
+const messageCounter = document.getElementById('messageCounter');
 
 let cloudTodoApp = null;
 let cloudTodoDb = null;
 let cloudTodoUid = '';
-// 保存本次匿名登录已经拿到的 access token。
-// 访问提醒走 HTTP API 时直接复用它，避免再次调用 auth.getSession() 触发部分浏览器/SDK 的 scope=null 兼容问题。
-let cloudTodoAccessToken = '';
 let cloudTodoReady = false;
-let cloudTodoPollingTimer = null;
+let cloudHomePollingTimer = null;
 let cloudTodoRefreshing = false;
+let cloudMessageRefreshing = false;
 let cloudTodoLastFingerprint = '';
+let cloudMessageLastFingerprint = '';
+let cloudTodoRowsCache = [];
 
 function setTodoSyncStatus(state, text) {
   if (todoSyncBar) todoSyncBar.dataset.state = state;
   if (todoSyncText) todoSyncText.textContent = text;
+}
+
+function setMessageSyncStatus(state, text) {
+  if (messageSyncBar) messageSyncBar.dataset.state = state;
+  if (messageSyncText) messageSyncText.textContent = text;
+}
+
+function setCloudComposerEnabled(enabled) {
+  if (todoCreateInput) todoCreateInput.disabled = !enabled;
+  if (todoCreateBtn) todoCreateBtn.disabled = !enabled;
+  if (messageInput) messageInput.disabled = !enabled;
+  if (messageSendBtn) messageSendBtn.disabled = !enabled;
+}
+
+function makeCloudId(prefix) {
+  if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+    return `${prefix}_${window.crypto.randomUUID()}`;
+  }
+  return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 11)}`;
 }
 
 function setTodoVisual(item, done) {
@@ -1041,24 +1069,103 @@ function setTodoVisual(item, done) {
   }
 }
 
-function applyCloudTodoRows(rows = []) {
-  const cloudMap = new Map();
-  rows.forEach((row) => {
-    if (row && row.id) cloudMap.set(String(row.id), row);
-  });
+function createTodoElement(row) {
+  const item = document.createElement('div');
+  item.className = `todo-item${row.done ? ' done' : ''}`;
+  item.dataset.todoId = String(row.id || '');
+  item.setAttribute('role', 'button');
+  item.setAttribute('tabindex', '0');
+  item.setAttribute('aria-pressed', row.done ? 'true' : 'false');
 
-  todoItems.forEach((item) => {
-    const row = cloudMap.get(item.dataset.todoId);
-    if (row && typeof row.done === 'boolean') {
-      setTodoVisual(item, row.done);
-    }
-  });
+  const checkbox = document.createElement('span');
+  checkbox.className = `checkbox${row.done ? ' checked' : ''}`;
+  checkbox.textContent = row.done ? '✔' : '';
+
+  const text = document.createElement('span');
+  text.className = 'todo-text';
+  text.textContent = String(row.title || '新的约定');
+
+  item.append(checkbox, text);
+  return item;
+}
+
+function renderCloudTodos(rows = []) {
+  if (!todoList) return;
+
+  cloudTodoRowsCache = rows.slice();
+  todoList.innerHTML = '';
+
+  if (rows.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'todo-empty';
+    empty.textContent = '还没有约定，写下第一件想一起完成的事吧 ♡';
+    todoList.appendChild(empty);
+    return;
+  }
+
+  rows.forEach((row) => todoList.appendChild(createTodoElement(row)));
 }
 
 function fingerprintTodoRows(rows = []) {
   return rows
-    .map((row) => `${row.id}:${row.done ? 1 : 0}:${row.updated_at || ''}`)
-    .sort()
+    .map((row) => `${row.id}:${row.title || ''}:${row.done ? 1 : 0}:${row.updated_at || ''}`)
+    .join('|');
+}
+
+function formatMessageTime(value) {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return '';
+
+  const now = new Date();
+  const sameDay =
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate();
+
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  if (sameDay) return `${hh}:${mm}`;
+  return `${date.getMonth() + 1}.${date.getDate()} ${hh}:${mm}`;
+}
+
+function renderCloudMessages(rows = []) {
+  if (!messageList) return;
+
+  messageList.innerHTML = '';
+
+  if (rows.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'message-empty';
+    empty.textContent = '留言板还是空的，先偷偷写一句给对方吧 ♡';
+    messageList.appendChild(empty);
+    return;
+  }
+
+  rows.forEach((row) => {
+    const mine = Boolean(cloudTodoUid && String(row.created_by || '') === String(cloudTodoUid));
+    const wrap = document.createElement('div');
+    wrap.className = `message-row ${mine ? 'mine' : 'other'}`;
+
+    const meta = document.createElement('div');
+    meta.className = 'message-meta';
+    meta.textContent = `${mine ? '我' : 'TA'} · ${formatMessageTime(row.created_at)}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.textContent = String(row.body || '');
+
+    wrap.append(meta, bubble);
+    messageList.appendChild(wrap);
+  });
+
+  window.requestAnimationFrame(() => {
+    messageList.scrollTop = messageList.scrollHeight;
+  });
+}
+
+function fingerprintMessageRows(rows = []) {
+  return rows
+    .map((row) => `${row.id}:${row.created_at || ''}:${row.created_by || ''}:${row.body || ''}`)
     .join('|');
 }
 
@@ -1070,23 +1177,9 @@ async function ensureAnonymousCloudLogin(auth) {
   const signInResult = await auth.signInAnonymously();
   if (signInResult?.error) throw signInResult.error;
 
-  // signInAnonymously 本身通常就会返回 session。先把 token 缓存下来。
-  cloudTodoAccessToken =
-    signInResult?.data?.session?.access_token ||
-    signInResult?.session?.access_token ||
-    cloudTodoAccessToken ||
-    '';
-
-  // Phase 2 的 PostgreSQL 同步已经验证 getSession() 在初始化阶段可正常工作。
-  // 这里只调用一次，并同时缓存 access_token。后续访问提醒绝不再重复调用 getSession()。
   if (typeof auth.getSession === 'function') {
     const sessionResult = await auth.getSession();
     if (sessionResult?.error) throw sessionResult.error;
-
-    cloudTodoAccessToken =
-      sessionResult?.data?.session?.access_token ||
-      cloudTodoAccessToken ||
-      '';
 
     return (
       sessionResult?.data?.user?.id ||
@@ -1120,72 +1213,105 @@ async function refreshCloudTodos({ silent = false } = {}) {
     const nextFingerprint = fingerprintTodoRows(rows);
 
     if (nextFingerprint !== cloudTodoLastFingerprint) {
-      applyCloudTodoRows(rows);
+      renderCloudTodos(rows);
       cloudTodoLastFingerprint = nextFingerprint;
+    } else {
+      cloudTodoRowsCache = rows.slice();
     }
 
     if (!silent) {
       const seconds = Math.max(1, Math.round(Number(config.pollMs || 4000) / 1000));
-      setTodoSyncStatus('online', `云端同步已连接 · 约 ${seconds} 秒自动同步一次 ♡`);
+      setTodoSyncStatus('online', `已连上云端 · 约 ${seconds} 秒自动同步一次 ♡`);
     }
   } catch (error) {
     console.error('[约定同步] SQL 读取失败：', error);
-    setTodoSyncStatus('error', '云同步读取失败，请检查 SQL 表或权限');
+    setTodoSyncStatus('error', '约定读取失败，请确认已执行 Phase 5 SQL');
   } finally {
     cloudTodoRefreshing = false;
   }
 }
 
-function shouldPollCloudTodos() {
-  return (
-    document.visibilityState === 'visible' &&
-    aboutPageEl &&
-    aboutPageEl.classList.contains('active')
-  );
+async function refreshCloudMessages({ silent = false } = {}) {
+  if (!cloudTodoReady || !cloudTodoDb || cloudMessageRefreshing || !messageBoard) return;
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.messageTable || 'couple_messages').trim();
+  cloudMessageRefreshing = true;
+
+  try {
+    const { data, error } = await cloudTodoDb
+      .from(tableName)
+      .select('id,body,created_at,created_by')
+      .order('created_at', { ascending: true })
+      .limit(60);
+
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    const nextFingerprint = fingerprintMessageRows(rows);
+
+    if (nextFingerprint !== cloudMessageLastFingerprint) {
+      renderCloudMessages(rows);
+      cloudMessageLastFingerprint = nextFingerprint;
+    }
+
+    if (!silent) {
+      const seconds = Math.max(1, Math.round(Number(config.pollMs || 4000) / 1000));
+      setMessageSyncStatus('online', `留言板已同步 · 约 ${seconds} 秒看看有没有新话 ♡`);
+    }
+  } catch (error) {
+    console.error('[留言板] SQL 读取失败：', error);
+    setMessageSyncStatus('error', '留言板暂时没连上，请确认已执行 Phase 5 SQL');
+  } finally {
+    cloudMessageRefreshing = false;
+  }
 }
 
-function startCloudTodoPolling() {
-  stopCloudTodoPolling();
+function shouldPollCloudTodos() {
+  return document.visibilityState === 'visible' && aboutPageEl?.classList.contains('active');
+}
+
+function shouldPollCloudMessages() {
+  return document.visibilityState === 'visible' && memoryPageEl?.classList.contains('active');
+}
+
+function startCloudHomePolling() {
+  if (cloudHomePollingTimer) window.clearInterval(cloudHomePollingTimer);
 
   const config = window.LOVE_HOUSE_CLOUD || {};
   const pollMs = Math.max(2500, Number(config.pollMs || 4000));
 
-  cloudTodoPollingTimer = window.setInterval(() => {
-    if (shouldPollCloudTodos()) {
-      refreshCloudTodos({ silent: true });
-    }
+  cloudHomePollingTimer = window.setInterval(() => {
+    if (shouldPollCloudTodos()) refreshCloudTodos({ silent: true });
+    if (shouldPollCloudMessages()) refreshCloudMessages({ silent: true });
   }, pollMs);
 }
 
-function stopCloudTodoPolling() {
-  if (cloudTodoPollingTimer) {
-    window.clearInterval(cloudTodoPollingTimer);
-    cloudTodoPollingTimer = null;
-  }
-}
-
-async function initCloudTodoSync() {
-  if (todoItems.length === 0) return;
+async function initCloudHomeSync() {
+  if (!todoList && !messageBoard) return;
 
   const config = window.LOVE_HOUSE_CLOUD || {};
   const envId = String(config.envId || '').trim();
 
   if (!envId || envId === 'YOUR_CLOUDBASE_ENV_ID') {
     setTodoSyncStatus('setup', '还差一步：请在 cloudbase-config.js 填入环境 ID');
+    setMessageSyncStatus('setup', '留言板等待 CloudBase 环境 ID');
     return;
   }
 
   if (!window.cloudbase || typeof window.cloudbase.init !== 'function') {
     setTodoSyncStatus('error', 'CloudBase SDK 加载失败，请检查网络');
+    setMessageSyncStatus('error', 'CloudBase SDK 加载失败，请检查网络');
     return;
   }
 
+  setCloudComposerEnabled(false);
   setTodoSyncStatus('connecting', '正在连接两个人的小屋…');
+  setMessageSyncStatus('connecting', '正在连接留言板…');
 
   try {
     cloudTodoApp = window.cloudbase.init({ env: envId });
     const auth = cloudTodoApp.auth;
-
     if (!auth) throw new Error('CloudBase Auth 模块未加载');
 
     cloudTodoUid = await ensureAnonymousCloudLogin(auth);
@@ -1202,24 +1328,28 @@ async function initCloudTodoSync() {
 
     cloudTodoDb = cloudTodoApp.rdb();
     cloudTodoReady = true;
+    setCloudComposerEnabled(true);
 
-    await refreshCloudTodos();
-    startCloudTodoPolling();
+    await Promise.all([
+      refreshCloudTodos(),
+      refreshCloudMessages()
+    ]);
+    startCloudHomePolling();
   } catch (error) {
-    console.error('[约定同步] CloudBase SQL 初始化失败：', error);
+    console.error('[小屋云同步] 初始化失败：', error);
     cloudTodoReady = false;
+    setCloudComposerEnabled(false);
 
     const message = String(error?.message || error || '');
     if (/anonymous|匿名|sign.?in/i.test(message)) {
       setTodoSyncStatus('error', '请先在 CloudBase 身份认证里开启匿名登录');
-    } else if (/relation|table|schema|不存在|does not exist/i.test(message)) {
-      setTodoSyncStatus('error', '请先执行我给你的 SQL，创建 couple_todos 表');
+      setMessageSyncStatus('error', '请先开启 CloudBase 匿名登录');
     } else if (/permission|denied|unauthorized|rls|403/i.test(message)) {
-      setTodoSyncStatus('error', 'SQL 权限还没配置好，请重新执行权限 SQL');
-    } else if (/cors|domain|origin/i.test(message)) {
-      setTodoSyncStatus('error', '请把当前网站域名加入 CloudBase 安全域名');
+      setTodoSyncStatus('error', 'SQL 权限还没配置好，请执行 Phase 5 SQL');
+      setMessageSyncStatus('error', '留言板权限还没配置好，请执行 Phase 5 SQL');
     } else {
-      setTodoSyncStatus('error', '云同步连接失败，打开浏览器控制台看具体原因');
+      setTodoSyncStatus('error', '云同步连接失败，请稍后再试');
+      setMessageSyncStatus('error', '留言板连接失败，请稍后再试');
     }
   }
 }
@@ -1234,7 +1364,9 @@ async function toggleCloudTodo(item) {
 
   const config = window.LOVE_HOUSE_CLOUD || {};
   const tableName = String(config.table || 'couple_todos').trim();
-  const id = item.dataset.todoId;
+  const id = String(item.dataset.todoId || '');
+  if (!id) return;
+
   const oldDone = item.classList.contains('done');
   const nextDone = !oldDone;
 
@@ -1243,7 +1375,6 @@ async function toggleCloudTodo(item) {
   setTodoSyncStatus('syncing', '正在保存这个小约定…');
 
   try {
-    // updated_at / updated_by 由数据库触发器自动记录。
     const { error } = await cloudTodoDb
       .from(tableName)
       .update({ done: nextDone })
@@ -1251,7 +1382,7 @@ async function toggleCloudTodo(item) {
 
     if (error) throw error;
 
-    cloudTodoLastFingerprint = ''; // 强制下一次读取重新应用云端状态
+    cloudTodoLastFingerprint = '';
     await refreshCloudTodos({ silent: true });
     setTodoSyncStatus('online', '已保存 · 另一台设备会自动同步 ♡');
   } catch (error) {
@@ -1265,14 +1396,106 @@ async function toggleCloudTodo(item) {
   }
 }
 
-todoItems.forEach((item) => {
-  item.addEventListener('click', () => toggleCloudTodo(item));
-  item.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      toggleCloudTodo(item);
-    }
-  });
+async function createCloudTodo(title) {
+  const cleanTitle = String(title || '').trim().replace(/\s+/g, ' ');
+  if (!cleanTitle) return;
+
+  if (!cloudTodoReady || !cloudTodoDb) {
+    setTodoSyncStatus('error', '现在还没连上云端，暂时不能创建新约定');
+    return;
+  }
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.table || 'couple_todos').trim();
+  const maxSort = cloudTodoRowsCache.reduce((max, row) => Math.max(max, Number(row.sort_order) || 0), 0);
+  const row = {
+    id: makeCloudId('todo').slice(0, 64),
+    title: cleanTitle.slice(0, 80),
+    done: false,
+    sort_order: maxSort + 1
+  };
+
+  if (todoCreateBtn) todoCreateBtn.disabled = true;
+  setTodoSyncStatus('syncing', '正在把新约定写进小屋…');
+
+  try {
+    const { error } = await cloudTodoDb.from(tableName).insert(row);
+    if (error) throw error;
+
+    if (todoCreateInput) todoCreateInput.value = '';
+    cloudTodoLastFingerprint = '';
+    await refreshCloudTodos({ silent: true });
+    setTodoSyncStatus('online', '新约定已经放进卧室啦 ♡');
+  } catch (error) {
+    console.error('[新建约定] 保存失败：', error);
+    setTodoSyncStatus('error', '新约定没保存成功，请确认已执行 Phase 5 SQL');
+  } finally {
+    if (todoCreateBtn) todoCreateBtn.disabled = !cloudTodoReady;
+  }
+}
+
+async function sendCloudMessage(body) {
+  const cleanBody = String(body || '').trim();
+  if (!cleanBody) return;
+
+  if (!cloudTodoReady || !cloudTodoDb || !cloudTodoUid) {
+    setMessageSyncStatus('error', '留言板还没连上云端，等一下再试');
+    return;
+  }
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.messageTable || 'couple_messages').trim();
+  const row = {
+    id: makeCloudId('msg').slice(0, 80),
+    body: cleanBody.slice(0, 300),
+    created_by: String(cloudTodoUid)
+  };
+
+  if (messageSendBtn) messageSendBtn.disabled = true;
+  setMessageSyncStatus('syncing', '正在把这句话留在客厅…');
+
+  try {
+    const { error } = await cloudTodoDb.from(tableName).insert(row);
+    if (error) throw error;
+
+    if (messageInput) messageInput.value = '';
+    if (messageCounter) messageCounter.textContent = '0 / 300';
+    cloudMessageLastFingerprint = '';
+    await refreshCloudMessages({ silent: true });
+    setMessageSyncStatus('online', '已经留在客厅啦，对方很快就能看到 ♡');
+  } catch (error) {
+    console.error('[留言板] 发送失败：', error);
+    setMessageSyncStatus('error', '这句话没有保存成功，请确认已执行 Phase 5 SQL');
+  } finally {
+    if (messageSendBtn) messageSendBtn.disabled = !cloudTodoReady;
+  }
+}
+
+todoList?.addEventListener('click', (event) => {
+  const item = event.target.closest('.todo-item[data-todo-id]');
+  if (item && todoList.contains(item)) toggleCloudTodo(item);
+});
+
+todoList?.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const item = event.target.closest('.todo-item[data-todo-id]');
+  if (!item || !todoList.contains(item)) return;
+  event.preventDefault();
+  toggleCloudTodo(item);
+});
+
+todoCreateForm?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  createCloudTodo(todoCreateInput?.value || '');
+});
+
+messageInput?.addEventListener('input', () => {
+  if (messageCounter) messageCounter.textContent = `${messageInput.value.length} / 300`;
+});
+
+messageForm?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  sendCloudMessage(messageInput?.value || '');
 });
 
 copyCloudUidBtn?.addEventListener('click', async () => {
@@ -1291,20 +1514,25 @@ copyCloudUidBtn?.addEventListener('click', async () => {
   }
 });
 
-// 切回网页/进入“关于芸芸”时立刻同步一次，不必等待轮询周期。
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') refreshCloudTodos({ silent: true });
+  if (document.visibilityState !== 'visible') return;
+  if (shouldPollCloudTodos()) refreshCloudTodos({ silent: true });
+  if (shouldPollCloudMessages()) refreshCloudMessages({ silent: true });
 });
-window.addEventListener('focus', () => refreshCloudTodos({ silent: true }));
 
-// 网站加载后连接一次；之后只在需要时轻量轮询。
-// 访问提醒与“共同约定”云同步解耦：即使匿名登录/SQL 同步暂时失败，访客提醒仍然会独立上报。
-initCloudTodoSync();
+window.addEventListener('focus', () => {
+  if (shouldPollCloudTodos()) refreshCloudTodos({ silent: true });
+  if (shouldPollCloudMessages()) refreshCloudMessages({ silent: true });
+});
+
+// 网站加载后连接一次；访客提醒仍然保持独立，不受这里的 SQL 同步影响。
+initCloudHomeSync();
 window.setTimeout(() => {
   initVisitTracking();
   initNotificationSetup();
   initStandaloneNotifyShortcut();
 }, 0);
+
 // ===============================
 // 第四步：访客记录 + 免费 Web Push 提醒（Publishable Key HTTP 调用版）
 // ===============================

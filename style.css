@@ -3339,3 +3339,558 @@ body.birthday-card-lock {
   font-size: 12px;
   line-height: 1.6;
 }
+
+/* ==========================================
+   Phase 5：客厅留言板 + 卧室入口 + 可新建约定
+========================================== */
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* 顶部“客厅”牌子现在只是标题，不再是跳转按钮 */
+.memory-title-box {
+  cursor: default !important;
+}
+
+/* ---------- 卧室：创建新约定 ---------- */
+.todo-create-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 9px;
+  border: 1.5px solid rgba(255, 205, 224, 0.9);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 7px 18px rgba(255, 137, 184, 0.08);
+}
+
+.todo-create-form input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid #ffe0ec;
+  border-radius: 13px;
+  outline: none;
+  color: #65485a;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  background: #fffafd;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.todo-create-form input:focus {
+  border-color: #ff9fc3;
+  box-shadow: 0 0 0 4px rgba(255, 159, 195, 0.12);
+}
+
+.todo-create-form button {
+  flex: 0 0 auto;
+  height: 38px;
+  padding: 0 13px;
+  border: none;
+  border-radius: 13px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff8fbd, #8bcfff);
+  box-shadow: 0 7px 15px rgba(255, 137, 184, 0.2);
+  cursor: pointer;
+}
+
+.todo-create-form button:active {
+  transform: scale(0.96);
+}
+
+.todo-create-form input:disabled,
+.todo-create-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.todo-empty {
+  padding: 22px 12px;
+  color: #b29aa8;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.7;
+  text-align: center;
+}
+
+/* ---------- 客厅：时间轴底部双人留言板 ---------- */
+.timeline-social-zone {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  margin-top: 42px;
+  padding-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.social-timeline-dot {
+  position: relative;
+  z-index: 12;
+  width: 22px;
+  height: 22px;
+  margin-bottom: 22px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid #ff9fc3;
+  box-shadow:
+    0 0 0 6px rgba(255, 203, 222, 0.5),
+    0 6px 14px rgba(255, 127, 174, 0.2);
+}
+
+.message-board-card {
+  position: relative;
+  z-index: 11;
+  width: min(88vw, 430px);
+  padding: 20px 18px 18px;
+  border: 2px solid #ffd3e4;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(255, 226, 239, 0.76), transparent 34%),
+    radial-gradient(circle at 95% 8%, rgba(221, 245, 255, 0.8), transparent 36%),
+    rgba(255, 255, 255, 0.96);
+  box-shadow: 0 16px 38px rgba(255, 145, 189, 0.16);
+}
+
+.message-board-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.message-board-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  border-radius: 16px;
+  font-size: 22px;
+  background: linear-gradient(145deg, #fff2f8, #e7f7ff);
+  border: 1.5px solid #ffd4e5;
+  box-shadow: 0 6px 13px rgba(255, 137, 184, 0.11);
+}
+
+.message-board-heading h3 {
+  margin: 0 0 3px;
+  color: #ff78a6;
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.message-board-heading p {
+  margin: 0;
+  color: #8a7280;
+  font-size: 11px;
+  line-height: 1.55;
+  font-weight: 650;
+}
+
+.message-sync-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 32px;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  border: 1px solid #ffe0eb;
+  border-radius: 999px;
+  color: #8a7280;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+  background: rgba(255, 250, 253, 0.82);
+}
+
+.message-sync-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d2c2cb;
+}
+
+.message-sync-bar[data-state="connecting"] .message-sync-dot,
+.message-sync-bar[data-state="syncing"] .message-sync-dot {
+  background: #8bcfff;
+  box-shadow: 0 0 0 4px rgba(139, 207, 255, 0.17);
+  animation: todoCloudPulse 1.15s ease-in-out infinite;
+}
+
+.message-sync-bar[data-state="online"] {
+  color: #6f7f72;
+  border-color: rgba(165, 223, 183, 0.78);
+  background: rgba(247, 255, 250, 0.88);
+}
+
+.message-sync-bar[data-state="online"] .message-sync-dot {
+  background: #81d49a;
+  box-shadow: 0 0 0 4px rgba(129, 212, 154, 0.16);
+}
+
+.message-sync-bar[data-state="error"] {
+  color: #9a6e76;
+  border-color: rgba(255, 174, 192, 0.82);
+  background: rgba(255, 247, 250, 0.9);
+}
+
+.message-sync-bar[data-state="error"] .message-sync-dot {
+  background: #ff91a9;
+}
+
+.message-list {
+  width: 100%;
+  max-height: 330px;
+  min-height: 120px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 11px 8px;
+  border: 1.5px solid rgba(255, 214, 231, 0.88);
+  border-radius: 20px;
+  background:
+    radial-gradient(rgba(255, 190, 215, 0.18) 1.2px, transparent 1.2px),
+    #fffafd;
+  background-size: 19px 19px;
+  scrollbar-width: thin;
+  scrollbar-color: #ffd0e1 transparent;
+}
+
+.message-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.message-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #ffd0e1;
+}
+
+.message-empty {
+  display: grid;
+  min-height: 96px;
+  place-items: center;
+  padding: 12px;
+  color: #baa5b1;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.7;
+  text-align: center;
+}
+
+.message-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  margin: 8px 0;
+}
+
+.message-row.mine {
+  align-items: flex-end;
+}
+
+.message-meta {
+  margin: 0 7px 4px;
+  color: #ab94a0;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.message-bubble {
+  max-width: 84%;
+  padding: 9px 12px;
+  border: 1px solid #ffd9e7;
+  border-radius: 16px 16px 16px 5px;
+  color: #65485a;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(131, 99, 117, 0.08);
+}
+
+.message-row.mine .message-bubble {
+  border-radius: 16px 16px 5px 16px;
+  border-color: #ffc9dd;
+  background: linear-gradient(135deg, #fff0f7, #edf8ff);
+}
+
+.message-compose {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1.5px solid #ffd9e7;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.message-compose textarea {
+  display: block;
+  width: 100%;
+  min-height: 74px;
+  max-height: 150px;
+  resize: vertical;
+  padding: 10px 11px;
+  border: none;
+  outline: none;
+  color: #65485a;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.6;
+  background: transparent;
+}
+
+.message-compose textarea::placeholder,
+.todo-create-form input::placeholder {
+  color: #bea9b5;
+}
+
+.message-compose-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed #ffe0eb;
+}
+
+.message-counter {
+  flex: 0 0 auto;
+  color: #b49ca9;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.message-compose button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff8fbd, #8bcfff);
+  box-shadow: 0 7px 14px rgba(255, 137, 184, 0.2);
+  cursor: pointer;
+}
+
+.message-compose button:active {
+  transform: scale(0.96);
+}
+
+.message-compose textarea:disabled,
+.message-compose button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- 客厅最底部：卧室入口 ---------- */
+.bedroom-entry-wrap {
+  position: relative;
+  z-index: 11;
+  width: 100%;
+  margin-top: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.bedroom-entry-wrap .social-timeline-dot {
+  margin-bottom: 18px;
+}
+
+.bedroom-door-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 13px;
+  width: min(84vw, 360px);
+  padding: 17px 18px;
+  border: 2px solid #ffd0e1;
+  border-radius: 24px;
+  color: #65485a;
+  font-family: inherit;
+  text-align: left;
+  background:
+    radial-gradient(circle at 10% 10%, rgba(255, 227, 239, 0.85), transparent 38%),
+    radial-gradient(circle at 90% 80%, rgba(221, 245, 255, 0.9), transparent 42%),
+    #fff;
+  box-shadow: 0 14px 32px rgba(255, 145, 189, 0.16);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.bedroom-door-card:active {
+  transform: scale(0.975);
+  box-shadow: 0 9px 22px rgba(255, 145, 189, 0.14);
+}
+
+.bedroom-door-icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  font-size: 25px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1.5px solid #ffd7e6;
+  box-shadow: 0 6px 13px rgba(255, 137, 184, 0.1);
+}
+
+.bedroom-door-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.bedroom-door-copy strong {
+  color: #ff78a6;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+.bedroom-door-copy small {
+  color: #8a7280;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.bedroom-door-arrow {
+  color: #8bcfff;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+@media (max-width: 480px) {
+  .todo-create-form {
+    gap: 6px;
+    padding: 7px;
+  }
+
+  .todo-create-form input {
+    height: 36px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+
+  .todo-create-form button {
+    height: 36px;
+    padding: 0 10px;
+    font-size: 10px;
+  }
+
+  .timeline-social-zone {
+    margin-top: 34px;
+  }
+
+  .message-board-card {
+    width: 90vw;
+    padding: 17px 13px 14px;
+    border-radius: 24px;
+  }
+
+  .message-board-heading {
+    gap: 9px;
+  }
+
+  .message-board-icon {
+    width: 39px;
+    height: 39px;
+    font-size: 20px;
+  }
+
+  .message-board-heading h3 {
+    font-size: 16px;
+  }
+
+  .message-board-heading p {
+    font-size: 10px;
+  }
+
+  .message-list {
+    max-height: 300px;
+    min-height: 110px;
+    padding: 8px 6px;
+    border-radius: 17px;
+  }
+
+  .message-bubble {
+    max-width: 88%;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+
+  .message-compose {
+    padding: 8px;
+  }
+
+  .message-compose textarea {
+    min-height: 68px;
+    padding: 8px;
+    font-size: 11px;
+  }
+
+  .message-compose button {
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 10px;
+  }
+
+  .bedroom-entry-wrap {
+    margin-top: 28px;
+  }
+
+  .bedroom-door-card {
+    width: 86vw;
+    gap: 10px;
+    padding: 14px 15px;
+    border-radius: 22px;
+  }
+
+  .bedroom-door-icon {
+    width: 42px;
+    height: 42px;
+    font-size: 22px;
+  }
+
+  .bedroom-door-copy strong {
+    font-size: 15px;
+  }
+
+  .bedroom-door-copy small {
+    font-size: 9px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message-sync-dot {
+    animation: none !important;
+  }
+}

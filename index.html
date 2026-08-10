@@ -127,9 +127,9 @@
     <div class="back-text">小屋</div>
   </button>
 
-<!-- 🆕 修改这里：删掉之前的独立按钮，直接让这个牌子变成触发器 -->
-  <div id="toAboutBtn" class="memory-title-box" style="cursor: pointer;">
-    <h2>恋爱回忆</h2>
+<!-- 客厅标题：只显示，不再承担页面跳转 -->
+  <div class="memory-title-box">
+    <h2>客厅</h2>
     <div class="memory-date-scroll">
       <span id="currentMemoryDate">2026.03.31</span>
     </div>
@@ -175,16 +175,49 @@
       <!-- 回忆卡片在这里动态渲染，保持完全独立 -->
       <div id="timelineList" class="timeline-list"></div>
 
-      <!-- 🆕 安全区：移到外部的惊喜礼物模块，再也不会被清空 -->
-      <div class="timeline-gift-node">
-        <div class="gift-timeline-dot"></div>
-        <div class="surprise-gift-box">
-          <div class="gift-top-heart">💖</div>
-          <div class="gift-card-body">
-            <span class="gift-icon">🎁</span>
-            <h3>你收到了一个未拆封的彩蛋</h3>
-            <p>抬头看看，试着点击 <span class="highlight-click">“恋爱回忆”</span> 牌子~</p>
+      <!-- 客厅最下方：双人留言板 -->
+      <div class="timeline-social-zone">
+        <div class="social-timeline-dot" aria-hidden="true"></div>
+
+        <section id="messageBoard" class="message-board-card" aria-labelledby="messageBoardTitle">
+          <div class="message-board-heading">
+            <span class="message-board-icon" aria-hidden="true">💌</span>
+            <div>
+              <h3 id="messageBoardTitle">客厅留言板</h3>
+              <p>想说的话就留在这里，我们两个人都能看到。</p>
+            </div>
           </div>
+
+          <div id="messageSyncBar" class="message-sync-bar" data-state="connecting" aria-live="polite">
+            <span class="message-sync-dot" aria-hidden="true"></span>
+            <span id="messageSyncText">正在连接留言板…</span>
+          </div>
+
+          <div id="messageList" class="message-list" aria-live="polite">
+            <div class="message-empty">正在把两个人写过的话搬进来… ♡</div>
+          </div>
+
+          <form id="messageForm" class="message-compose">
+            <label class="sr-only" for="messageInput">写一条留言</label>
+            <textarea id="messageInput" maxlength="300" rows="3" placeholder="给对方留一句话吧…" autocomplete="off"></textarea>
+            <div class="message-compose-footer">
+              <span id="messageCounter" class="message-counter">0 / 300</span>
+              <button id="messageSendBtn" type="submit">留下这句话 ♡</button>
+            </div>
+          </form>
+        </section>
+
+        <!-- 留言板下方：唯一的卧室入口 -->
+        <div class="bedroom-entry-wrap">
+          <div class="social-timeline-dot bedroom-dot" aria-hidden="true"></div>
+          <button id="enterBedroomBtn" class="bedroom-door-card" type="button">
+            <span class="bedroom-door-icon" aria-hidden="true">🚪</span>
+            <span class="bedroom-door-copy">
+              <strong>敲门进入卧室</strong>
+              <small>里面放着关于你的好多小事</small>
+            </span>
+            <span class="bedroom-door-arrow" aria-hidden="true">→</span>
+          </button>
         </div>
       </div>
 
@@ -205,17 +238,17 @@
     </div>
   </div>
 <!-- ========================================== -->
-  <!-- 🆕 新增：第三页：关于边芸芸的一切 -->
+  <!-- 第三页：卧室 -->
   <!-- ========================================== -->
   <section id="aboutPage" class="page about-page">
     <!-- 顶部固定表头 -->
     <header class="about-header">
       <button id="backToMemoryBtn" class="back-to-memory-btn" type="button">
         <div class="back-icon-mini">←</div>
-        <div class="back-text-mini">回忆</div>
+        <div class="back-text-mini">客厅</div>
       </button>
       <div class="about-title-box">
-        <h2>关于边芸芸的一切</h2>
+        <h2>卧室</h2>
       </div>
     </header>
 
@@ -319,7 +352,7 @@
         </div>
       </section>
 
-     <!-- 模块三：浪漫约定清单 -->
+     <!-- 模块三：可共同维护的约定清单 -->
       <section class="yunyaun-section">
         <div class="section-title">📌 我们的约定 (要记得)</div>
         <div id="todoSyncBar" class="todo-sync-bar" aria-live="polite">
@@ -327,7 +360,14 @@
           <span id="todoSyncText">正在连接两个人的小屋…</span>
           <button id="copyCloudUidBtn" class="copy-cloud-uid-btn" type="button" hidden>复制设备ID</button>
         </div>
-        <div class="todo-notebook">
+
+        <form id="todoCreateForm" class="todo-create-form">
+          <label class="sr-only" for="todoCreateInput">创建一个新的约定</label>
+          <input id="todoCreateInput" type="text" maxlength="80" placeholder="再约一件想一起做的事…" autocomplete="off" />
+          <button id="todoCreateBtn" type="submit">＋ 新约定</button>
+        </form>
+
+        <div id="todoList" class="todo-notebook">
           <!-- 一起去爬山 ⛰️（原本自带的） -->
           <div class="todo-item" data-todo-id="todo_01_mountain" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">一起去爬山 ⛰️</span></div>
           
