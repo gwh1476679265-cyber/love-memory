@@ -1405,6 +1405,7 @@ async function initVisitTracking() {
     await callLoveHouseNotify('visit', {
       path: window.location.pathname || '/',
       title: document.title || '我们的恋爱小屋',
+      origin: window.location.origin || '',
       userAgent: navigator.userAgent || ''
     });
     // 只有云函数真正接收成功后才进入客户端冷却，避免后端故障时 20 分钟都不再重试。
@@ -1715,13 +1716,23 @@ async function testLoveHousePush(panel) {
     testBtn.disabled = true;
     status.textContent = '正在发送测试提醒…';
     const result = await withTimeout(
-      callLoveHouseNotify('test'),
-      15000,
+      callLoveHouseNotify('test', { origin: window.location.origin || '' }),
+      20000,
       '测试请求超时，请检查 love-house-notify 云函数日志。',
       'TEST_PUSH_TIMEOUT'
     );
     if (result?.ok === false) throw new Error(result.message || '测试发送失败');
-    status.textContent = '测试提醒已发送，请看系统通知栏 ♡';
+
+    const sent = Number(result?.sent || 0);
+    const failed = Number(result?.failed || 0);
+    if (sent <= 0) {
+      const detail = Array.isArray(result?.failures) && result.failures.length
+        ? `：${result.failures.map(item => `${item.statusCode || ''} ${item.message || ''}`.trim()).join('；')}`
+        : '';
+      throw new Error(`云端没有成功投递任何通知（失败 ${failed} 条）${detail}`);
+    }
+
+    status.textContent = `云端已接受 ${sent} 条推送${failed ? `，另有 ${failed} 条失败` : ''}。iPhone 请先回到桌面或锁屏，再下拉通知中心查看 ♡`;
   } catch (error) {
     status.textContent = `测试失败：${error?.message || error}`;
   } finally {

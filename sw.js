@@ -15,15 +15,22 @@ self.addEventListener('push', (event) => {
     data = { body: event.data ? event.data.text() : '' };
   }
 
-  const title = data.title || '鱼鱼和獭獭的小屋 ♡';
+  // Safari / iOS 18.4+ 支持 Declarative Web Push。
+  // 新格式到达较新的 WebKit 时，系统本身就有能力显示兜底通知；
+  // 在其他浏览器或旧版 WebKit 中，仍由这里的 Service Worker 正常显示。
+  const declarative = data && data.web_push === 8030 && data.notification
+    ? data.notification
+    : null;
+
+  const title = declarative?.title || data.title || '鱼鱼和獭獭的小屋 ♡';
   const options = {
-    body: data.body || '小屋有新的动静啦。',
-    icon: data.icon || './pwa-icon-192.png',
-    badge: data.badge || './pwa-icon-192.png',
-    tag: data.tag || 'love-house-visit',
+    body: declarative?.body || data.body || '小屋有新的动静啦。',
+    icon: declarative?.icon || data.icon || './pwa-icon-192.png',
+    badge: declarative?.badge || data.badge || './pwa-icon-192.png',
+    tag: declarative?.tag || data.tag || 'love-house-visit',
     renotify: true,
     data: {
-      url: data.url || './'
+      url: declarative?.navigate || data.url || './'
     }
   };
 
