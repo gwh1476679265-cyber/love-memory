@@ -1,0 +1,12 @@
+Phase 4.8 iPhone 主屏幕入口修复
+
+原因：manifest.webmanifest 的 start_url 是 ./，所以从 iPhone 桌面图标启动时不会带上 Safari 地址里的 ?notify=setup。iOS 也不会在 App 一打开时自动弹通知权限，必须在主屏幕 Web App 内由用户点击按钮触发 Notification.requestPermission()。
+
+操作：只替换 GitHub cloud 分支根目录的 script.js，commit + push，等 CloudBase 自动部署。
+
+之后：
+1. 从 iPhone 桌面打开“小屋”。
+2. 右下角会出现“♡ 通知设置”（只在 iPhone 主屏幕 Web App 且尚未绑定时出现）。
+3. 点它，会直接打开原来的“小屋访问提醒”面板。
+4. 再点“开启访问提醒”，这一步才会触发 iOS 系统的“允许通知”弹窗。
+5. 允许后完成绑定，右下角入口会自动消失。

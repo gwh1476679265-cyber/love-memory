@@ -1301,6 +1301,7 @@ window.addEventListener('focus', () => refreshCloudTodos({ silent: true }));
 initCloudTodoSync().then(() => {
   initVisitTracking();
   initNotificationSetup();
+  initStandaloneNotifyShortcut();
 });
 // ===============================
 // 第四步：访客记录 + 免费 Web Push 提醒（Publishable Key HTTP 调用版）
@@ -1680,6 +1681,8 @@ async function enableLoveHousePush(panel) {
     );
     if (result?.ok === false) throw new Error(result.message || '云端保存失败');
 
+    try { localStorage.setItem('love_house_push_bound_v1', '1'); } catch (_) {}
+    document.getElementById('standaloneNotifyShortcut')?.remove();
     status.textContent = '已开启 ♡ 以后别人打开小屋，你这台设备会收到提醒。';
     enableBtn.textContent = '访问提醒已开启';
     testBtn.hidden = false;
@@ -1786,6 +1789,57 @@ async function initNotificationSetup() {
 
   enableBtn.addEventListener('click', () => enableLoveHousePush(panel));
   testBtn.addEventListener('click', () => testLoveHousePush(panel));
+}
+
+
+// iPhone 主屏幕 Web App 没有地址栏；manifest 的 start_url 是 ./，
+// 所以从桌面图标启动时不会保留 Safari 里的 ?notify=setup。
+// 仅在 iOS 主屏幕 Web App、且尚未完成绑定时显示一个很小的“通知设置”入口。
+function initStandaloneNotifyShortcut() {
+  if (!isIOSDevice() || !isStandaloneWebApp()) return;
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('notify') === 'setup') return;
+
+  try {
+    if (localStorage.getItem('love_house_push_bound_v1') === '1') return;
+  } catch (_) {}
+
+  if (document.getElementById('standaloneNotifyShortcut')) return;
+
+  const button = document.createElement('button');
+  button.id = 'standaloneNotifyShortcut';
+  button.type = 'button';
+  button.textContent = '♡ 通知设置';
+  button.setAttribute('aria-label', '打开小屋访问提醒设置');
+  Object.assign(button.style, {
+    position: 'fixed',
+    right: '14px',
+    bottom: 'calc(14px + env(safe-area-inset-bottom, 0px))',
+    zIndex: '480',
+    border: '1.5px solid rgba(255, 174, 205, .95)',
+    borderRadius: '999px',
+    padding: '9px 13px',
+    color: '#ff6f9f',
+    fontFamily: 'inherit',
+    fontSize: '12px',
+    fontWeight: '800',
+    background: 'rgba(255,255,255,.90)',
+    boxShadow: '0 8px 22px rgba(104, 74, 92, .16)',
+    WebkitBackdropFilter: 'blur(12px)',
+    backdropFilter: 'blur(12px)',
+    WebkitTapHighlightColor: 'transparent'
+  });
+
+  button.addEventListener('click', () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('notify', 'setup');
+    window.history.pushState({}, '', url);
+    button.remove();
+    initNotificationSetup();
+  });
+
+  document.body.appendChild(button);
 }
 
 // ===============================
