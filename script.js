@@ -1298,11 +1298,13 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('focus', () => refreshCloudTodos({ silent: true }));
 
 // 网站加载后连接一次；之后只在需要时轻量轮询。
-initCloudTodoSync().then(() => {
+// 访问提醒与“共同约定”云同步解耦：即使匿名登录/SQL 同步暂时失败，访客提醒仍然会独立上报。
+initCloudTodoSync();
+window.setTimeout(() => {
   initVisitTracking();
   initNotificationSetup();
   initStandaloneNotifyShortcut();
-});
+}, 0);
 // ===============================
 // 第四步：访客记录 + 免费 Web Push 提醒（Publishable Key HTTP 调用版）
 // ===============================
@@ -1310,7 +1312,7 @@ initCloudTodoSync().then(() => {
 // 只有你自己用 ?notify=setup 打开网站时，才会出现“访问提醒设置”。
 // Server酱 SendKey 已从前端彻底移除。
 
-const VISIT_CLIENT_COOLDOWN_MS = 20 * 60 * 1000;
+const VISIT_CLIENT_COOLDOWN_MS = 5 * 60 * 1000;
 
 function getLoveHouseDeviceId() {
   const key = 'love_house_device_id_v1';
@@ -1364,7 +1366,8 @@ async function callLoveHouseNotify(action, data = {}) {
       'Accept': 'application/json'
     },
     body: JSON.stringify(requestBody),
-    cache: 'no-store'
+    cache: 'no-store',
+    keepalive: true
   });
 
   let payload = null;
@@ -1395,21 +1398,37 @@ async function callLoveHouseNotify(action, data = {}) {
 }
 
 async function initVisitTracking() {
-
   try {
-    const key = 'love_house_visit_ping_at';
+    // 通知设置页是“主人设备”的配置入口，不应该算作一次访客访问。
+    const params = new URLSearchParams(window.location.search || '');
+    if (params.get('notify') === 'setup') return;
+
+    // 已绑定 Push 的设备就是接收提醒的主人设备。主人自己逛小屋时不记录为访客，
+    // 也避免刚刚配置通知后污染服务器的访问冷却/去重判断。
+    try {
+      if (localStorage.getItem('love_house_push_bound_v1') === '1') return;
+    } catch (_) {}
+
+    // v2 使用新的本地冷却 key，绕过之前测试阶段留下的 20 分钟旧冷却。
+    // 真实访客的重复控制放在本机：同一设备 5 分钟内刷新不会重复提醒。
+    const key = 'love_house_visit_ping_at_v2';
     const last = Number(localStorage.getItem(key) || 0);
     const now = Date.now();
     if (last && now - last < VISIT_CLIENT_COOLDOWN_MS) return;
 
-    await callLoveHouseNotify('visit', {
+    const result = await callLoveHouseNotify('visit', {
       path: window.location.pathname || '/',
       title: document.title || '我们的恋爱小屋',
       origin: window.location.origin || '',
       userAgent: navigator.userAgent || ''
     });
-    // 只有云函数真正接收成功后才进入客户端冷却，避免后端故障时 20 分钟都不再重试。
+
+    if (!result?.ok) {
+      throw new Error(result?.message || '访问记录没有被云端接收');
+    }
+
     localStorage.setItem(key, String(now));
+    console.log('[访客记录] 云端已接收：', result);
   } catch (error) {
     // 访问提醒失败绝不能影响网站本身。
     console.warn('[访客记录] 云函数暂时不可用：', error);

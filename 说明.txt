@@ -1,12 +1,21 @@
-Phase 4.8 iPhone 主屏幕入口修复
+Phase 4.13：真实访客提醒修复
 
-原因：manifest.webmanifest 的 start_url 是 ./，所以从 iPhone 桌面图标启动时不会带上 Safari 地址里的 ?notify=setup。iOS 也不会在 App 一打开时自动弹通知权限，必须在主屏幕 Web App 内由用户点击按钮触发 Notification.requestPermission()。
+问题原因：
+- 旧版在通知设置页也会记录“访问”；
+- 云函数还有一个全站 90 秒冷却；
+- 另一台设备如果马上打开，会被这个全局冷却静默挡住；
+- 被挡住后，旧前端又会给该设备记 20 分钟本地冷却，因此后续刷新也不再上报。
 
-操作：只替换 GitHub cloud 分支根目录的 script.js，commit + push，等 CloudBase 自动部署。
+这版修复：
+- ?notify=setup 不计为访客；
+- 已绑定 Push 的主人设备不计为访客；
+- 前端同设备刷新冷却改为 5 分钟，并使用新的 v2 key；
+- 移除云函数所有基于旧 visit_logs 的冷却/去重；同一设备 5 分钟重复控制仅放前端；
+- 访问上报与 PostgreSQL 共同约定同步解耦；
+- fetch 增加 keepalive。
 
-之后：
-1. 从 iPhone 桌面打开“小屋”。
-2. 右下角会出现“♡ 通知设置”（只在 iPhone 主屏幕 Web App 且尚未绑定时出现）。
-3. 点它，会直接打开原来的“小屋访问提醒”面板。
-4. 再点“开启访问提醒”，这一步才会触发 iOS 系统的“允许通知”弹窗。
-5. 允许后完成绑定，右下角入口会自动消失。
+部署：
+1. GitHub cloud 分支：替换 script.js 后 push。
+2. CloudBase love-house-notify：上传 love-house-notify-phase4.13.zip，保存并安装依赖。
+3. iPhone 不需要重新开启通知。
+4. 测试：锁屏 iPhone，用另一台设备打开普通网址（不要带 ?notify=setup）。
