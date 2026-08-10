@@ -1369,11 +1369,48 @@ function ensureNotifySetupPanel() {
   return panel;
 }
 
+function withTimeout(promise, timeoutMs, message, code = 'TIMEOUT') {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = window.setTimeout(() => {
+      const error = new Error(message);
+      error.code = code;
+      reject(error);
+    }, timeoutMs);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timer) window.clearTimeout(timer);
+  });
+}
+
+function isEmbeddedBrowser() {
+  const ua = navigator.userAgent || '';
+  return /MicroMessenger|QQ\//i.test(ua);
+}
+
+function isCrossOriginIframe() {
+  if (window.top === window.self) return false;
+  try {
+    return window.top.location.origin !== window.location.origin;
+  } catch (_) {
+    return true;
+  }
+}
+
 async function registerLoveHouseServiceWorker() {
   if (!('serviceWorker' in navigator)) {
     throw new Error('当前浏览器不支持 Service Worker');
   }
-  return navigator.serviceWorker.register('./sw.js', { scope: './' });
+
+  // 网站部署在根目录，使用绝对路径可以避免 ?notify=setup 或子路径造成 scope 偏移。
+  const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+  return withTimeout(
+    navigator.serviceWorker.ready,
+    10000,
+    'Service Worker 启动超时，请刷新页面后再试。',
+    'SW_READY_TIMEOUT'
+  ).catch(() => registration);
 }
 
 async function savePushSubscription(subscription) {
@@ -1400,26 +1437,81 @@ async function enableLoveHousePush(panel) {
     return;
   }
 
+  if (!window.isSecureContext) {
+    status.textContent = '开启失败：网页必须通过 HTTPS 打开。';
+    return;
+  }
+
+  if (isCrossOriginIframe()) {
+    status.textContent = '开启失败：通知不能在嵌入式预览窗口中申请。请复制网址，在浏览器新标签页直接打开。';
+    return;
+  }
+
+  if (isEmbeddedBrowser()) {
+    status.textContent = '当前是微信/QQ内置浏览器，请复制网址到系统 Safari、Edge 或 Chrome 后再开启。';
+    return;
+  }
+
   try {
     enableBtn.disabled = true;
-    status.textContent = '正在申请系统通知权限…';
 
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      throw new Error('你没有允许通知权限');
+    if (Notification.permission === 'denied') {
+      const error = new Error('浏览器已经禁止这个网站发送通知，请先在地址栏的网站权限里改为“允许”。');
+      error.code = 'PERMISSION_DENIED';
+      throw error;
     }
 
-    const registration = await registerLoveHouseServiceWorker();
-    let subscription = await registration.pushManager.getSubscription();
+    status.textContent = '第 1/4 步：正在申请系统通知权限…';
+    const permission = Notification.permission === 'granted'
+      ? 'granted'
+      : await withTimeout(
+          Notification.requestPermission(),
+          15000,
+          '通知权限请求没有返回。请检查浏览器地址栏是否出现了通知权限提示，或到“网站设置 → 通知”中手动允许。',
+          'PERMISSION_TIMEOUT'
+        );
+
+    if (permission !== 'granted') {
+      const error = new Error('你没有允许通知权限');
+      error.code = 'PERMISSION_NOT_GRANTED';
+      throw error;
+    }
+
+    status.textContent = '第 2/4 步：通知权限已允许，正在启动通知服务…';
+    const registration = await withTimeout(
+      registerLoveHouseServiceWorker(),
+      12000,
+      'Service Worker 注册超时，请刷新网页后重试。',
+      'SW_REGISTER_TIMEOUT'
+    );
+
+    status.textContent = '第 3/4 步：正在连接浏览器推送服务…';
+    let subscription = await withTimeout(
+      registration.pushManager.getSubscription(),
+      8000,
+      '读取现有推送订阅超时。',
+      'PUSH_GET_TIMEOUT'
+    );
 
     if (!subscription) {
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey)
-      });
+      subscription = await withTimeout(
+        registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        }),
+        20000,
+        '浏览器推送服务连接超时。系统通知权限已经成功，但当前网络或浏览器无法完成 Push 订阅。',
+        'PUSH_SUBSCRIBE_TIMEOUT'
+      );
     }
 
-    const result = await savePushSubscription(subscription);
+    status.textContent = '第 4/4 步：正在把这台设备保存到小屋…';
+    const result = await withTimeout(
+      savePushSubscription(subscription),
+      15000,
+      'CloudBase 保存订阅超时，请检查云函数 love-house-notify 是否部署成功。',
+      'SAVE_SUBSCRIPTION_TIMEOUT'
+    );
     if (result?.ok === false) throw new Error(result.message || '云端保存失败');
 
     status.textContent = '已开启 ♡ 以后别人打开小屋，你这台设备会收到提醒。';
@@ -1427,7 +1519,12 @@ async function enableLoveHousePush(panel) {
     testBtn.hidden = false;
   } catch (error) {
     console.error('[访问提醒设置]', error);
-    status.textContent = `开启失败：${error?.message || error}`;
+
+    if (error?.code === 'PUSH_SUBSCRIBE_TIMEOUT') {
+      status.textContent = '系统通知权限已成功，但“浏览器推送服务”连接超时。若你现在用 Chrome，可先换 Edge 测试；iPhone 请使用“添加到主屏幕”后的 Safari Web App。';
+    } else {
+      status.textContent = `开启失败：${error?.message || error}`;
+    }
     enableBtn.disabled = false;
   }
 }
@@ -1438,9 +1535,14 @@ async function testLoveHousePush(panel) {
   try {
     testBtn.disabled = true;
     status.textContent = '正在发送测试提醒…';
-    const result = await callLoveHouseNotify('test');
+    const result = await withTimeout(
+      callLoveHouseNotify('test'),
+      15000,
+      '测试请求超时，请检查 love-house-notify 云函数日志。',
+      'TEST_PUSH_TIMEOUT'
+    );
     if (result?.ok === false) throw new Error(result.message || '测试发送失败');
-    status.textContent = '测试提醒已发送，请看手机通知栏 ♡';
+    status.textContent = '测试提醒已发送，请看系统通知栏 ♡';
   } catch (error) {
     status.textContent = `测试失败：${error?.message || error}`;
   } finally {
@@ -1458,8 +1560,29 @@ async function initNotificationSetup() {
   const enableBtn = panel.querySelector('#enableNotifyBtn');
   const testBtn = panel.querySelector('#testNotifyBtn');
 
+  if (!window.isSecureContext) {
+    text.textContent = '这个通知设置页必须通过 HTTPS 直接打开。';
+    enableBtn.disabled = true;
+    status.textContent = '当前页面不是安全上下文（HTTPS）';
+    return;
+  }
+
+  if (isCrossOriginIframe()) {
+    text.textContent = '当前页面似乎处于嵌入式预览窗口中。通知权限不能在跨域 iframe 里申请。';
+    enableBtn.disabled = true;
+    status.textContent = '请复制网站正式网址，在浏览器新标签页直接打开 ?notify=setup';
+    return;
+  }
+
+  if (isEmbeddedBrowser()) {
+    text.textContent = '微信/QQ 内置浏览器不适合作为这台设备的访问提醒接收端。';
+    enableBtn.disabled = true;
+    status.textContent = '请复制网址到系统 Safari、Edge 或 Chrome';
+    return;
+  }
+
   if (!('Notification' in window) || !('PushManager' in window) || !('serviceWorker' in navigator)) {
-    text.textContent = '这台浏览器暂时不支持网页推送。可以换 Chrome / Edge，或在 iPhone 上添加到主屏幕后再试。';
+    text.textContent = '这台浏览器暂时不支持网页推送。可以换 Edge / Chrome，或在 iPhone 上添加到主屏幕后再试。';
     enableBtn.disabled = true;
     return;
   }
@@ -1473,17 +1596,41 @@ async function initNotificationSetup() {
 
   text.textContent = '这个设置页只给你自己使用。开启后，普通访客不会看到它。';
 
+  if (Notification.permission === 'denied') {
+    status.textContent = '浏览器当前已禁止通知。请先在地址栏“网站设置 → 通知”中改为允许。';
+  }
+
   try {
-    const registration = await registerLoveHouseServiceWorker();
-    const existing = await registration.pushManager.getSubscription();
+    const registration = await withTimeout(
+      registerLoveHouseServiceWorker(),
+      10000,
+      'Service Worker 初始化超时。',
+      'INIT_SW_TIMEOUT'
+    );
+    const existing = await withTimeout(
+      registration.pushManager.getSubscription(),
+      8000,
+      '读取通知订阅超时。',
+      'INIT_PUSH_TIMEOUT'
+    );
     if (existing && Notification.permission === 'granted') {
-      await savePushSubscription(existing);
-      enableBtn.textContent = '访问提醒已开启';
-      testBtn.hidden = false;
-      status.textContent = '这台设备已经订阅通知 ♡';
+      const result = await withTimeout(
+        savePushSubscription(existing),
+        12000,
+        '同步现有订阅到 CloudBase 超时。',
+        'INIT_SAVE_TIMEOUT'
+      );
+      if (result?.ok !== false) {
+        enableBtn.textContent = '访问提醒已开启';
+        testBtn.hidden = false;
+        status.textContent = '这台设备已经订阅通知 ♡';
+      }
     }
   } catch (error) {
-    console.warn('[Service Worker]', error);
+    console.warn('[Service Worker / Push 初始化]', error);
+    if (!status.textContent) {
+      status.textContent = `初始化提示：${error?.message || error}`;
+    }
   }
 
   enableBtn.addEventListener('click', () => enableLoveHousePush(panel));
