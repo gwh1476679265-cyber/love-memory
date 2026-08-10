@@ -1015,6 +1015,9 @@ const copyCloudUidBtn = document.getElementById('copyCloudUidBtn');
 let cloudTodoApp = null;
 let cloudTodoDb = null;
 let cloudTodoUid = '';
+// 保存本次匿名登录已经拿到的 access token。
+// 访问提醒走 HTTP API 时直接复用它，避免再次调用 auth.getSession() 触发部分浏览器/SDK 的 scope=null 兼容问题。
+let cloudTodoAccessToken = '';
 let cloudTodoReady = false;
 let cloudTodoPollingTimer = null;
 let cloudTodoRefreshing = false;
@@ -1067,15 +1070,30 @@ async function ensureAnonymousCloudLogin(auth) {
   const signInResult = await auth.signInAnonymously();
   if (signInResult?.error) throw signInResult.error;
 
-  // 使用官方推荐的 getSession() 读取真正的匿名用户 UID。
+  // signInAnonymously 本身通常就会返回 session。先把 token 缓存下来。
+  cloudTodoAccessToken =
+    signInResult?.data?.session?.access_token ||
+    signInResult?.session?.access_token ||
+    cloudTodoAccessToken ||
+    '';
+
+  // Phase 2 的 PostgreSQL 同步已经验证 getSession() 在初始化阶段可正常工作。
+  // 这里只调用一次，并同时缓存 access_token。后续访问提醒绝不再重复调用 getSession()。
   if (typeof auth.getSession === 'function') {
     const sessionResult = await auth.getSession();
     if (sessionResult?.error) throw sessionResult.error;
+
+    cloudTodoAccessToken =
+      sessionResult?.data?.session?.access_token ||
+      cloudTodoAccessToken ||
+      '';
 
     return (
       sessionResult?.data?.user?.id ||
       sessionResult?.data?.session?.sub ||
       sessionResult?.data?.session?.user?.id ||
+      signInResult?.data?.user?.id ||
+      signInResult?.user?.id ||
       ''
     );
   }
@@ -1294,22 +1312,31 @@ initCloudTodoSync().then(() => {
 const VISIT_CLIENT_COOLDOWN_MS = 20 * 60 * 1000;
 
 async function getCloudBaseAccessToken() {
-  if (!cloudTodoApp?.auth || typeof cloudTodoApp.auth.getSession !== 'function') {
+  // 最重要：优先复用初始化匿名登录时已经拿到的 token。
+  // 不再在第 4/4 步调用 auth.getSession()，因为当前 CloudBase Web SDK 2.27.x
+  // 在部分浏览器里第二次读取会话时会抛出 scope=null。
+  if (cloudTodoAccessToken) return cloudTodoAccessToken;
+
+  // 极少数情况下 signInAnonymously/getSession 没有回传 token，尝试重新匿名登录一次。
+  // 这仍然发生在 CloudBase Auth 层，不触碰 Service Worker / Push 订阅。
+  const auth = cloudTodoApp?.auth;
+  if (!auth || typeof auth.signInAnonymously !== 'function') {
     throw new Error('CloudBase 登录会话不可用');
   }
 
-  let { data, error } = await cloudTodoApp.auth.getSession();
-  if (error) throw error;
+  const signInResult = await auth.signInAnonymously();
+  if (signInResult?.error) throw signInResult.error;
 
-  let token = data?.session?.access_token || '';
-  if (!token && typeof cloudTodoApp.auth.refreshSession === 'function') {
-    const refreshed = await cloudTodoApp.auth.refreshSession();
-    if (refreshed?.error) throw refreshed.error;
-    token = refreshed?.data?.session?.access_token || '';
+  cloudTodoAccessToken =
+    signInResult?.data?.session?.access_token ||
+    signInResult?.session?.access_token ||
+    '';
+
+  if (!cloudTodoAccessToken) {
+    throw new Error('匿名登录成功，但没有取得 CloudBase access token；请刷新页面后再试');
   }
 
-  if (!token) throw new Error('没有取得 CloudBase access token');
-  return token;
+  return cloudTodoAccessToken;
 }
 
 async function callLoveHouseNotify(action, data = {}) {
@@ -1376,12 +1403,13 @@ async function initVisitTracking() {
     const now = Date.now();
     if (last && now - last < VISIT_CLIENT_COOLDOWN_MS) return;
 
-    localStorage.setItem(key, String(now));
     await callLoveHouseNotify('visit', {
       path: window.location.pathname || '/',
       title: document.title || '我们的恋爱小屋',
       userAgent: navigator.userAgent || ''
     });
+    // 只有云函数真正接收成功后才进入客户端冷却，避免后端故障时 20 分钟都不再重试。
+    localStorage.setItem(key, String(now));
   } catch (error) {
     // 访问提醒失败绝不能影响网站本身。
     console.warn('[访客记录] 云函数暂时不可用：', error);
