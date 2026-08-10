@@ -1303,7 +1303,7 @@ initCloudTodoSync().then(() => {
   initNotificationSetup();
 });
 // ===============================
-// 第四步：访客记录 + 免费 Web Push 提醒
+// 第四步：访客记录 + 免费 Web Push 提醒（Publishable Key HTTP 调用版）
 // ===============================
 // 普通访客不会看到任何新增 UI。
 // 只有你自己用 ?notify=setup 打开网站时，才会出现“访问提醒设置”。
@@ -1311,58 +1311,58 @@ initCloudTodoSync().then(() => {
 
 const VISIT_CLIENT_COOLDOWN_MS = 20 * 60 * 1000;
 
-async function getCloudBaseAccessToken() {
-  // 最重要：优先复用初始化匿名登录时已经拿到的 token。
-  // 不再在第 4/4 步调用 auth.getSession()，因为当前 CloudBase Web SDK 2.27.x
-  // 在部分浏览器里第二次读取会话时会抛出 scope=null。
-  if (cloudTodoAccessToken) return cloudTodoAccessToken;
-
-  // 极少数情况下 signInAnonymously/getSession 没有回传 token，尝试重新匿名登录一次。
-  // 这仍然发生在 CloudBase Auth 层，不触碰 Service Worker / Push 订阅。
-  const auth = cloudTodoApp?.auth;
-  if (!auth || typeof auth.signInAnonymously !== 'function') {
-    throw new Error('CloudBase 登录会话不可用');
+function getLoveHouseDeviceId() {
+  const key = 'love_house_device_id_v1';
+  try {
+    let id = localStorage.getItem(key) || '';
+    if (!id) {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+        id = window.crypto.randomUUID();
+      } else {
+        const bytes = new Uint8Array(16);
+        if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+          window.crypto.getRandomValues(bytes);
+          id = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+        } else {
+          id = `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        }
+      }
+      localStorage.setItem(key, id);
+    }
+    return id;
+  } catch (_) {
+    return `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
-
-  const signInResult = await auth.signInAnonymously();
-  if (signInResult?.error) throw signInResult.error;
-
-  cloudTodoAccessToken =
-    signInResult?.data?.session?.access_token ||
-    signInResult?.session?.access_token ||
-    '';
-
-  if (!cloudTodoAccessToken) {
-    throw new Error('匿名登录成功，但没有取得 CloudBase access token；请刷新页面后再试');
-  }
-
-  return cloudTodoAccessToken;
 }
 
 async function callLoveHouseNotify(action, data = {}) {
   const config = window.LOVE_HOUSE_CLOUD || {};
   const envId = String(config.envId || '').trim();
   const name = String(config.visitFunction || 'love-house-notify').trim();
+  const publishableKey = String(config.publishableKey || '').trim();
 
   if (!envId) throw new Error('缺少 CloudBase 环境 ID');
   if (!name) throw new Error('缺少通知云函数名称');
+  if (!publishableKey) throw new Error('缺少 CloudBase Publishable Key，请检查 cloudbase-config.js');
 
-  // 这里故意不再使用 app.callFunction()。
-  // 当前这套 PG 环境 + v2 Web SDK 在部分浏览器中会在调用云函数时抛出
-  // "Cannot read properties of null (reading scope)"。CloudBase 官方同时提供
-  // HTTP API 调用普通云函数，因此直接用当前匿名登录会话的 access_token 请求，
-  // 可绕开 SDK 内部适配层，不影响 PostgreSQL 的现有代码。
-  const token = await getCloudBaseAccessToken();
+  // 通知云函数使用 Publishable Key 调 HTTP API。
+  // Publishable Key 是 CloudBase 专门允许放在浏览器中的客户端 Key；
+  // “我们的约定”仍然保留独立的匿名登录，因此两套用途互不影响。
   const url = `https://${envId}.api.tcloudbasegateway.com/v1/functions/${encodeURIComponent(name)}`;
+  const requestBody = {
+    action,
+    deviceId: getLoveHouseDeviceId(),
+    ...data
+  };
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`,
+      'Authorization': `Bearer ${publishableKey}`,
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     },
-    body: JSON.stringify({ action, ...data }),
+    body: JSON.stringify(requestBody),
     cache: 'no-store'
   });
 
@@ -1387,7 +1387,6 @@ async function callLoveHouseNotify(action, data = {}) {
   }
 
   let result = payload?.result ?? payload;
-  // 某些函数调用链会把对象序列化成 JSON 字符串，这里兼容解析。
   if (typeof result === 'string') {
     try { result = JSON.parse(result); } catch (_) {}
   }
@@ -1395,7 +1394,6 @@ async function callLoveHouseNotify(action, data = {}) {
 }
 
 async function initVisitTracking() {
-  if (!cloudTodoApp || !cloudTodoUid) return;
 
   try {
     const key = 'love_house_visit_ping_at';
