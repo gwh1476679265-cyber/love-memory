@@ -1398,19 +1398,93 @@ function isCrossOriginIframe() {
   }
 }
 
+async function waitForActiveServiceWorker(registration, timeoutMs = 12000) {
+  if (!registration) {
+    throw new Error('Service Worker 注册结果为空');
+  }
+
+  if (registration.active?.state === 'activated') return registration;
+
+  let worker = registration.active || registration.waiting || registration.installing;
+
+  if (!worker) {
+    try {
+      await registration.update();
+    } catch (_) {}
+    worker = registration.active || registration.waiting || registration.installing;
+  }
+
+  // 已经有一个可工作的 active worker 时直接使用。
+  if (registration.active && ['activating', 'activated'].includes(registration.active.state)) {
+    if (registration.active.state === 'activated') return registration;
+    worker = registration.active;
+  }
+
+  if (!worker) {
+    throw new Error('Service Worker 已注册，但浏览器没有返回可激活的 worker');
+  }
+
+  await withTimeout(
+    new Promise((resolve, reject) => {
+      if (worker.state === 'activated') return resolve();
+      const onStateChange = () => {
+        if (worker.state === 'activated') {
+          worker.removeEventListener('statechange', onStateChange);
+          resolve();
+        } else if (worker.state === 'redundant') {
+          worker.removeEventListener('statechange', onStateChange);
+          reject(new Error('Service Worker 激活失败，请重试'));
+        }
+      };
+      worker.addEventListener('statechange', onStateChange);
+    }),
+    timeoutMs,
+    'Service Worker 激活超时，请点击重试。',
+    'SW_ACTIVATE_TIMEOUT'
+  );
+
+  return registration;
+}
+
+async function clearBrokenLoveHouseServiceWorkers() {
+  if (!('serviceWorker' in navigator) || typeof navigator.serviceWorker.getRegistrations !== 'function') return;
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister().catch(() => false)));
+  } catch (_) {}
+}
+
 async function registerLoveHouseServiceWorker() {
   if (!('serviceWorker' in navigator)) {
     throw new Error('当前浏览器不支持 Service Worker');
   }
 
-  // 网站部署在根目录，使用绝对路径可以避免 ?notify=setup 或子路径造成 scope 偏移。
-  const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-  return withTimeout(
+  // 禁止使用旧 HTTP 缓存检查 sw.js，避免 Git 自动部署后浏览器仍拿到旧 worker。
+  const registration = await navigator.serviceWorker.register('/sw.js', {
+    scope: '/',
+    updateViaCache: 'none'
+  });
+
+  // ready 按规范应返回一个已激活 registration。上一版在 ready 失败时直接回退到
+  // registration，可能把尚未激活的对象交给 PushManager，部分浏览器会因此报 scope=null。
+  const readyRegistration = await withTimeout(
     navigator.serviceWorker.ready,
-    10000,
-    'Service Worker 启动超时，请刷新页面后再试。',
+    12000,
+    'Service Worker 尚未激活，请点击重试。',
     'SW_READY_TIMEOUT'
-  ).catch(() => registration);
+  );
+
+  const usableRegistration = readyRegistration || registration;
+  await waitForActiveServiceWorker(usableRegistration, 12000);
+
+  if (!usableRegistration.scope) {
+    throw new Error('Service Worker scope 尚未就绪');
+  }
+  if (!usableRegistration.pushManager) {
+    throw new Error('浏览器没有为当前 Service Worker 提供 PushManager');
+  }
+
+  return usableRegistration;
 }
 
 async function savePushSubscription(subscription) {
@@ -1452,6 +1526,8 @@ async function enableLoveHousePush(panel) {
     return;
   }
 
+  let currentStage = '准备阶段';
+
   try {
     enableBtn.disabled = true;
 
@@ -1461,6 +1537,7 @@ async function enableLoveHousePush(panel) {
       throw error;
     }
 
+    currentStage = '第 1/4 步';
     status.textContent = '第 1/4 步：正在申请系统通知权限…';
     const permission = Notification.permission === 'granted'
       ? 'granted'
@@ -1477,6 +1554,7 @@ async function enableLoveHousePush(panel) {
       throw error;
     }
 
+    currentStage = '第 2/4 步';
     status.textContent = '第 2/4 步：通知权限已允许，正在启动通知服务…';
     const registration = await withTimeout(
       registerLoveHouseServiceWorker(),
@@ -1485,6 +1563,7 @@ async function enableLoveHousePush(panel) {
       'SW_REGISTER_TIMEOUT'
     );
 
+    currentStage = '第 3/4 步';
     status.textContent = '第 3/4 步：正在连接浏览器推送服务…';
     let subscription = await withTimeout(
       registration.pushManager.getSubscription(),
@@ -1505,6 +1584,7 @@ async function enableLoveHousePush(panel) {
       );
     }
 
+    currentStage = '第 4/4 步';
     status.textContent = '第 4/4 步：正在把这台设备保存到小屋…';
     const result = await withTimeout(
       savePushSubscription(subscription),
@@ -1520,10 +1600,18 @@ async function enableLoveHousePush(panel) {
   } catch (error) {
     console.error('[访问提醒设置]', error);
 
-    if (error?.code === 'PUSH_SUBSCRIBE_TIMEOUT') {
-      status.textContent = '系统通知权限已成功，但“浏览器推送服务”连接超时。若你现在用 Chrome，可先换 Edge 测试；iPhone 请使用“添加到主屏幕”后的 Safari Web App。';
+    const message = String(error?.message || error || '未知错误');
+
+    if (/reading ['"]scope['"]|scope.*null|null.*scope/i.test(message)) {
+      // 某些浏览器在 SW 刚部署/更新后可能残留一个没有完整内部 registration 的记录。
+      // 清掉后让用户再点一次，比让页面永久卡住更可靠。
+      await clearBrokenLoveHouseServiceWorkers();
+      status.textContent = `${currentStage}：检测到浏览器里的通知服务记录异常，已自动清理。请再点一次“重新开启访问提醒”。`;
+      enableBtn.textContent = '重新开启访问提醒';
+    } else if (error?.code === 'PUSH_SUBSCRIBE_TIMEOUT') {
+      status.textContent = `${currentStage}：系统通知权限已成功，但浏览器推送服务连接超时。若你现在用 Chrome，可先换 Edge 测试；iPhone 请使用“添加到主屏幕”后的 Safari Web App。`;
     } else {
-      status.textContent = `开启失败：${error?.message || error}`;
+      status.textContent = `开启失败（${currentStage}）：${message}`;
     }
     enableBtn.disabled = false;
   }
@@ -1600,37 +1688,12 @@ async function initNotificationSetup() {
     status.textContent = '浏览器当前已禁止通知。请先在地址栏“网站设置 → 通知”中改为允许。';
   }
 
-  try {
-    const registration = await withTimeout(
-      registerLoveHouseServiceWorker(),
-      10000,
-      'Service Worker 初始化超时。',
-      'INIT_SW_TIMEOUT'
-    );
-    const existing = await withTimeout(
-      registration.pushManager.getSubscription(),
-      8000,
-      '读取通知订阅超时。',
-      'INIT_PUSH_TIMEOUT'
-    );
-    if (existing && Notification.permission === 'granted') {
-      const result = await withTimeout(
-        savePushSubscription(existing),
-        12000,
-        '同步现有订阅到 CloudBase 超时。',
-        'INIT_SAVE_TIMEOUT'
-      );
-      if (result?.ok !== false) {
-        enableBtn.textContent = '访问提醒已开启';
-        testBtn.hidden = false;
-        status.textContent = '这台设备已经订阅通知 ♡';
-      }
-    }
-  } catch (error) {
-    console.warn('[Service Worker / Push 初始化]', error);
-    if (!status.textContent) {
-      status.textContent = `初始化提示：${error?.message || error}`;
-    }
+  // 不在页面初始化时自动注册/读取 Push。Push 订阅尽量只放在明确的用户点击手势里，
+  // 可以避开部分浏览器首次安装 Service Worker 时的生命周期竞态。
+  if (Notification.permission === 'granted') {
+    status.textContent = '系统通知权限已经允许，点击下方按钮完成这台设备的绑定。';
+  } else if (!status.textContent) {
+    status.textContent = '准备就绪，点击下方按钮开始。';
   }
 
   enableBtn.addEventListener('click', () => enableLoveHousePush(panel));

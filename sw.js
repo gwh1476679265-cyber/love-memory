@@ -1,3 +1,12 @@
+// Phase 4.2: 让新部署的 Service Worker 尽快进入 activated 状态。
+self.addEventListener('install', () => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 self.addEventListener('push', (event) => {
   let data = {};
   try {
