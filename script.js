@@ -997,12 +997,13 @@ document.querySelectorAll('.flip-card').forEach(card => {
 });
 
 // ==========================================
-// 3. 两个人的小屋云同步：约定 + 客厅留言板
+// 3. 两个人的小屋云同步：约定 + 客厅毛毡板（Phase 6）
 // ==========================================
-// CloudBase PostgreSQL 当前用轻量轮询保持两台设备同步：
-// - 卧室：共同约定可以打勾，也可以新建；
-// - 客厅：留言板双方都可以写、都可以看；
-// - 所有内容都保存到 PostgreSQL，刷新/换设备仍然存在。
+// CloudBase PostgreSQL 继续用轻量轮询保持两台设备同步：
+// - 卧室：共同约定可以打勾、新建、删除；
+// - 客厅：毛毡板支持文字 / 图片 / 语音便利贴，可查看详情和删除；
+// - 文字与元数据保存在 PostgreSQL；图片 / 语音保存在 CloudBase PG 云存储；
+// - “我 / TA”仍只用每台设备长期保存的 deviceId 区分，不改变访问提醒逻辑。
 
 const todoList = document.getElementById('todoList');
 const todoSyncBar = document.getElementById('todoSyncBar');
@@ -1020,6 +1021,30 @@ const messageForm = document.getElementById('messageForm');
 const messageInput = document.getElementById('messageInput');
 const messageSendBtn = document.getElementById('messageSendBtn');
 const messageCounter = document.getElementById('messageCounter');
+const messageModeButtons = [...document.querySelectorAll('[data-message-mode]')];
+const messagePanels = [...document.querySelectorAll('[data-message-panel]')];
+const messageImageInput = document.getElementById('messageImageInput');
+const messageImagePreviewWrap = document.getElementById('messageImagePreviewWrap');
+const messageImagePreview = document.getElementById('messageImagePreview');
+const messageImageStatus = document.getElementById('messageImageStatus');
+const messageImageSendBtn = document.getElementById('messageImageSendBtn');
+const voiceRecordTitle = document.getElementById('voiceRecordTitle');
+const voiceRecordStatus = document.getElementById('voiceRecordStatus');
+const voiceRecordBtn = document.getElementById('voiceRecordBtn');
+const voiceSendBtn = document.getElementById('voiceSendBtn');
+const voicePreview = document.getElementById('voicePreview');
+
+const stickyNoteModal = document.getElementById('stickyNoteModal');
+const closeStickyNoteModalBtn = document.getElementById('closeStickyNoteModalBtn');
+const stickyNoteModalMeta = document.getElementById('stickyNoteModalMeta');
+const stickyNoteModalContent = document.getElementById('stickyNoteModalContent');
+const stickyNoteDeleteBtn = document.getElementById('stickyNoteDeleteBtn');
+const stickyNoteDeleteHint = document.getElementById('stickyNoteDeleteHint');
+
+const todoDeleteModal = document.getElementById('todoDeleteModal');
+const todoDeleteText = document.getElementById('todoDeleteText');
+const todoDeleteCancelBtn = document.getElementById('todoDeleteCancelBtn');
+const todoDeleteConfirmBtn = document.getElementById('todoDeleteConfirmBtn');
 
 let cloudTodoApp = null;
 let cloudTodoDb = null;
@@ -1031,6 +1056,23 @@ let cloudMessageRefreshing = false;
 let cloudTodoLastFingerprint = '';
 let cloudMessageLastFingerprint = '';
 let cloudTodoRowsCache = [];
+let cloudMessageRowsCache = [];
+let cloudMessageRowsById = new Map();
+let messageMode = 'text';
+let pendingImageFile = null;
+let pendingImagePreviewUrl = '';
+let pendingVoiceBlob = null;
+let pendingVoicePreviewUrl = '';
+let pendingVoiceDuration = 0;
+let voiceMediaRecorder = null;
+let voiceMediaStream = null;
+let voiceChunks = [];
+let voiceRecordStartedAt = 0;
+let openedStickyMessageId = '';
+let stickyDeleteArmed = false;
+let pendingTodoDeleteId = '';
+let cloudMessageSchemaReady = true;
+const messageMediaUrlCache = new Map();
 
 function setTodoSyncStatus(state, text) {
   if (todoSyncBar) todoSyncBar.dataset.state = state;
@@ -1047,6 +1089,11 @@ function setCloudComposerEnabled(enabled) {
   if (todoCreateBtn) todoCreateBtn.disabled = !enabled;
   if (messageInput) messageInput.disabled = !enabled;
   if (messageSendBtn) messageSendBtn.disabled = !enabled;
+  messageModeButtons.forEach((button) => { button.disabled = !enabled; });
+  if (messageImageInput) messageImageInput.disabled = !enabled;
+  if (messageImageSendBtn) messageImageSendBtn.disabled = !enabled || !pendingImageFile;
+  if (voiceRecordBtn) voiceRecordBtn.disabled = !enabled;
+  if (voiceSendBtn) voiceSendBtn.disabled = !enabled || !pendingVoiceBlob;
 }
 
 function makeCloudId(prefix) {
@@ -1085,7 +1132,14 @@ function createTodoElement(row) {
   text.className = 'todo-text';
   text.textContent = String(row.title || '新的约定');
 
-  item.append(checkbox, text);
+  const deleteBtn = document.createElement('button');
+  deleteBtn.className = 'todo-delete-btn';
+  deleteBtn.type = 'button';
+  deleteBtn.dataset.todoDelete = String(row.id || '');
+  deleteBtn.setAttribute('aria-label', `删除约定：${String(row.title || '新的约定')}`);
+  deleteBtn.textContent = '×';
+
+  item.append(checkbox, text, deleteBtn);
   return item;
 }
 
@@ -1128,35 +1182,149 @@ function formatMessageTime(value) {
   return `${date.getMonth() + 1}.${date.getDate()} ${hh}:${mm}`;
 }
 
-function renderCloudMessages(rows = []) {
+function formatVoiceDuration(seconds) {
+  const total = Math.max(0, Math.round(Number(seconds) || 0));
+  const mm = Math.floor(total / 60);
+  const ss = String(total % 60).padStart(2, '0');
+  return `${mm}:${ss}`;
+}
+
+function getMessageContentType(row) {
+  const type = String(row?.content_type || 'text').toLowerCase();
+  return ['text', 'image', 'audio'].includes(type) ? type : 'text';
+}
+
+function getBoardStorageConfig() {
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  return {
+    bucket: String(config.messageStorageBucket || 'love-house-board').trim() || 'love-house-board'
+  };
+}
+
+function getBoardStorageClient() {
+  if (!cloudTodoApp?.storage || typeof cloudTodoApp.storage.from !== 'function') {
+    throw new Error('当前 CloudBase SDK 没有可用的 PG 云存储模块');
+  }
+  return cloudTodoApp.storage.from(getBoardStorageConfig().bucket);
+}
+
+async function getMessageMediaUrl(row) {
+  const path = String(row?.media_path || '').trim();
+  const fileId = String(row?.media_file_id || '').trim();
+  if (!path && !fileId) return '';
+
+  const cacheKey = `${getBoardStorageConfig().bucket}:${fileId || path}`;
+  const cached = messageMediaUrlCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.url;
+
+  const bucket = getBoardStorageClient();
+  const candidates = [...new Set([path, fileId].filter(Boolean))];
+  let lastError = null;
+
+  for (const target of candidates) {
+    try {
+      const { data, error } = await bucket.createSignedUrl(target, 3600);
+      if (error) throw error;
+      const url = data?.signedUrl || data?.fullSignedURL || data?.fullSignedUrl || '';
+      if (!url) throw new Error('云存储没有返回可访问链接');
+      messageMediaUrlCache.set(cacheKey, {
+        url,
+        expiresAt: Date.now() + 50 * 60 * 1000
+      });
+      return url;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('云存储链接获取失败');
+}
+
+function chooseStickyColor(row, index) {
+  const source = String(row?.id || index || '');
+  let hash = 0;
+  for (let i = 0; i < source.length; i += 1) hash = (hash * 31 + source.charCodeAt(i)) >>> 0;
+  return `note-color-${hash % 4}`;
+}
+
+function buildStickyTextPreview(body) {
+  const text = String(body || '').trim();
+  if (!text) return '一张空白便利贴 ♡';
+  return text.length > 58 ? `${text.slice(0, 58)}…` : text;
+}
+
+async function createStickyNoteElement(row, index) {
+  const mine = Boolean(cloudTodoUid && String(row.created_by || '') === String(cloudTodoUid));
+  const type = getMessageContentType(row);
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `felt-note ${chooseStickyColor(row, index)} ${mine ? 'mine' : 'other'}`;
+  button.dataset.messageId = String(row.id || '');
+  button.setAttribute('aria-label', `打开${mine ? '我' : 'TA'}的${type === 'text' ? '文字' : type === 'image' ? '图片' : '语音'}便利贴`);
+
+  const pin = document.createElement('span');
+  pin.className = 'felt-note-pin';
+  pin.setAttribute('aria-hidden', 'true');
+
+  const content = document.createElement('div');
+  content.className = 'felt-note-preview';
+
+  if (type === 'image') {
+    const image = document.createElement('img');
+    image.alt = '图片便利贴';
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    content.appendChild(image);
+    try {
+      image.src = await getMessageMediaUrl(row);
+    } catch (error) {
+      console.warn('[毛毡板] 图片预览链接获取失败：', error);
+      content.classList.add('media-preview-failed');
+      content.textContent = '🖼️\n图片便利贴';
+    }
+  } else if (type === 'audio') {
+    const audioPreview = document.createElement('div');
+    audioPreview.className = 'felt-note-audio-preview';
+    audioPreview.innerHTML = `
+      <span class="felt-note-audio-icon">🎙️</span>
+      <strong>语音便利贴</strong>
+      <small>${formatVoiceDuration(row.media_duration)}</small>
+    `;
+    content.appendChild(audioPreview);
+  } else {
+    const text = document.createElement('div');
+    text.className = 'felt-note-text-preview';
+    text.textContent = buildStickyTextPreview(row.body);
+    content.appendChild(text);
+  }
+
+  const meta = document.createElement('div');
+  meta.className = 'felt-note-meta';
+  meta.textContent = `${mine ? '我' : 'TA'} · ${formatMessageTime(row.created_at)}`;
+
+  button.append(pin, content, meta);
+  return button;
+}
+
+async function renderCloudMessages(rows = []) {
   if (!messageList) return;
 
+  cloudMessageRowsCache = rows.slice();
+  cloudMessageRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
   messageList.innerHTML = '';
 
   if (rows.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'message-empty';
-    empty.textContent = '留言板还是空的，先偷偷写一句给对方吧 ♡';
+    empty.textContent = '毛毡板还是空的，先贴上第一张便利贴吧 ♡';
     messageList.appendChild(empty);
     return;
   }
 
-  rows.forEach((row) => {
-    const mine = Boolean(cloudTodoUid && String(row.created_by || '') === String(cloudTodoUid));
-    const wrap = document.createElement('div');
-    wrap.className = `message-row ${mine ? 'mine' : 'other'}`;
-
-    const meta = document.createElement('div');
-    meta.className = 'message-meta';
-    meta.textContent = `${mine ? '我' : 'TA'} · ${formatMessageTime(row.created_at)}`;
-
-    const bubble = document.createElement('div');
-    bubble.className = 'message-bubble';
-    bubble.textContent = String(row.body || '');
-
-    wrap.append(meta, bubble);
-    messageList.appendChild(wrap);
-  });
+  for (let index = 0; index < rows.length; index += 1) {
+    const note = await createStickyNoteElement(rows[index], index);
+    messageList.appendChild(note);
+  }
 
   window.requestAnimationFrame(() => {
     messageList.scrollTop = messageList.scrollHeight;
@@ -1165,33 +1333,231 @@ function renderCloudMessages(rows = []) {
 
 function fingerprintMessageRows(rows = []) {
   return rows
-    .map((row) => `${row.id}:${row.created_at || ''}:${row.created_by || ''}:${row.body || ''}`)
+    .map((row) => [
+      row.id,
+      row.created_at || '',
+      row.created_by || '',
+      row.body || '',
+      row.content_type || 'text',
+      row.media_path || '',
+      row.media_file_id || '',
+      row.media_name || '',
+      row.media_mime || '',
+      row.media_duration || ''
+    ].join(':'))
     .join('|');
 }
 
-async function ensureAnonymousCloudLogin(auth) {
-  if (!auth || typeof auth.signInAnonymously !== 'function') {
-    throw new Error('当前 CloudBase SDK 不支持匿名登录');
+function setMessageMode(nextMode) {
+  messageMode = ['text', 'image', 'audio'].includes(nextMode) ? nextMode : 'text';
+
+  messageModeButtons.forEach((button) => {
+    const active = button.dataset.messageMode === messageMode;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+
+  messagePanels.forEach((panel) => {
+    const active = panel.dataset.messagePanel === messageMode;
+    panel.hidden = !active;
+    panel.classList.toggle('active', active);
+  });
+}
+
+function clearPendingImage() {
+  pendingImageFile = null;
+  if (pendingImagePreviewUrl) URL.revokeObjectURL(pendingImagePreviewUrl);
+  pendingImagePreviewUrl = '';
+  if (messageImageInput) messageImageInput.value = '';
+  if (messageImagePreview) messageImagePreview.removeAttribute('src');
+  if (messageImagePreviewWrap) messageImagePreviewWrap.hidden = true;
+  if (messageImageStatus) messageImageStatus.textContent = '选好图片后，再把它贴到毛毡板上。';
+  if (messageImageSendBtn) messageImageSendBtn.disabled = true;
+}
+
+function stopVoiceStream() {
+  if (!voiceMediaStream) return;
+  voiceMediaStream.getTracks().forEach((track) => track.stop());
+  voiceMediaStream = null;
+}
+
+function clearPendingVoice() {
+  pendingVoiceBlob = null;
+  pendingVoiceDuration = 0;
+  if (pendingVoicePreviewUrl) URL.revokeObjectURL(pendingVoicePreviewUrl);
+  pendingVoicePreviewUrl = '';
+  if (voicePreview) {
+    voicePreview.pause();
+    voicePreview.removeAttribute('src');
+    voicePreview.hidden = true;
+  }
+  if (voiceSendBtn) voiceSendBtn.disabled = true;
+  if (voiceRecordTitle) voiceRecordTitle.textContent = '录一段语音';
+  if (voiceRecordStatus) voiceRecordStatus.textContent = '点击开始后，说完再点击停止。';
+  if (voiceRecordBtn) {
+    voiceRecordBtn.textContent = '● 开始录音';
+    voiceRecordBtn.classList.remove('recording');
+  }
+}
+
+function pickRecorderMimeType() {
+  if (!window.MediaRecorder) return '';
+  const candidates = [
+    'audio/mp4',
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/ogg;codecs=opus'
+  ];
+  return candidates.find((type) => MediaRecorder.isTypeSupported?.(type)) || '';
+}
+
+async function startVoiceRecording() {
+  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
+    setMessageSyncStatus('error', '当前浏览器不支持网页录音，请换 Safari / Chrome 后再试');
+    return;
   }
 
-  const signInResult = await auth.signInAnonymously();
-  if (signInResult?.error) throw signInResult.error;
+  try {
+    clearPendingVoice();
+    voiceMediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mimeType = pickRecorderMimeType();
+    voiceChunks = [];
+    voiceRecordStartedAt = Date.now();
+    voiceMediaRecorder = mimeType
+      ? new MediaRecorder(voiceMediaStream, { mimeType })
+      : new MediaRecorder(voiceMediaStream);
 
-  if (typeof auth.getSession === 'function') {
-    const sessionResult = await auth.getSession();
-    if (sessionResult?.error) throw sessionResult.error;
+    voiceMediaRecorder.addEventListener('dataavailable', (event) => {
+      if (event.data?.size) voiceChunks.push(event.data);
+    });
 
-    return (
-      sessionResult?.data?.user?.id ||
-      sessionResult?.data?.session?.sub ||
-      sessionResult?.data?.session?.user?.id ||
-      signInResult?.data?.user?.id ||
-      signInResult?.user?.id ||
-      ''
-    );
+    voiceMediaRecorder.addEventListener('stop', () => {
+      const finalMime = voiceMediaRecorder?.mimeType || mimeType || 'audio/webm';
+      pendingVoiceBlob = new Blob(voiceChunks, { type: finalMime });
+      pendingVoiceDuration = Math.max(1, Math.round((Date.now() - voiceRecordStartedAt) / 1000));
+      stopVoiceStream();
+
+      pendingVoicePreviewUrl = URL.createObjectURL(pendingVoiceBlob);
+      if (voicePreview) {
+        voicePreview.src = pendingVoicePreviewUrl;
+        voicePreview.hidden = false;
+      }
+      if (voiceSendBtn) voiceSendBtn.disabled = !cloudTodoReady;
+      if (voiceRecordTitle) voiceRecordTitle.textContent = '录音完成';
+      if (voiceRecordStatus) voiceRecordStatus.textContent = `时长 ${formatVoiceDuration(pendingVoiceDuration)}，可以试听后贴上。`;
+      if (voiceRecordBtn) {
+        voiceRecordBtn.textContent = '↻ 重新录音';
+        voiceRecordBtn.classList.remove('recording');
+      }
+      voiceMediaRecorder = null;
+    });
+
+    voiceMediaRecorder.start(250);
+    if (voiceRecordTitle) voiceRecordTitle.textContent = '正在录音…';
+    if (voiceRecordStatus) voiceRecordStatus.textContent = '说完后点击“停止录音”。';
+    if (voiceRecordBtn) {
+      voiceRecordBtn.textContent = '■ 停止录音';
+      voiceRecordBtn.classList.add('recording');
+    }
+  } catch (error) {
+    console.error('[毛毡板] 录音失败：', error);
+    stopVoiceStream();
+    setMessageSyncStatus('error', '没有拿到麦克风权限，暂时不能录语音');
+  }
+}
+
+function stopVoiceRecording() {
+  if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+    voiceMediaRecorder.stop();
+  }
+}
+
+function getMediaExtension(name, mime, type) {
+  const fromName = String(name || '').toLowerCase().match(/\.([a-z0-9]{1,8})$/)?.[1];
+  if (fromName) return fromName === 'jpeg' ? 'jpg' : fromName;
+
+  const normalized = String(mime || '').toLowerCase();
+  const map = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+    'image/heic': 'heic',
+    'image/heif': 'heif',
+    'audio/mp4': 'm4a',
+    'audio/mpeg': 'mp3',
+    'audio/wav': 'wav',
+    'audio/x-wav': 'wav',
+    'audio/webm': 'webm',
+    'audio/ogg': 'ogg',
+    'audio/aac': 'aac'
+  };
+  return map[normalized.split(';')[0]] || (type === 'image' ? 'jpg' : 'webm');
+}
+
+async function uploadMessageMedia(fileOrBlob, type, originalName = '') {
+  if (!cloudTodoReady || !cloudTodoApp || !cloudTodoUid) {
+    throw new Error('毛毡板还没连上云端');
   }
 
-  return signInResult?.data?.user?.id || signInResult?.user?.id || '';
+  const maxBytes = type === 'image' ? 10 * 1024 * 1024 : 12 * 1024 * 1024;
+  if (fileOrBlob.size > maxBytes) {
+    throw new Error(type === 'image' ? '这张图片超过 10MB，请换一张小一点的图片' : '这段语音超过 12MB，请录短一点');
+  }
+
+  const mime = fileOrBlob.type || (type === 'image' ? 'image/jpeg' : 'audio/webm');
+  const extension = getMediaExtension(originalName, mime, type);
+  const date = new Date();
+  const month = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
+  const objectId = makeCloudId(type === 'image' ? 'img' : 'voice').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 70);
+  const path = `board/${type}/${month}/${cloudTodoUid}/${objectId}.${extension}`;
+  const bucket = getBoardStorageClient();
+  const { data, error } = await bucket.upload(path, fileOrBlob, {
+    contentType: mime,
+    upsert: false,
+    metadata: {
+      usage: 'love-house-feltboard',
+      deviceId: cloudTodoUid
+    }
+  });
+
+  if (error) throw error;
+  return {
+    path: data?.path || path,
+    fileId: data?.id || data?.fileID || data?.fileId || '',
+    mime,
+    name: originalName || `${type}.${extension}`
+  };
+}
+
+async function removeMessageMedia(row) {
+  const path = String(row?.media_path || '').trim();
+  const fileId = String(row?.media_file_id || '').trim();
+  if (!path && !fileId) return;
+
+  try {
+    const bucket = getBoardStorageClient();
+    const candidates = [...new Set([path, fileId].filter(Boolean))];
+    let removed = false;
+    let lastError = null;
+
+    for (const target of candidates) {
+      try {
+        const { error } = await bucket.remove([target]);
+        if (error) throw error;
+        removed = true;
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!removed && lastError) throw lastError;
+    messageMediaUrlCache.delete(`${getBoardStorageConfig().bucket}:${fileId || path}`);
+  } catch (error) {
+    // 便利贴数据库删除优先；存储清理失败只记录，不让用户看到“删不掉”的假象。
+    console.warn('[毛毡板] 便利贴已删除，但附件清理失败：', error);
+  }
 }
 
 async function refreshCloudTodos({ silent = false } = {}) {
@@ -1225,10 +1591,26 @@ async function refreshCloudTodos({ silent = false } = {}) {
     }
   } catch (error) {
     console.error('[约定同步] SQL 读取失败：', error);
-    setTodoSyncStatus('error', '约定读取失败，请确认已执行 Phase 5 SQL');
+    setTodoSyncStatus('error', `约定读取失败：${String(error?.message || error || '未知错误')}`);
   } finally {
     cloudTodoRefreshing = false;
   }
+}
+
+async function fetchMessageRowsExtended(tableName) {
+  return cloudTodoDb
+    .from(tableName)
+    .select('id,body,created_at,created_by,content_type,media_path,media_file_id,media_name,media_mime,media_duration')
+    .order('created_at', { ascending: true })
+    .limit(60);
+}
+
+async function fetchMessageRowsLegacy(tableName) {
+  return cloudTodoDb
+    .from(tableName)
+    .select('id,body,created_at,created_by')
+    .order('created_at', { ascending: true })
+    .limit(60);
 }
 
 async function refreshCloudMessages({ silent = false } = {}) {
@@ -1239,29 +1621,46 @@ async function refreshCloudMessages({ silent = false } = {}) {
   cloudMessageRefreshing = true;
 
   try {
-    const { data, error } = await cloudTodoDb
-      .from(tableName)
-      .select('id,body,created_at,created_by')
-      .order('created_at', { ascending: true })
-      .limit(60);
+    let result = await fetchMessageRowsExtended(tableName);
+    cloudMessageSchemaReady = !result.error;
 
-    if (error) throw error;
+    // 代码先部署、SQL 后执行时，也尽量继续显示旧文字留言，不让整个毛毡板空掉。
+    if (result.error) {
+      console.warn('[毛毡板] Phase 6 字段尚不可用，回退读取旧留言：', result.error);
+      result = await fetchMessageRowsLegacy(tableName);
+      if (!result.error && !silent) {
+        setMessageSyncStatus('setup', '文字留言可读 · 图片/语音/删除需要先执行 Phase 6 SQL');
+      }
+    }
 
-    const rows = Array.isArray(data) ? data : [];
+    if (result.error) throw result.error;
+
+    const rows = (Array.isArray(result.data) ? result.data : []).map((row) => ({
+      content_type: 'text',
+      media_path: null,
+      media_file_id: null,
+      media_name: null,
+      media_mime: null,
+      media_duration: null,
+      ...row
+    }));
     const nextFingerprint = fingerprintMessageRows(rows);
 
     if (nextFingerprint !== cloudMessageLastFingerprint) {
-      renderCloudMessages(rows);
+      await renderCloudMessages(rows);
       cloudMessageLastFingerprint = nextFingerprint;
+    } else {
+      cloudMessageRowsCache = rows.slice();
+      cloudMessageRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
     }
 
-    if (!silent) {
+    if (!silent && cloudMessageSchemaReady) {
       const seconds = Math.max(1, Math.round(Number(config.pollMs || 4000) / 1000));
-      setMessageSyncStatus('online', `留言板已同步 · 约 ${seconds} 秒看看有没有新话 ♡`);
+      setMessageSyncStatus('online', `毛毡板已同步 · 约 ${seconds} 秒看看有没有新便利贴 ♡`);
     }
   } catch (error) {
-    console.error('[留言板] SQL 读取失败：', error);
-    setMessageSyncStatus('error', '留言板暂时没连上，请确认已执行 Phase 5 SQL');
+    console.error('[毛毡板] SQL 读取失败：', error);
+    setMessageSyncStatus('error', `毛毡板暂时没连上：${String(error?.message || error || '未知错误')}`);
   } finally {
     cloudMessageRefreshing = false;
   }
@@ -1295,7 +1694,7 @@ async function initCloudHomeSync() {
 
   if (!envId || envId === 'YOUR_CLOUDBASE_ENV_ID') {
     setTodoSyncStatus('setup', '还差一步：请在 cloudbase-config.js 填入环境 ID');
-    setMessageSyncStatus('setup', '留言板等待 CloudBase 环境 ID');
+    setMessageSyncStatus('setup', '毛毡板等待 CloudBase 环境 ID');
     return;
   }
 
@@ -1307,17 +1706,13 @@ async function initCloudHomeSync() {
 
   setCloudComposerEnabled(false);
   setTodoSyncStatus('connecting', '正在连接两个人的小屋…');
-  setMessageSyncStatus('connecting', '正在连接留言板…');
+  setMessageSyncStatus('connecting', '正在连接毛毡板…');
 
   try {
     const publishableKey = String(config.publishableKey || '').trim();
-    if (!publishableKey) {
-      throw new Error('缺少 CloudBase Publishable Key');
-    }
+    if (!publishableKey) throw new Error('缺少 CloudBase Publishable Key');
 
-    // Phase 5.1：数据库直接使用 Publishable Key 以 anon 身份访问。
-    // 不再显式调用匿名登录，避免匿名会话在不同浏览器 / PWA 环境里失效。
-    // “我 / TA”的区分改用每台设备自己的长期 deviceId。
+    // 继续沿用已经实测成功的 Phase 5.1 初始化方式。
     cloudTodoApp = window.cloudbase.init({
       env: envId,
       accessKey: publishableKey
@@ -1354,11 +1749,11 @@ async function initCloudHomeSync() {
       setTodoSyncStatus('error', 'CloudBase Publishable Key 配置有误');
       setMessageSyncStatus('error', 'CloudBase Publishable Key 配置有误');
     } else if (/permission|denied|unauthorized|rls|403/i.test(message)) {
-      setTodoSyncStatus('error', 'SQL 权限还没配置好，请执行 Phase 5.1 修复 SQL');
-      setMessageSyncStatus('error', '留言板权限还没配置好，请执行 Phase 5.1 修复 SQL');
+      setTodoSyncStatus('error', 'CloudBase 写权限不足，请检查对应 GRANT / RLS');
+      setMessageSyncStatus('error', 'CloudBase 写权限不足，请检查 Phase 6 SQL');
     } else {
       setTodoSyncStatus('error', '云同步连接失败，请稍后再试');
-      setMessageSyncStatus('error', '留言板连接失败，请稍后再试');
+      setMessageSyncStatus('error', '毛毡板连接失败，请稍后再试');
     }
   }
 }
@@ -1399,7 +1794,7 @@ async function toggleCloudTodo(item) {
     setTodoVisual(item, oldDone);
     item.classList.add('sync-error');
     window.setTimeout(() => item.classList.remove('sync-error'), 700);
-    setTodoSyncStatus('error', '这次没有保存成功，请检查网络后再点一次');
+    setTodoSyncStatus('error', `这次没有保存成功：${String(error?.message || error || '未知错误')}`);
   } finally {
     item.classList.remove('syncing');
   }
@@ -1437,56 +1832,311 @@ async function createCloudTodo(title) {
     setTodoSyncStatus('online', '新约定已经放进卧室啦 ♡');
   } catch (error) {
     console.error('[新建约定] 保存失败：', error);
-    setTodoSyncStatus('error', '新约定没保存成功，请确认已执行 Phase 5 SQL');
+    setTodoSyncStatus('error', `新约定没保存成功：${String(error?.message || error || '未知错误')}`);
   } finally {
     if (todoCreateBtn) todoCreateBtn.disabled = !cloudTodoReady;
   }
 }
 
-async function sendCloudMessage(body) {
-  const cleanBody = String(body || '').trim();
-  if (!cleanBody) return;
+function openTodoDeleteConfirm(row) {
+  if (!todoDeleteModal || !row) return;
+  pendingTodoDeleteId = String(row.id || '');
+  if (todoDeleteText) todoDeleteText.textContent = `“${String(row.title || '这条约定')}”`;
+  todoDeleteModal.classList.add('show');
+  todoDeleteModal.setAttribute('aria-hidden', 'false');
+}
 
+function closeTodoDeleteConfirm() {
+  pendingTodoDeleteId = '';
+  todoDeleteModal?.classList.remove('show');
+  todoDeleteModal?.setAttribute('aria-hidden', 'true');
+}
+
+async function deleteCloudTodo(id) {
+  if (!id || !cloudTodoReady || !cloudTodoDb) return;
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.table || 'couple_todos').trim();
+
+  if (todoDeleteConfirmBtn) todoDeleteConfirmBtn.disabled = true;
+  setTodoSyncStatus('syncing', '正在删掉这条约定…');
+
+  try {
+    const { error } = await cloudTodoDb.from(tableName).delete().eq('id', id);
+    if (error) throw error;
+    closeTodoDeleteConfirm();
+    cloudTodoLastFingerprint = '';
+    await refreshCloudTodos({ silent: true });
+    setTodoSyncStatus('online', '这条约定已经删掉了');
+  } catch (error) {
+    console.error('[删除约定] 失败：', error);
+    setTodoSyncStatus('error', `删除失败：${String(error?.message || error || '未知错误')}`);
+  } finally {
+    if (todoDeleteConfirmBtn) todoDeleteConfirmBtn.disabled = false;
+  }
+}
+
+async function insertCloudMessage(row) {
   if (!cloudTodoReady || !cloudTodoDb || !cloudTodoUid) {
-    setMessageSyncStatus('error', '留言板还没连上云端，等一下再试');
-    return;
+    throw new Error('毛毡板还没连上云端');
+  }
+  if (!cloudMessageSchemaReady && row.content_type !== 'text') {
+    throw new Error('请先执行 Phase 6 SQL，再使用图片和语音便利贴');
   }
 
   const config = window.LOVE_HOUSE_CLOUD || {};
   const tableName = String(config.messageTable || 'couple_messages').trim();
+  const { error } = await cloudTodoDb.from(tableName).insert(row);
+  if (error) throw error;
+}
+
+async function sendCloudTextMessage(body) {
+  const cleanBody = String(body || '').trim();
+  if (!cleanBody) return;
+
   const row = {
     id: makeCloudId('msg').slice(0, 80),
     body: cleanBody.slice(0, 300),
-    created_by: String(cloudTodoUid)
+    created_by: String(cloudTodoUid),
+    content_type: 'text'
   };
 
   if (messageSendBtn) messageSendBtn.disabled = true;
-  setMessageSyncStatus('syncing', '正在把这句话留在客厅…');
+  setMessageSyncStatus('syncing', '正在把文字便利贴贴上去…');
 
   try {
-    const { error } = await cloudTodoDb.from(tableName).insert(row);
-    if (error) throw error;
+    if (cloudMessageSchemaReady) {
+      await insertCloudMessage(row);
+    } else {
+      // 兼容“代码先上线、SQL 还没执行”的短暂阶段。
+      const config = window.LOVE_HOUSE_CLOUD || {};
+      const tableName = String(config.messageTable || 'couple_messages').trim();
+      const legacyRow = { id: row.id, body: row.body, created_by: row.created_by };
+      const { error } = await cloudTodoDb.from(tableName).insert(legacyRow);
+      if (error) throw error;
+    }
 
     if (messageInput) messageInput.value = '';
     if (messageCounter) messageCounter.textContent = '0 / 300';
     cloudMessageLastFingerprint = '';
     await refreshCloudMessages({ silent: true });
-    setMessageSyncStatus('online', '已经留在客厅啦，对方很快就能看到 ♡');
+    setMessageSyncStatus('online', '文字便利贴已经贴好啦 ♡');
   } catch (error) {
-    console.error('[留言板] 发送失败：', error);
-    setMessageSyncStatus('error', '这句话没有保存成功，请确认已执行 Phase 5 SQL');
+    console.error('[毛毡板] 文字便利贴发送失败：', error);
+    setMessageSyncStatus('error', `便利贴没有贴成功：${String(error?.message || error || '未知错误')}`);
   } finally {
     if (messageSendBtn) messageSendBtn.disabled = !cloudTodoReady;
   }
 }
 
+async function sendCloudImageMessage() {
+  if (!pendingImageFile) return;
+  if (!cloudMessageSchemaReady) {
+    setMessageSyncStatus('error', '图片便利贴需要先执行 Phase 6 SQL');
+    return;
+  }
+
+  if (messageImageSendBtn) messageImageSendBtn.disabled = true;
+  setMessageSyncStatus('syncing', '正在上传图片并贴到毛毡板…');
+  let uploaded = null;
+
+  try {
+    uploaded = await uploadMessageMedia(pendingImageFile, 'image', pendingImageFile.name || 'image');
+    const row = {
+      id: makeCloudId('msg').slice(0, 80),
+      body: '[图片]',
+      created_by: String(cloudTodoUid),
+      content_type: 'image',
+      media_path: uploaded.path,
+      media_file_id: uploaded.fileId || null,
+      media_name: String(uploaded.name || '').slice(0, 180),
+      media_mime: String(uploaded.mime || '').slice(0, 100),
+      media_duration: null
+    };
+    await insertCloudMessage(row);
+
+    clearPendingImage();
+    cloudMessageLastFingerprint = '';
+    await refreshCloudMessages({ silent: true });
+    setMessageSyncStatus('online', '图片便利贴已经贴好啦 ♡');
+  } catch (error) {
+    console.error('[毛毡板] 图片便利贴失败：', error);
+    if (uploaded?.path || uploaded?.fileId) await removeMessageMedia({ media_path: uploaded?.path, media_file_id: uploaded?.fileId });
+    setMessageSyncStatus('error', `图片没有贴成功：${String(error?.message || error || '未知错误')}`);
+  } finally {
+    if (messageImageSendBtn) messageImageSendBtn.disabled = !cloudTodoReady || !pendingImageFile;
+  }
+}
+
+async function sendCloudVoiceMessage() {
+  if (!pendingVoiceBlob) return;
+  if (!cloudMessageSchemaReady) {
+    setMessageSyncStatus('error', '语音便利贴需要先执行 Phase 6 SQL');
+    return;
+  }
+
+  if (voiceSendBtn) voiceSendBtn.disabled = true;
+  setMessageSyncStatus('syncing', '正在上传语音并贴到毛毡板…');
+  let uploaded = null;
+
+  try {
+    uploaded = await uploadMessageMedia(pendingVoiceBlob, 'audio', 'voice');
+    const row = {
+      id: makeCloudId('msg').slice(0, 80),
+      body: '[语音]',
+      created_by: String(cloudTodoUid),
+      content_type: 'audio',
+      media_path: uploaded.path,
+      media_file_id: uploaded.fileId || null,
+      media_name: String(uploaded.name || 'voice').slice(0, 180),
+      media_mime: String(uploaded.mime || '').slice(0, 100),
+      media_duration: Math.max(1, Math.round(pendingVoiceDuration || 1))
+    };
+    await insertCloudMessage(row);
+
+    clearPendingVoice();
+    cloudMessageLastFingerprint = '';
+    await refreshCloudMessages({ silent: true });
+    setMessageSyncStatus('online', '语音便利贴已经贴好啦 ♡');
+  } catch (error) {
+    console.error('[毛毡板] 语音便利贴失败：', error);
+    if (uploaded?.path || uploaded?.fileId) await removeMessageMedia({ media_path: uploaded?.path, media_file_id: uploaded?.fileId });
+    setMessageSyncStatus('error', `语音没有贴成功：${String(error?.message || error || '未知错误')}`);
+  } finally {
+    if (voiceSendBtn) voiceSendBtn.disabled = !cloudTodoReady || !pendingVoiceBlob;
+  }
+}
+
+async function renderStickyModalContent(row) {
+  if (!stickyNoteModalContent) return;
+  stickyNoteModalContent.innerHTML = '<div class="sticky-modal-loading">正在展开便利贴…</div>';
+  const type = getMessageContentType(row);
+
+  if (type === 'image') {
+    try {
+      const url = await getMessageMediaUrl(row);
+      const image = document.createElement('img');
+      image.className = 'sticky-modal-image';
+      image.src = url;
+      image.alt = row.media_name || '图片便利贴';
+      stickyNoteModalContent.innerHTML = '';
+      stickyNoteModalContent.appendChild(image);
+    } catch (error) {
+      stickyNoteModalContent.textContent = `图片暂时打不开：${String(error?.message || error || '')}`;
+    }
+    return;
+  }
+
+  if (type === 'audio') {
+    try {
+      const url = await getMessageMediaUrl(row);
+      const wrap = document.createElement('div');
+      wrap.className = 'sticky-modal-audio-wrap';
+      const title = document.createElement('div');
+      title.className = 'sticky-modal-audio-title';
+      title.textContent = `🎙️ 语音 · ${formatVoiceDuration(row.media_duration)}`;
+      const audio = document.createElement('audio');
+      audio.className = 'sticky-modal-audio';
+      audio.src = url;
+      audio.controls = true;
+      audio.preload = 'metadata';
+      wrap.append(title, audio);
+      stickyNoteModalContent.innerHTML = '';
+      stickyNoteModalContent.appendChild(wrap);
+    } catch (error) {
+      stickyNoteModalContent.textContent = `语音暂时打不开：${String(error?.message || error || '')}`;
+    }
+    return;
+  }
+
+  const text = document.createElement('div');
+  text.className = 'sticky-modal-text';
+  text.textContent = String(row.body || '');
+  stickyNoteModalContent.innerHTML = '';
+  stickyNoteModalContent.appendChild(text);
+}
+
+async function openStickyNoteModal(row) {
+  if (!row || !stickyNoteModal) return;
+  openedStickyMessageId = String(row.id || '');
+  stickyDeleteArmed = false;
+  stickyNoteDeleteBtn?.classList.remove('confirm');
+  if (stickyNoteDeleteBtn) stickyNoteDeleteBtn.textContent = '删除便利贴';
+  if (stickyNoteDeleteHint) stickyNoteDeleteHint.textContent = '';
+
+  const mine = Boolean(cloudTodoUid && String(row.created_by || '') === String(cloudTodoUid));
+  if (stickyNoteModalMeta) stickyNoteModalMeta.textContent = `${mine ? '我' : 'TA'} · ${formatMessageTime(row.created_at)}`;
+  stickyNoteModal.classList.add('show');
+  stickyNoteModal.setAttribute('aria-hidden', 'false');
+  await renderStickyModalContent(row);
+}
+
+function closeStickyNoteModal() {
+  openedStickyMessageId = '';
+  stickyDeleteArmed = false;
+  stickyNoteModal?.classList.remove('show');
+  stickyNoteModal?.setAttribute('aria-hidden', 'true');
+  stickyNoteDeleteBtn?.classList.remove('confirm');
+  if (stickyNoteDeleteBtn) stickyNoteDeleteBtn.textContent = '删除便利贴';
+  if (stickyNoteDeleteHint) stickyNoteDeleteHint.textContent = '';
+  const audio = stickyNoteModalContent?.querySelector('audio');
+  audio?.pause();
+}
+
+async function deleteOpenedStickyNote() {
+  const id = openedStickyMessageId;
+  const row = cloudMessageRowsById.get(id);
+  if (!id || !row || !cloudTodoReady || !cloudTodoDb) return;
+
+  if (!stickyDeleteArmed) {
+    stickyDeleteArmed = true;
+    stickyNoteDeleteBtn?.classList.add('confirm');
+    if (stickyNoteDeleteBtn) stickyNoteDeleteBtn.textContent = '确认删除';
+    if (stickyNoteDeleteHint) stickyNoteDeleteHint.textContent = '再点一次“确认删除”，这张便利贴就会从两个人的毛毡板上消失。';
+    return;
+  }
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.messageTable || 'couple_messages').trim();
+  if (stickyNoteDeleteBtn) stickyNoteDeleteBtn.disabled = true;
+  setMessageSyncStatus('syncing', '正在取下这张便利贴…');
+
+  try {
+    const { error } = await cloudTodoDb.from(tableName).delete().eq('id', id);
+    if (error) throw error;
+
+    closeStickyNoteModal();
+    await removeMessageMedia(row);
+    cloudMessageLastFingerprint = '';
+    await refreshCloudMessages({ silent: true });
+    setMessageSyncStatus('online', '便利贴已经取下来了');
+  } catch (error) {
+    console.error('[毛毡板] 删除便利贴失败：', error);
+    if (stickyNoteDeleteHint) stickyNoteDeleteHint.textContent = `删除失败：${String(error?.message || error || '未知错误')}`;
+    setMessageSyncStatus('error', '这张便利贴暂时没删掉');
+  } finally {
+    if (stickyNoteDeleteBtn) stickyNoteDeleteBtn.disabled = false;
+  }
+}
+
+// ---------- 约定事件 ----------
 todoList?.addEventListener('click', (event) => {
+  const deleteBtn = event.target.closest('[data-todo-delete]');
+  if (deleteBtn && todoList.contains(deleteBtn)) {
+    event.preventDefault();
+    event.stopPropagation();
+    const id = String(deleteBtn.dataset.todoDelete || '');
+    const row = cloudTodoRowsCache.find((item) => String(item.id || '') === id);
+    if (row) openTodoDeleteConfirm(row);
+    return;
+  }
+
   const item = event.target.closest('.todo-item[data-todo-id]');
   if (item && todoList.contains(item)) toggleCloudTodo(item);
 });
 
 todoList?.addEventListener('keydown', (event) => {
   if (event.key !== 'Enter' && event.key !== ' ') return;
+  if (event.target.closest('[data-todo-delete]')) return;
   const item = event.target.closest('.todo-item[data-todo-id]');
   if (!item || !todoList.contains(item)) return;
   event.preventDefault();
@@ -1498,13 +2148,72 @@ todoCreateForm?.addEventListener('submit', (event) => {
   createCloudTodo(todoCreateInput?.value || '');
 });
 
+todoDeleteCancelBtn?.addEventListener('click', closeTodoDeleteConfirm);
+todoDeleteConfirmBtn?.addEventListener('click', () => deleteCloudTodo(pendingTodoDeleteId));
+todoDeleteModal?.querySelector('[data-close-todo-delete]')?.addEventListener('click', closeTodoDeleteConfirm);
+
+// ---------- 毛毡板编辑器事件 ----------
+messageModeButtons.forEach((button) => {
+  button.addEventListener('click', () => setMessageMode(button.dataset.messageMode || 'text'));
+});
+
 messageInput?.addEventListener('input', () => {
   if (messageCounter) messageCounter.textContent = `${messageInput.value.length} / 300`;
 });
 
 messageForm?.addEventListener('submit', (event) => {
   event.preventDefault();
-  sendCloudMessage(messageInput?.value || '');
+  if (messageMode === 'text') sendCloudTextMessage(messageInput?.value || '');
+});
+
+messageImageInput?.addEventListener('change', () => {
+  const file = messageImageInput.files?.[0];
+  clearPendingImage();
+  if (!file) return;
+  if (!String(file.type || '').startsWith('image/')) {
+    setMessageSyncStatus('error', '请选择图片文件');
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    setMessageSyncStatus('error', '图片不能超过 10MB');
+    return;
+  }
+
+  pendingImageFile = file;
+  pendingImagePreviewUrl = URL.createObjectURL(file);
+  if (messageImagePreview) messageImagePreview.src = pendingImagePreviewUrl;
+  if (messageImagePreviewWrap) messageImagePreviewWrap.hidden = false;
+  if (messageImageStatus) messageImageStatus.textContent = `${file.name || '这张图片'} · ${(file.size / 1024 / 1024).toFixed(1)}MB`;
+  if (messageImageSendBtn) messageImageSendBtn.disabled = !cloudTodoReady;
+});
+
+messageImageSendBtn?.addEventListener('click', sendCloudImageMessage);
+
+voiceRecordBtn?.addEventListener('click', () => {
+  if (voiceMediaRecorder && voiceMediaRecorder.state !== 'inactive') {
+    stopVoiceRecording();
+  } else {
+    startVoiceRecording();
+  }
+});
+voiceSendBtn?.addEventListener('click', sendCloudVoiceMessage);
+
+// ---------- 毛毡板便利贴事件 ----------
+messageList?.addEventListener('click', (event) => {
+  const note = event.target.closest('.felt-note[data-message-id]');
+  if (!note || !messageList.contains(note)) return;
+  const row = cloudMessageRowsById.get(String(note.dataset.messageId || ''));
+  if (row) openStickyNoteModal(row);
+});
+
+closeStickyNoteModalBtn?.addEventListener('click', closeStickyNoteModal);
+stickyNoteModal?.querySelector('[data-close-sticky-modal]')?.addEventListener('click', closeStickyNoteModal);
+stickyNoteDeleteBtn?.addEventListener('click', deleteOpenedStickyNote);
+
+window.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape') return;
+  if (stickyNoteModal?.classList.contains('show')) closeStickyNoteModal();
+  if (todoDeleteModal?.classList.contains('show')) closeTodoDeleteConfirm();
 });
 
 copyCloudUidBtn?.addEventListener('click', async () => {
@@ -1534,7 +2243,15 @@ window.addEventListener('focus', () => {
   if (shouldPollCloudMessages()) refreshCloudMessages({ silent: true });
 });
 
-// 网站加载后连接一次；访客提醒仍然保持独立，不受这里的 SQL 同步影响。
+window.addEventListener('pagehide', () => {
+  stopVoiceStream();
+  if (pendingImagePreviewUrl) URL.revokeObjectURL(pendingImagePreviewUrl);
+  if (pendingVoicePreviewUrl) URL.revokeObjectURL(pendingVoicePreviewUrl);
+});
+
+setMessageMode('text');
+
+// 网站加载后连接一次；访客提醒仍然保持独立，不受这里的 SQL / 云存储同步影响。
 initCloudHomeSync();
 window.setTimeout(() => {
   initVisitTracking();

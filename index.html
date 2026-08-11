@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="鱼鱼和獭獭的小屋" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="pwa-icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260810-phase5-1" />
+  <link rel="stylesheet" href="style.css?v=20260811-phase6-feltboard" />
 </head>
 <body>
 
@@ -124,7 +124,7 @@
 <!-- 左上角返回小屋 -->
   <button id="backBtn" class="back-btn" type="button">
     <div class="back-icon">←</div>
-    <div class="back-text">小屋</div>
+    <div class="back-text">门口</div>
   </button>
 
 <!-- 客厅标题：只显示，不再承担页面跳转 -->
@@ -142,7 +142,7 @@
   <div id="playerDisc" class="player-disc empty">
     <span class="music-note">♪</span>
   </div>
-  <div class="player-text">音乐</div>
+  <div class="player-text">唱片机</div>
 </button>
 
 <!-- 音乐选择弹窗 -->
@@ -179,30 +179,63 @@
       <div class="timeline-social-zone">
         <div class="social-timeline-dot" aria-hidden="true"></div>
 
-        <section id="messageBoard" class="message-board-card" aria-labelledby="messageBoardTitle">
+        <section id="messageBoard" class="message-board-card felt-board-card" aria-labelledby="messageBoardTitle">
           <div class="message-board-heading">
-            <span class="message-board-icon" aria-hidden="true">💌</span>
+            <span class="message-board-icon" aria-hidden="true">📌</span>
             <div>
-              <h3 id="messageBoardTitle">客厅留言板</h3>
-              <p>想说的话就留在这里，我们两个人都能看到。</p>
+              <h3 id="messageBoardTitle">客厅毛毡板</h3>
+              <p>这里可以贴上便利贴</p>
             </div>
           </div>
 
           <div id="messageSyncBar" class="message-sync-bar" data-state="connecting" aria-live="polite">
             <span class="message-sync-dot" aria-hidden="true"></span>
-            <span id="messageSyncText">正在连接留言板…</span>
+            <span id="messageSyncText">正在连接毛毡板…</span>
           </div>
 
-          <div id="messageList" class="message-list" aria-live="polite">
-            <div class="message-empty">正在把两个人写过的话搬进来… ♡</div>
+          <div id="messageList" class="message-list felt-board-surface" aria-live="polite">
+            <div class="message-empty">正在把两个人贴过的便利贴搬进来… ♡</div>
           </div>
 
-          <form id="messageForm" class="message-compose">
-            <label class="sr-only" for="messageInput">写一条留言</label>
-            <textarea id="messageInput" maxlength="300" rows="3" placeholder="给对方留一句话吧…" autocomplete="off"></textarea>
-            <div class="message-compose-footer">
-              <span id="messageCounter" class="message-counter">0 / 300</span>
-              <button id="messageSendBtn" type="submit">留下这句话 ♡</button>
+          <form id="messageForm" class="message-compose felt-compose">
+            <div class="message-mode-tabs" role="tablist" aria-label="选择便利贴类型">
+              <button class="message-mode-btn active" type="button" data-message-mode="text" role="tab" aria-selected="true">✏️ 文字</button>
+              <button class="message-mode-btn" type="button" data-message-mode="image" role="tab" aria-selected="false">🖼️ 图片</button>
+              <button class="message-mode-btn" type="button" data-message-mode="audio" role="tab" aria-selected="false">🎙️ 语音</button>
+            </div>
+
+            <div class="message-compose-panel active" data-message-panel="text">
+              <label class="sr-only" for="messageInput">文字便利贴</label>
+              <textarea id="messageInput" maxlength="300" rows="3" placeholder="图片、文字、语音都可以贴上！" autocomplete="off"></textarea>
+              <div class="message-compose-footer">
+                <span id="messageCounter" class="message-counter">0 / 300</span>
+                <button id="messageSendBtn" class="message-primary-action" type="submit">贴上便利贴 ♡</button>
+              </div>
+            </div>
+
+            <div class="message-compose-panel" data-message-panel="image" hidden>
+              <input id="messageImageInput" class="sr-only" type="file" accept="image/*" />
+              <label for="messageImageInput" class="message-media-picker">＋ 选择一张图片</label>
+              <div id="messageImagePreviewWrap" class="message-image-preview-wrap" hidden>
+                <img id="messageImagePreview" alt="准备贴上的图片预览" />
+              </div>
+              <p id="messageImageStatus" class="message-media-status">选好图片后，再把它贴到毛毡板上。</p>
+              <button id="messageImageSendBtn" class="message-primary-action full" type="button" disabled>贴上图片便利贴</button>
+            </div>
+
+            <div class="message-compose-panel" data-message-panel="audio" hidden>
+              <div class="voice-recorder-card">
+                <div class="voice-recorder-icon" aria-hidden="true">🎙️</div>
+                <div>
+                  <strong id="voiceRecordTitle">录一段语音</strong>
+                  <span id="voiceRecordStatus">点击开始后，说完再点击停止。</span>
+                </div>
+              </div>
+              <audio id="voicePreview" class="voice-preview" controls hidden></audio>
+              <div class="voice-actions">
+                <button id="voiceRecordBtn" class="message-secondary-action" type="button">● 开始录音</button>
+                <button id="voiceSendBtn" class="message-primary-action" type="button" disabled>贴上语音便利贴</button>
+              </div>
             </div>
           </form>
         </section>
@@ -401,11 +434,42 @@
 </main>
   </section>
 
+
+  <!-- 毛毡板：点击便利贴后的内容弹窗 -->
+  <div id="stickyNoteModal" class="sticky-note-modal" aria-hidden="true">
+    <div class="sticky-note-modal-mask" data-close-sticky-modal></div>
+    <div class="sticky-note-modal-card" role="dialog" aria-modal="true" aria-labelledby="stickyNoteModalTitle">
+      <button id="closeStickyNoteModalBtn" class="sticky-note-modal-close" type="button" aria-label="关闭">×</button>
+      <div class="sticky-note-detail-paper">
+        <span class="sticky-note-detail-pin" aria-hidden="true"></span>
+        <div id="stickyNoteModalMeta" class="sticky-note-modal-meta"></div>
+        <h3 id="stickyNoteModalTitle">便利贴</h3>
+        <div id="stickyNoteModalContent" class="sticky-note-modal-content"></div>
+      </div>
+      <button id="stickyNoteDeleteBtn" class="sticky-note-delete-btn" type="button">删除便利贴</button>
+      <div id="stickyNoteDeleteHint" class="sticky-note-delete-hint" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <!-- 卧室：删除约定确认弹窗 -->
+  <div id="todoDeleteModal" class="todo-delete-modal" aria-hidden="true">
+    <div class="todo-delete-mask" data-close-todo-delete></div>
+    <div class="todo-delete-card" role="dialog" aria-modal="true" aria-labelledby="todoDeleteTitle">
+      <div class="todo-delete-icon" aria-hidden="true">✕</div>
+      <h3 id="todoDeleteTitle">删除这条约定吗？</h3>
+      <p id="todoDeleteText"></p>
+      <div class="todo-delete-actions">
+        <button id="todoDeleteCancelBtn" type="button">先留着</button>
+        <button id="todoDeleteConfirmBtn" type="button">确认删除</button>
+      </div>
+    </div>
+  </div>
+
   <!-- CloudBase：匿名身份 + PostgreSQL(SQL 型数据库) -->
   <script src="https://static.cloudbase.net/cloudbase-js-sdk/2.28.6/cloudbase.full.js"></script>
   <script src="cloudbase-config.js?v=20260810-phase5-1"></script>
 
   <!-- 页面逻辑 -->
-  <script src="script.js?v=20260810-phase5-1"></script>
+  <script src="script.js?v=20260811-phase6-feltboard"></script>
 </body>
 </html>
