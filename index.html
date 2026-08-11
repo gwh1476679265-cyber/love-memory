@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="鱼鱼和獭獭的小屋" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="pwa-icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260811-phase7-4" />
+  <link rel="stylesheet" href="style.css?v=20260811-phase7-5" />
 </head>
 <body>
 
@@ -519,10 +519,49 @@
         </div>
       </section>
 
-     <!-- 模块三：可共同维护的约定清单 -->
-      <section class="yunyaun-section">
-        <div class="section-title">📌 我们的约定 (要记得)</div>
-        <div id="todoSyncBar" class="todo-sync-bar" aria-live="polite">
+     <!-- 模块三：床头柜里的约定小册子 -->
+      <section class="yunyaun-section bedside-cabinet-section" id="bedsideCabinetSection">
+        <div class="bedside-scene">
+          <div class="bedside-scene-kicker">♡ BEDTIME CORNER ♡</div>
+          <div class="bedside-scene-title">床头柜</div>
+
+          <div class="bedside-lamp" aria-hidden="true">
+            <span class="bedside-lamp-shade"></span>
+            <span class="bedside-lamp-neck"></span>
+            <span class="bedside-lamp-base"></span>
+          </div>
+
+          <div class="bedside-cabinet" aria-hidden="true">
+            <span class="bedside-cabinet-top"></span>
+            <span class="bedside-drawer"><i></i></span>
+            <span class="bedside-drawer lower"><i></i></span>
+            <span class="bedside-leg left"></span>
+            <span class="bedside-leg right"></span>
+          </div>
+
+          <button id="todoNotebookToggle" class="todo-book-button" type="button" aria-expanded="false" aria-controls="todoNotebookPanel">
+            <span class="todo-book-pages" aria-hidden="true"></span>
+            <span class="todo-book-cover">
+              <small>OUR LITTLE LIST</small>
+              <strong>我们的约定</strong>
+              <em>📌</em>
+            </span>
+            <span class="todo-book-hint">点一下翻开</span>
+          </button>
+
+          <p class="bedside-scene-copy">把想一起完成的小事，收进床头这本册子里。</p>
+        </div>
+
+        <div id="todoNotebookPanel" class="todo-notebook-panel" hidden>
+          <div class="todo-notebook-panel-heading">
+            <div>
+              <span>📖 翻开的约定册</span>
+              <small>两个人一起写、一起完成</small>
+            </div>
+            <button id="todoNotebookCloseBtn" type="button">合上册子</button>
+          </div>
+
+          <div id="todoSyncBar" class="todo-sync-bar" aria-live="polite">
           <span class="todo-sync-dot" aria-hidden="true"></span>
           <span id="todoSyncText">正在连接两个人的小屋…</span>
           <button id="copyCloudUidBtn" class="copy-cloud-uid-btn" type="button" hidden>复制设备ID</button>
@@ -564,7 +603,8 @@
           <div class="todo-item" data-todo-id="todo_24_xiaxu_gelato" role="button" tabindex="0" aria-pressed="false"><span class="checkbox"></span> <span class="todo-text">吃夏序gelato</span></div>
           <div class="todo-item done" data-todo-id="todo_25_watch_website" role="button" tabindex="0" aria-pressed="true"><span class="checkbox checked">✔</span> <span class="todo-text">线下一起看我们的网站</span></div>
         </div>
-     </section>
+        </div>
+      </section>
 </main>
   </section>
 
@@ -622,6 +662,6 @@
   <script src="cloudbase-config.js?v=20260810-phase5-1"></script>
 
   <!-- 页面逻辑 -->
-  <script src="script.js?v=20260811-phase7-4"></script>
+  <script src="script.js?v=20260811-phase7-5"></script>
 </body>
 </html>

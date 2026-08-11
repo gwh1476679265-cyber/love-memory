@@ -153,6 +153,9 @@ window.addEventListener("keydown", (event) => {
 // 之后你主要改这里就可以
 // 日期格式必须是：YYYY-MM-DD
 // image 写你的图片路径，例如：images/2026-04-01.webp
+// 同一天只有一条：继续写 { ... }；同一天有多条：写成 [ { ... }, { ... } ]。
+// 注意：不要重复写两个完全相同的日期 key，JavaScript 会让后一个覆盖前一个。
+// 数组里排在上面的回忆，会先出现在照片墙；排在下面的会后出现。
 // ===============================
 
 const memories = {
@@ -344,7 +347,8 @@ const memories = {
     text: "进行一个小小的拆箱吧✔外貌check！✔✔✔"
   },
 
- "2026-08-08": {
+ "2026-08-08": [
+  {
     featured: true,
     title: "给你庆生！",
     images: ["images/20260808-1.webp",
@@ -355,19 +359,19 @@ const memories = {
 	 "images/20260808-6.webp",
 	 "images/20260808-7.webp",
 	    ],
-   text: "非常之美丽非常之美味的小蛋糕👸和小蛋糕🎂"
+    text: "非常之美丽非常之美味的小蛋糕👸和小蛋糕🎂"
   },
-
- "2026-08-08": {
-     title: "爱你的人会把你拍得很美",
+  {
+    title: "爱你的人会把你拍得很美",
     images: ["images/20260808-8.jpg",
-	 "images/20260808-9.jpg",
-	 "images/20260808-10.jpg",
-	 "images/20260808-11.jgp",
-	 "images/20260808-12.jpg",
-	    ],
-   text: "所有人欣赏"
-  },
+      "images/20260808-9.jpg",
+      "images/20260808-10.jpg",
+      "images/20260808-11.jpg",
+      "images/20260808-12.jpg"
+    ],
+    text: "所有人欣赏"
+  }
+ ],
 
 };
 
@@ -473,21 +477,46 @@ function getThumbnailPath(imagePath) {
   return imagePath;
 }
 
+function getMemoryEntriesInOrder() {
+  const entries = [];
+
+  Object.keys(memories)
+    .sort((a, b) => new Date(a) - new Date(b))
+    .forEach((dateKey) => {
+      const rawValue = memories[dateKey];
+      const sameDayMemories = Array.isArray(rawValue) ? rawValue : [rawValue];
+      const validMemories = sameDayMemories.filter((memory) => memory && typeof memory === 'object');
+
+      validMemories.forEach((memory, sameDayIndex) => {
+        entries.push({
+          dateKey,
+          memory,
+          sameDayIndex,
+          sameDayCount: validMemories.length
+        });
+      });
+    });
+
+  return entries;
+}
+
 function createTimeline() {
   timelineList.innerHTML = "";
 
-  // 只获取 memories 里面已经填写的日期，并按照日期从早到晚排序。
-  // 普通拍立得每两个组成一“时间行”，保证上方永远比下方更早；
-  // 行内第二张略微下沉，制造自然摆放感，但不会跑到更早日期上方。
-  const memoryDates = Object.keys(memories).sort((a, b) => {
-    return new Date(a) - new Date(b);
-  });
+  // Phase 7.5：同一天可以写多条回忆。
+  // 一个日期对应对象时保持旧写法；对应数组时，数组从上到下就是照片墙出现顺序。
+  const memoryEntries = getMemoryEntriesInOrder();
   let currentWallRow = null;
   let standardCountInRow = 0;
   let wallRowIndex = 0;
+  let tapeItemIndex = 0;
 
-  // 如果还没有任何回忆，就显示一个提示
-  if (memoryDates.length === 0) {
+  function closeCurrentWallRow() {
+    currentWallRow = null;
+    standardCountInRow = 0;
+  }
+
+  if (memoryEntries.length === 0) {
     timelineList.innerHTML = `
       <div class="empty-timeline">
         还没有添加回忆哦，之后可以在 script.js 的 memories 里面添加。
@@ -496,23 +525,38 @@ function createTimeline() {
     return;
   }
 
-  memoryDates.forEach((dateKey, index) => {
+  memoryEntries.forEach((entry, index) => {
+    const { dateKey, memory, sameDayIndex, sameDayCount } = entry;
     const dateText = formatDateText(dateKey);
-    const memory = memories[dateKey];
+    const imageList = getMemoryImages(memory);
+
+    // 默认规则：featured=true → 相框；只有 1 张图 → 胶带照片；其他 → 拍立得。
+    // 如果以后某张单图仍想强制做拍立得，可以在该条回忆里写 display: "polaroid"。
+    // 也支持 display: "tape" 手动指定胶带照片。
+    const useTapeStyle = !memory.featured && (
+      memory.display === 'tape' ||
+      (imageList.length === 1 && memory.display !== 'polaroid')
+    );
 
     const item = document.createElement("div");
-
-    // Phase 7：从纵向时间轴改成照片墙。
-    // featured=true 的重要日子占整行，其余回忆保持小拍立得尺寸。
     const tiltClass = `wall-tilt-${index % 6}`;
-    item.className = `timeline-item photo-wall-item ${memory.featured ? "featured" : "standard"} ${tiltClass}`;
+    const layoutClass = memory.featured ? 'featured' : (useTapeStyle ? 'taped' : 'standard');
+    item.className = `timeline-item photo-wall-item ${layoutClass} ${tiltClass}`;
     item.dataset.date = dateText;
+    item.dataset.memoryIndex = String(index);
+    item.dataset.sameDayIndex = String(sameDayIndex);
+
+    if (sameDayCount > 1) {
+      item.classList.add('same-day-memory');
+    }
 
     const node = document.createElement("div");
-    node.className = "timeline-node photo-frame-pin";
+    node.className = useTapeStyle
+      ? "timeline-node photo-tape-strip"
+      : "timeline-node photo-frame-pin";
 
     const card = document.createElement("article");
-    card.className = `memory-card photo-frame${memory.featured ? " featured-frame" : ""}`;
+    card.className = `memory-card photo-frame${memory.featured ? " featured-frame" : ""}${useTapeStyle ? " taped-photo-card" : ""}`;
 
     const date = document.createElement("div");
     date.className = "memory-date";
@@ -524,163 +568,154 @@ function createTimeline() {
       specialBadge.textContent = "♡ 特别的一天";
     }
 
-const photo = document.createElement("div");
-photo.className = "memory-photo";
+    const photo = document.createElement("div");
+    photo.className = "memory-photo";
+    let currentImageIndex = 0;
+    let hasSwiped = false;
 
-const imageList = getMemoryImages(memory);
-let currentImageIndex = 0;
-let hasSwiped = false;
+    if (imageList.length > 0) {
+      photo.classList.add("has-image");
 
-if (imageList.length > 0) {
-  photo.classList.add("has-image");
+      const img = document.createElement("img");
+      img.alt = memory.title || dateText;
+      img.loading = "lazy";
+      img.decoding = "async";
+      img.setAttribute("fetchpriority", "low");
+      photo.classList.add("is-loading");
 
-  const img = document.createElement("img");
-  img.alt = memory.title || dateText;
-  img.loading = "lazy";
-  img.decoding = "async";
-  img.setAttribute("fetchpriority", "low");
+      function syncWallItemToLoadedImage() {
+        if (!img.naturalWidth || !img.naturalHeight) return;
+        const ratio = img.naturalWidth / img.naturalHeight;
 
-  // 让卡片在图片真正加载前保留一个柔和占位，避免页面突然跳动。
-  photo.classList.add("is-loading");
+        if (!memory.featured && !useTapeStyle) {
+          photo.style.setProperty('--polaroid-photo-ratio', String(ratio));
+          item.classList.toggle("landscape-polaroid", ratio >= 1.16);
+          item.classList.toggle("portrait-polaroid", ratio < 1.16);
+        }
 
-  // 普通拍立得会跟随“当前正在看的照片”改变照片窗比例。
-  // 第一张加载时先确定初始形态；之后每次左右滑动，横 / 竖版和边框高度都会重新适配。
-  function syncPolaroidToLoadedImage() {
-    if (memory.featured || !img.naturalWidth || !img.naturalHeight) return;
-    const ratio = img.naturalWidth / img.naturalHeight;
-    photo.style.setProperty('--polaroid-photo-ratio', String(ratio));
-    item.classList.toggle("landscape-polaroid", ratio >= 1.16);
-    item.classList.toggle("portrait-polaroid", ratio < 1.16);
-  }
+        if (useTapeStyle) {
+          photo.style.setProperty('--taped-photo-ratio', String(ratio));
+          item.classList.toggle('tape-landscape', ratio >= 1.18);
+          item.classList.toggle('tape-portrait', ratio < 0.86);
+          item.classList.toggle('tape-squareish', ratio >= 0.86 && ratio < 1.18);
+        }
+      }
 
-  function loadTimelineMemoryImage(immediate = false) {
-    const fullSrc = imageList[currentImageIndex] || '';
-    const thumbSrc = getThumbnailPath(fullSrc);
-    img.dataset.fullSrc = fullSrc;
-    img.dataset.fallbackTried = '0';
-    setTimelineImageSource(img, thumbSrc, immediate);
-  }
+      function loadTimelineMemoryImage(immediate = false) {
+        const fullSrc = imageList[currentImageIndex] || '';
+        const thumbSrc = getThumbnailPath(fullSrc);
+        img.dataset.fullSrc = fullSrc;
+        img.dataset.fallbackTried = '0';
+        setTimelineImageSource(img, thumbSrc, immediate);
+      }
 
-  img.addEventListener("load", () => {
-    photo.classList.remove("is-loading");
-    syncPolaroidToLoadedImage();
-  });
-  img.addEventListener("error", () => {
-    // 兼容你原来的更新习惯：只把高清图放进 images/ 也可以。
-    // 如果对应 images/thumbs/ 缩略图还没生成，就自动退回高清图。
-    const fullSrc = String(img.dataset.fullSrc || '');
-    const tried = img.dataset.fallbackTried === '1';
-    if (!tried && fullSrc) {
-      img.dataset.fallbackTried = '1';
-      setTimelineImageSource(img, fullSrc, true);
-      return;
-    }
-    photo.classList.remove("is-loading");
-  });
-
-  photo.appendChild(img);
-  loadTimelineMemoryImage();
-
-  if (imageList.length > 1) {
-    photo.classList.add("has-multiple");
-
-    // 照片墙只保留左右滑动 + 圆点，不再显示左右箭头。
-    const dots = document.createElement("div");
-    dots.className = "slide-dots";
-
-    imageList.forEach((_, dotIndex) => {
-      const dot = document.createElement("span");
-      dot.className = dotIndex === 0 ? "dot active" : "dot";
-      dots.appendChild(dot);
-    });
-
-    function updateSlide() {
-      loadTimelineMemoryImage(true);
-
-      const dotList = dots.querySelectorAll(".dot");
-      dotList.forEach((dot, dotIndex) => {
-        dot.classList.toggle("active", dotIndex === currentImageIndex);
+      img.addEventListener("load", () => {
+        photo.classList.remove("is-loading");
+        syncWallItemToLoadedImage();
       });
-    }
 
-    function showPrev() {
-      currentImageIndex =
-        (currentImageIndex - 1 + imageList.length) % imageList.length;
-      updateSlide();
-    }
-
-    function showNext() {
-      currentImageIndex =
-        (currentImageIndex + 1) % imageList.length;
-      updateSlide();
-    }
-
-    dots.querySelectorAll(".dot").forEach((dot, dotIndex) => {
-      dot.addEventListener("click", (e) => {
-        e.stopPropagation();
-        hasSwiped = true;
-        currentImageIndex = dotIndex;
-        updateSlide();
+      img.addEventListener("error", () => {
+        const fullSrc = String(img.dataset.fullSrc || '');
+        const tried = img.dataset.fallbackTried === '1';
+        if (!tried && fullSrc) {
+          img.dataset.fallbackTried = '1';
+          setTimelineImageSource(img, fullSrc, true);
+          return;
+        }
+        photo.classList.remove("is-loading");
       });
-    });
 
-    let startX = 0;
-let endX = 0;
+      photo.appendChild(img);
+      loadTimelineMemoryImage();
 
-photo.addEventListener("touchstart", (e) => {
-  startX = e.touches[0].clientX;
-  endX = startX; // 关键：单击时 endX 和 startX 保持一致
-  hasSwiped = false;
-});
+      if (imageList.length > 1) {
+        photo.classList.add("has-multiple");
 
-photo.addEventListener("touchmove", (e) => {
-  endX = e.touches[0].clientX;
-});
+        const dots = document.createElement("div");
+        dots.className = "slide-dots";
 
-photo.addEventListener("touchend", () => {
-  const distance = endX - startX;
+        imageList.forEach((_, dotIndex) => {
+          const dot = document.createElement("span");
+          dot.className = dotIndex === 0 ? "dot active" : "dot";
+          dots.appendChild(dot);
+        });
 
-  // 只有真正滑动超过 40px，才切换图片
-  if (Math.abs(distance) > 40) {
-    hasSwiped = true;
+        function updateSlide() {
+          loadTimelineMemoryImage(true);
+          dots.querySelectorAll(".dot").forEach((dot, dotIndex) => {
+            dot.classList.toggle("active", dotIndex === currentImageIndex);
+          });
+        }
 
-    if (distance > 0) {
-      showPrev();
+        function showPrev() {
+          currentImageIndex = (currentImageIndex - 1 + imageList.length) % imageList.length;
+          updateSlide();
+        }
+
+        function showNext() {
+          currentImageIndex = (currentImageIndex + 1) % imageList.length;
+          updateSlide();
+        }
+
+        dots.querySelectorAll(".dot").forEach((dot, dotIndex) => {
+          dot.addEventListener("click", (e) => {
+            e.stopPropagation();
+            hasSwiped = true;
+            currentImageIndex = dotIndex;
+            updateSlide();
+          });
+        });
+
+        let startX = 0;
+        let endX = 0;
+
+        photo.addEventListener("touchstart", (e) => {
+          startX = e.touches[0].clientX;
+          endX = startX;
+          hasSwiped = false;
+        });
+
+        photo.addEventListener("touchmove", (e) => {
+          endX = e.touches[0].clientX;
+        });
+
+        photo.addEventListener("touchend", () => {
+          const distance = endX - startX;
+
+          if (Math.abs(distance) > 40) {
+            hasSwiped = true;
+            if (distance > 0) showPrev();
+            else showNext();
+          } else {
+            hasSwiped = false;
+          }
+
+          startX = 0;
+          endX = 0;
+        });
+
+        photo.appendChild(dots);
+      }
     } else {
-      showNext();
+      const empty = document.createElement("div");
+      empty.className = "empty-photo";
+      empty.innerHTML = "♡<br>等待添加照片";
+      photo.appendChild(empty);
     }
-  } else {
-    hasSwiped = false; // 单击时允许打开描述弹窗
-  }
-
-  startX = 0;
-  endX = 0;
-});
-
-    photo.appendChild(dots);
-  }
-} else {
-  const empty = document.createElement("div");
-  empty.className = "empty-photo";
-  empty.innerHTML = "♡<br>等待添加照片";
-  photo.appendChild(empty);
-}
 
     const title = document.createElement("h3");
     title.className = "memory-title";
     title.textContent = memory.title || "这一天的回忆";
 
-   photo.addEventListener("click", () => {
-  if (hasSwiped) {
-    hasSwiped = false;
-    return;
-  }
+    photo.addEventListener("click", () => {
+      if (hasSwiped) {
+        hasSwiped = false;
+        return;
+      }
 
-  const imageList = getMemoryImages(memory);
-  const currentImage = imageList[currentImageIndex] || "";
-
-  openMemoryModal(dateText, memory, currentImage);
-});
+      const currentImage = imageList[currentImageIndex] || "";
+      openMemoryModal(dateText, memory, currentImage);
+    });
 
     card.appendChild(date);
     if (specialBadge) card.appendChild(specialBadge);
@@ -691,32 +726,42 @@ photo.addEventListener("touchend", () => {
     item.appendChild(card);
 
     if (memory.featured) {
-      // 特别日子独占一行，但保留一点轻微歪斜，不再摆得特别正。
-      currentWallRow = null;
-      standardCountInRow = 0;
+      closeCurrentWallRow();
       timelineList.appendChild(item);
-    } else {
-      if (!currentWallRow || standardCountInRow >= 2) {
-        currentWallRow = document.createElement("div");
-        currentWallRow.className = `photo-wall-row row-pattern-${wallRowIndex % 4}`;
-        currentWallRow.dataset.rowIndex = String(wallRowIndex);
-        timelineList.appendChild(currentWallRow);
-        wallRowIndex += 1;
-        standardCountInRow = 0;
-      }
+      return;
+    }
 
-      item.classList.add(standardCountInRow === 0 ? "row-first" : "row-second");
-      currentWallRow.appendChild(item);
-      standardCountInRow += 1;
+    if (useTapeStyle) {
+      closeCurrentWallRow();
+      item.classList.add(tapeItemIndex % 2 === 0 ? 'tape-left' : 'tape-right');
+      tapeItemIndex += 1;
+      timelineList.appendChild(item);
+      return;
+    }
 
-      if (standardCountInRow >= 2) {
-        currentWallRow = null;
-        standardCountInRow = 0;
-      }
+    // 同一天有多条时，每一条都单独占自己的时间行，确保“数组上面的先出现、下面的后出现”。
+    if (sameDayCount > 1) {
+      closeCurrentWallRow();
+    }
+
+    if (!currentWallRow || standardCountInRow >= 2) {
+      currentWallRow = document.createElement("div");
+      currentWallRow.className = `photo-wall-row row-pattern-${wallRowIndex % 4}`;
+      currentWallRow.dataset.rowIndex = String(wallRowIndex);
+      timelineList.appendChild(currentWallRow);
+      wallRowIndex += 1;
+      standardCountInRow = 0;
+    }
+
+    item.classList.add(standardCountInRow === 0 ? "row-first" : "row-second");
+    currentWallRow.appendChild(item);
+    standardCountInRow += 1;
+
+    if (standardCountInRow >= 2 || sameDayCount > 1) {
+      closeCurrentWallRow();
     }
   });
 }
-
 createTimeline();
 
 
@@ -1092,8 +1137,41 @@ document.querySelectorAll('.flip-card').forEach(card => {
   });
 });
 
+// 3. 床头柜：点击约定小册子后再展开原有约定功能
+const bedsideCabinetSection = document.getElementById('bedsideCabinetSection');
+const todoNotebookToggle = document.getElementById('todoNotebookToggle');
+const todoNotebookPanel = document.getElementById('todoNotebookPanel');
+const todoNotebookCloseBtn = document.getElementById('todoNotebookCloseBtn');
+
+function setTodoNotebookOpen(open) {
+  const nextOpen = Boolean(open);
+  if (todoNotebookPanel) todoNotebookPanel.hidden = !nextOpen;
+  if (todoNotebookToggle) {
+    todoNotebookToggle.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
+    todoNotebookToggle.classList.toggle('open', nextOpen);
+  }
+  bedsideCabinetSection?.classList.toggle('book-open', nextOpen);
+
+  if (nextOpen && typeof refreshCloudTodos === 'function') {
+    refreshCloudTodos({ silent: true });
+  }
+}
+
+todoNotebookToggle?.addEventListener('click', () => {
+  const isOpen = todoNotebookToggle.getAttribute('aria-expanded') === 'true';
+  setTodoNotebookOpen(!isOpen);
+});
+
+todoNotebookCloseBtn?.addEventListener('click', () => {
+  setTodoNotebookOpen(false);
+  window.requestAnimationFrame(() => {
+    todoNotebookToggle?.focus({ preventScroll: true });
+    bedsideCabinetSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+});
+
 // ==========================================
-// 3. 两个人的小屋云同步：约定 + 客厅毛毡板（Phase 6）
+// 4. 两个人的小屋云同步：约定 + 客厅毛毡板（Phase 6）
 // ==========================================
 // CloudBase PostgreSQL 继续用轻量轮询保持两台设备同步：
 // - 卧室：共同约定可以打勾、新建、删除；
