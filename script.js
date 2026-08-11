@@ -1130,12 +1130,15 @@ document.querySelectorAll('.dog-container').forEach(dog => {
   dog.addEventListener('click', triggerDogSticker);
 });
 // ==========================================
-// 客厅 ↔ 卧室 页面切换
+// 客厅 ↔ 卧室 / 厨房 页面切换
 // ==========================================
 const aboutPageEl = document.getElementById("aboutPage");
+const kitchenPageEl = document.getElementById("kitchenPage");
 const memoryPageEl = document.getElementById("memoryPage");
 const enterBedroomBtn = document.getElementById("enterBedroomBtn");
+const enterKitchenBtn = document.getElementById("enterKitchenBtn");
 const backToMemoryBtnEl = document.getElementById("backToMemoryBtn");
+const backToMemoryFromKitchenBtnEl = document.getElementById("backToMemoryFromKitchenBtn");
 
 function openBedroomPage(e) {
   if (e) {
@@ -1146,31 +1149,50 @@ function openBedroomPage(e) {
   if (!aboutPageEl || !memoryPageEl) return;
 
   memoryPageEl.classList.remove("active");
+  kitchenPageEl?.classList.remove("active");
   aboutPageEl.classList.add("active");
   window.scrollTo({ top: 0, behavior: "instant" });
 
   if (typeof refreshCloudTodos === "function") {
     refreshCloudTodos({ silent: true });
   }
+}
+
+function openKitchenPage(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  if (!kitchenPageEl || !memoryPageEl) return;
+
+  memoryPageEl.classList.remove("active");
+  aboutPageEl?.classList.remove("active");
+  kitchenPageEl.classList.add("active");
+  window.scrollTo({ top: 0, behavior: "instant" });
+
   if (typeof refreshCloudEatenPlaces === "function") {
     refreshCloudEatenPlaces({ silent: true });
   }
 }
 
-enterBedroomBtn?.addEventListener("click", openBedroomPage);
-
-backToMemoryBtnEl?.addEventListener("click", () => {
-  aboutPageEl?.classList.remove("active");
+function returnToLivingRoom(pageEl) {
+  pageEl?.classList.remove("active");
   memoryPageEl?.classList.add("active");
   window.scrollTo({ top: 0, behavior: "smooth" });
 
   if (typeof refreshCloudMessages === "function") {
     refreshCloudMessages({ silent: true });
   }
-});
+}
+
+enterBedroomBtn?.addEventListener("click", openBedroomPage);
+enterKitchenBtn?.addEventListener("click", openKitchenPage);
+backToMemoryBtnEl?.addEventListener("click", () => returnToLivingRoom(aboutPageEl));
+backToMemoryFromKitchenBtnEl?.addEventListener("click", () => returnToLivingRoom(kitchenPageEl));
 
 // ==========================================
-// 卧室页面交互逻辑
+// 卧室 / 厨房页面交互逻辑
 // ==========================================
 
 // 1. 吃喝雷达：好吃 / 不好吃 / 已吃
@@ -2726,7 +2748,7 @@ function shouldPollCloudMessages() {
 }
 
 function shouldPollCloudEatenPlaces() {
-  return document.visibilityState === 'visible' && aboutPageEl?.classList.contains('active');
+  return document.visibilityState === 'visible' && kitchenPageEl?.classList.contains('active');
 }
 
 function shouldPollCloudLetters() {

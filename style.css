@@ -8312,3 +8312,291 @@ body.birthday-card-lock {
     bottom: 22px !important;
   }
 }
+
+/* ==========================================
+   Phase 7.9：照片墙细节 / 毛毡板三列 / 卧室与厨房分房
+========================================== */
+
+/* ---------- 所有 featured 拼贴卡：统一左上日期规格 ---------- */
+.photo-wall-grid .featured .memory-date {
+  left: 20px !important;
+  top: 13px !important;
+  color: #9c7488 !important;
+  font-size: 12.5px !important;
+  line-height: 1.15 !important;
+  font-weight: 950 !important;
+  letter-spacing: .55px !important;
+  z-index: 9 !important;
+}
+
+/* 2026.04.14：日期压住一点红心，并加浅色描边保证清楚。 */
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-note .memory-date {
+  left: 20px !important;
+  top: 13px !important;
+  -webkit-text-stroke: 2.6px rgba(255, 249, 245, .96);
+  paint-order: stroke fill;
+  text-shadow: 0 1px 1px rgba(255,255,255,.9);
+}
+
+/* ---------- 2026.03.31：左上三层关系重新整理 ----------
+   底卡背景 < 白圈/黄色圆 < 照片 < 网格波点 < 日期
+*/
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .collage-dots-decor {
+  z-index: auto !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .memory-photo {
+  z-index: 4 !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-a,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-a,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-b {
+  z-index: 2 !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-a {
+  z-index: 6 !important;
+}
+
+/* 左上白圈和黄色圆只露在卡片边界附近，不再压聊天头像。 */
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-a {
+  width: 82px !important;
+  height: 82px !important;
+  left: -40px !important;
+  top: 30px !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-a {
+  width: 68px !important;
+  height: 68px !important;
+  left: -25px !important;
+  top: 82px !important;
+}
+
+/* 网格波点最上层，但只轻轻吃进照片边缘。 */
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-a {
+  width: 58px !important;
+  height: 58px !important;
+  left: -38px !important;
+  top: 122px !important;
+}
+
+/* 右上大黄圆再往右，避免碰日期 / 图片文字主体。 */
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-b {
+  width: 104px !important;
+  height: 104px !important;
+  right: -48px !important;
+  top: 20px !important;
+}
+
+/* 其余右侧 / 底部装饰继续主要贴在底卡与墙的交界。 */
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-c {
+  left: -31px !important;
+  bottom: 26px !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-d {
+  right: -23px !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-b {
+  right: -25px !important;
+  bottom: 43px !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-b {
+  right: -22px !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-c {
+  right: -22px !important;
+  bottom: 16px !important;
+}
+
+/* ---------- 2026.05.09：“在一起”底色与顶部红胶带同色 ---------- */
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .memory-title {
+  background: linear-gradient(transparent 63%, rgba(196, 71, 78, .70) 63%) !important;
+}
+
+/* ---------- 客厅毛毡板：固定三列，避免右侧留一大片空白 ---------- */
+.felt-board-surface {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  align-items: start !important;
+  align-content: start !important;
+  justify-content: stretch !important;
+  gap: 14px 9px !important;
+  padding: 20px 10px 14px !important;
+}
+
+.felt-board-surface .message-empty {
+  grid-column: 1 / -1;
+}
+
+.felt-board-surface .felt-note,
+.felt-board-surface .felt-note.note-type-text.note-text-short,
+.felt-board-surface .felt-note.note-type-text.note-text-medium,
+.felt-board-surface .felt-note.note-type-text.note-text-long,
+.felt-board-surface .felt-note.note-type-image,
+.felt-board-surface .felt-note.note-type-image.note-image-landscape,
+.felt-board-surface .felt-note.note-type-image.note-image-square,
+.felt-board-surface .felt-note.note-type-image.note-image-portrait,
+.felt-board-surface .felt-note.note-type-audio {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  justify-self: stretch !important;
+}
+
+.felt-board-surface .felt-note {
+  padding-left: 7px !important;
+  padding-right: 7px !important;
+}
+
+.felt-board-surface .felt-note-preview img {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 142px !important;
+  object-fit: contain !important;
+}
+
+/* ---------- 客厅底部第二个空间入口：厨房 ---------- */
+.kitchen-entry-wrap {
+  position: relative;
+  z-index: 11;
+  width: 100%;
+  margin-top: 23px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.kitchen-entry-wrap .social-timeline-dot {
+  margin-bottom: 18px;
+  border-color: #efc76f;
+  box-shadow:
+    0 0 0 7px rgba(255, 229, 166, .38),
+    0 7px 14px rgba(206, 164, 73, .16);
+}
+
+.kitchen-door-card {
+  border-color: rgba(244, 202, 116, .72) !important;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 238, 190, .78), transparent 38%),
+    radial-gradient(circle at 88% 80%, rgba(214, 243, 231, .76), transparent 42%),
+    #fffdf7 !important;
+  box-shadow: 0 14px 30px rgba(203, 161, 80, .13) !important;
+}
+
+.kitchen-door-icon {
+  border-color: rgba(243, 206, 130, .78) !important;
+  background: rgba(255, 251, 237, .92) !important;
+}
+
+.kitchen-door-copy strong {
+  color: #dcae4d !important;
+}
+
+.kitchen-door-arrow {
+  color: #87cdb4 !important;
+}
+
+/* ---------- 独立厨房页 ---------- */
+.kitchen-page {
+  background:
+    radial-gradient(circle at 86% 9%, rgba(255, 232, 175, .62) 0, transparent 27%),
+    radial-gradient(circle at 12% 14%, rgba(210, 242, 229, .70) 0, transparent 29%),
+    linear-gradient(180deg, #fffaf3 0%, #f5fbf7 48%, #fff8f4 100%) !important;
+}
+
+.kitchen-page .about-header::before {
+  background: rgba(255, 250, 243, .68);
+  border-bottom-color: rgba(237, 201, 127, .48);
+}
+
+.kitchen-page .kitchen-title-box {
+  border-color: rgba(240, 205, 136, .76) !important;
+}
+
+.kitchen-page .kitchen-title-box h2 {
+  color: #d6a64d !important;
+}
+
+.kitchen-page .back-to-memory-btn {
+  border-color: rgba(240, 205, 136, .76) !important;
+}
+
+.kitchen-page .back-icon-mini,
+.kitchen-page .back-text-mini {
+  color: #d6a64d !important;
+}
+
+.kitchen-content-wrap {
+  padding-bottom: 26px;
+}
+
+@media (max-width: 480px) {
+  .photo-wall-grid .featured .memory-date {
+    left: 18px !important;
+    top: 12px !important;
+    font-size: 12px !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-note .memory-date {
+    left: 18px !important;
+    top: 12px !important;
+    -webkit-text-stroke-width: 2.4px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-a {
+    width: 74px !important;
+    height: 74px !important;
+    left: -37px !important;
+    top: 31px !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-a {
+    width: 62px !important;
+    height: 62px !important;
+    left: -23px !important;
+    top: 81px !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-a {
+    width: 54px !important;
+    height: 54px !important;
+    left: -35px !important;
+    top: 119px !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-b {
+    width: 94px !important;
+    height: 94px !important;
+    right: -45px !important;
+    top: 22px !important;
+  }
+
+  .felt-board-surface {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px 7px !important;
+    padding: 19px 8px 13px !important;
+  }
+
+  .felt-board-surface .felt-note {
+    padding: 17px 6px 8px !important;
+  }
+
+  .felt-board-surface .felt-note-text-preview {
+    font-size: 10px !important;
+    line-height: 1.45 !important;
+  }
+
+  .felt-board-surface .felt-note-meta {
+    font-size: 7.5px !important;
+  }
+
+  .kitchen-entry-wrap {
+    margin-top: 22px;
+  }
+}
