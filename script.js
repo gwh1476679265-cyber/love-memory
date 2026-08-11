@@ -1252,10 +1252,36 @@ function getBoardStorageConfig() {
 }
 
 function getBoardStorageClient() {
-  if (!cloudTodoApp?.storage || typeof cloudTodoApp.storage.from !== 'function') {
+  const storage = cloudTodoApp?.storage;
+
+  if (!storage || typeof storage.from !== 'function') {
     throw new Error('当前 CloudBase SDK 没有可用的 PG 云存储模块');
   }
-  return cloudTodoApp.storage.from(getBoardStorageConfig().bucket);
+
+  // Phase 6.2：毛毡板使用的是 PostgreSQL 原生 Bucket。
+  // 这套 app.storage.from(bucketId) / listBuckets() 能力属于 CloudBase JS SDK v3。
+  // 如果用户只替换了 script.js、仍加载旧 v2 SDK，就直接给出明确提示，
+  // 不再让旧 SDK 把 Publishable Key 当成 legacy access token 后报 INVALID_ACCESS_TOKEN。
+  if (typeof storage.listBuckets !== 'function') {
+    throw new Error('CloudBase SDK 版本过旧，请同时部署 Phase 6.2 的 index.html');
+  }
+
+  return storage.from(getBoardStorageConfig().bucket);
+}
+
+function formatBoardStorageError(error, fallback = '云存储暂时不可用') {
+  const raw = String(error?.message || error || '').trim();
+
+  if (/INVALID_ACCESS_TOKEN|JsonWebTokenError|signing key|Unable to find a signing key/i.test(raw)) {
+    return '云存储连接使用了旧版 SDK，请刷新到最新小屋版本后再试';
+  }
+
+  if (/SDK 版本过旧/i.test(raw)) return raw;
+  if (/permission|denied|unauthorized|rls|403/i.test(raw)) {
+    return '云存储权限暂时没有通过，请检查毛毡板 Storage Policy';
+  }
+
+  return raw || fallback;
 }
 
 async function getMessageMediaUrl(row) {
@@ -1831,7 +1857,7 @@ async function createCloudEatenPlace(body) {
     if (uploaded?.path || uploaded?.fileId) {
       await removeMessageMedia({ media_path: uploaded?.path, media_file_id: uploaded?.fileId });
     }
-    setEatenSyncStatus('error', `没有保存成功：${String(error?.message || error || '未知错误')}`);
+    setEatenSyncStatus('error', `没有保存成功：${formatBoardStorageError(error, '未知错误')}`);
   } finally {
     updateEatenSaveState();
   }
@@ -2253,7 +2279,7 @@ async function sendCloudImageMessage() {
   } catch (error) {
     console.error('[毛毡板] 图片便利贴失败：', error);
     if (uploaded?.path || uploaded?.fileId) await removeMessageMedia({ media_path: uploaded?.path, media_file_id: uploaded?.fileId });
-    setMessageSyncStatus('error', `图片没有贴成功：${String(error?.message || error || '未知错误')}`);
+    setMessageSyncStatus('error', `图片没有贴成功：${formatBoardStorageError(error, '未知错误')}`);
   } finally {
     if (messageImageSendBtn) messageImageSendBtn.disabled = !cloudTodoReady || !pendingImageFile;
   }
@@ -2292,7 +2318,7 @@ async function sendCloudVoiceMessage() {
   } catch (error) {
     console.error('[毛毡板] 语音便利贴失败：', error);
     if (uploaded?.path || uploaded?.fileId) await removeMessageMedia({ media_path: uploaded?.path, media_file_id: uploaded?.fileId });
-    setMessageSyncStatus('error', `语音没有贴成功：${String(error?.message || error || '未知错误')}`);
+    setMessageSyncStatus('error', `语音没有贴成功：${formatBoardStorageError(error, '未知错误')}`);
   } finally {
     if (voiceSendBtn) voiceSendBtn.disabled = !cloudTodoReady || !pendingVoiceBlob;
   }
