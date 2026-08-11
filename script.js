@@ -508,6 +508,74 @@ function getCollageSkin(memory, featuredIndex) {
   return COLLAGE_SKINS[featuredIndex % COLLAGE_SKINS.length];
 }
 
+const PHOTO_WALL_FEATURED_VARIANTS = {
+  '2026-03-31': 'featured-card-dots',
+  '2026-04-14': 'featured-card-note',
+  '2026-05-09': 'featured-card-swag',
+  '2026-08-08': 'featured-card-stars'
+};
+
+function buildDecoration(tagName = 'span', className = '', text = '') {
+  const el = document.createElement(tagName);
+  if (className) el.className = className;
+  if (text) el.textContent = text;
+  el.setAttribute('aria-hidden', 'true');
+  return el;
+}
+
+function applyPhotoWallFeaturedVariant(card, item, variantName) {
+  if (!card || !item || !variantName) return;
+
+  item.classList.add(variantName);
+  card.classList.add(variantName);
+
+  if (variantName === 'featured-card-dots') {
+    const decor = buildDecoration('div', 'collage-extra-decor collage-dots-decor');
+    [
+      'dot-solid dot-solid-a',
+      'dot-solid dot-solid-b',
+      'dot-solid dot-solid-c',
+      'dot-solid dot-solid-d',
+      'dot-ring dot-ring-a',
+      'dot-ring dot-ring-b',
+      'dot-grid dot-grid-a',
+      'dot-grid dot-grid-b',
+      'dot-grid dot-grid-c'
+    ].forEach(className => decor.appendChild(buildDecoration('span', className)));
+    card.appendChild(decor);
+    return;
+  }
+
+  if (variantName === 'featured-card-swag') {
+    const decor = buildDecoration('div', 'collage-extra-decor collage-swag-decor');
+    const swagDefs = [
+      ['span', 'swag-chip swag-333', '<333*'],
+      ['span', 'swag-chip swag-hash', '#SWAG'],
+      ['span', 'swag-chip swag-star', '★'],
+      ['span', 'swag-chip swag-heart', '♡'],
+      ['span', 'swag-chip swag-spiral', '◌'],
+      ['span', 'swag-chip swag-choose', 'CHOOSE YOU'],
+      ['span', 'swag-chip swag-music', 'i♡ music'],
+      ['span', 'swag-chip swag-notes', '𝄞♪♬']
+    ];
+
+    swagDefs.forEach(([tag, className, content]) => {
+      decor.appendChild(buildDecoration(tag, className, content));
+    });
+
+    card.appendChild(decor);
+    return;
+  }
+
+  if (variantName === 'featured-card-stars') {
+    const decor = buildDecoration('div', 'collage-extra-decor collage-stars-decor');
+    ['star-a', 'star-b', 'star-c', 'star-d'].forEach(className => {
+      decor.appendChild(buildDecoration('span', `edge-star ${className}`, '★'));
+    });
+    card.appendChild(decor);
+  }
+}
+
 function createTimeline() {
   timelineList.innerHTML = "";
 
@@ -548,6 +616,7 @@ function createTimeline() {
       (imageList.length === 1 && memory.display !== 'polaroid')
     );
     const collageSkin = memory.featured ? getCollageSkin(memory, featuredItemIndex) : '';
+    const featuredVariantName = memory.featured ? (PHOTO_WALL_FEATURED_VARIANTS[dateKey] || '') : '';
     if (memory.featured) featuredItemIndex += 1;
 
     const item = document.createElement("div");
@@ -555,6 +624,7 @@ function createTimeline() {
     const layoutClass = memory.featured ? 'featured collage-item' : (useTapeStyle ? 'taped' : 'standard');
     item.className = `timeline-item photo-wall-item ${layoutClass} ${tiltClass}${collageSkin ? ` collage-${collageSkin}` : ''}`;
     item.dataset.date = dateText;
+    item.dataset.memoryKey = dateKey;
     item.dataset.memoryIndex = String(index);
     item.dataset.sameDayIndex = String(sameDayIndex);
 
@@ -736,6 +806,10 @@ function createTimeline() {
     card.appendChild(date);
     card.appendChild(photo);
     card.appendChild(title);
+
+    if (memory.featured && featuredVariantName) {
+      applyPhotoWallFeaturedVariant(card, item, featuredVariantName);
+    }
 
     item.appendChild(node);
     item.appendChild(card);

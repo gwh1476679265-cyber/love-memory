@@ -7528,3 +7528,378 @@ body.birthday-card-lock {
     font-size: 10px !important;
   }
 }
+
+/* ==========================================
+   Phase 7.8.1：客厅照片墙 4 张指定拼贴卡定向视觉
+   - 仅改 4 张 featured 卡片的装饰层
+   - 不动 memories 数据结构 / 其他模块
+========================================== */
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-note,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-stars {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots::before,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots::after,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag::before,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag::after,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-stars::before,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-stars::after {
+  content: none !important;
+  display: none !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card .memory-date,
+.photo-wall-grid .featured .memory-card.collage-card .memory-title {
+  position: relative;
+  z-index: 5;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card .memory-photo {
+  position: relative;
+  z-index: 4;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card .collage-extra-decor {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* A. 第 1 张：黄色波点 / 白色空心圆 / 网格圆点 */
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots {
+  background: #f9f4e9 !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring,
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid {
+  background: rgba(243, 216, 97, .84);
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-a {
+  width: 84px; height: 84px; left: -18px; top: 24px; opacity: .56;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-b {
+  width: 112px; height: 112px; right: -8px; top: -12px; opacity: .92;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-c {
+  width: 70px; height: 70px; left: -26px; bottom: 54px; opacity: .74;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-d {
+  width: 36px; height: 36px; right: 24px; top: 56px; opacity: .52;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring {
+  border: 3px solid rgba(255,255,255,.88);
+  background: transparent;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-a {
+  width: 138px; height: 138px; left: -72px; top: -18px;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-b {
+  width: 52px; height: 52px; right: 14px; bottom: 86px;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid {
+  background-image: radial-gradient(circle, rgba(247,219,108,.95) 0 3px, transparent 3.6px);
+  background-size: 11px 11px;
+  background-color: transparent;
+  opacity: .96;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-a {
+  width: 70px; height: 70px; left: -6px; top: 46px;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-b {
+  width: 48px; height: 48px; right: -20px; top: 146px; opacity: .82;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-c {
+  width: 44px; height: 44px; right: -12px; bottom: 26px; opacity: .8;
+}
+
+/* B. 第 2 张：右上回形针 + 左上爱心 */
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-note {
+  background: linear-gradient(180deg, #fff6ef 0%, #fffaf3 100%) !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-note::before {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  right: 18px;
+  top: 10px;
+  width: 10px;
+  height: 24px;
+  border: 2px solid rgba(76, 76, 76, .72);
+  border-left-width: 1.5px;
+  border-radius: 8px;
+  background: transparent;
+  transform: rotate(7deg);
+  z-index: 2;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-note::after {
+  content: "❤" !important;
+  display: block !important;
+  position: absolute;
+  left: 18px;
+  top: 10px;
+  color: rgba(233, 170, 191, .8);
+  font-size: 20px;
+  line-height: 1;
+  transform: rotate(-13deg);
+  z-index: 2;
+}
+
+/* C. 第 3 张：使用 p6 元素，按 p5 的清爽贴纸排版 */
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag {
+  background: #edf8f7 !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: .2px;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-333 {
+  left: -8px;
+  top: 18px;
+  color: #79d9ca;
+  font-size: 17px;
+  transform: rotate(-4deg);
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-hash {
+  right: 22px;
+  top: 16px;
+  color: #20c9d1;
+  font-size: 13px;
+  transform: rotate(-2deg);
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-star {
+  right: 7px;
+  top: 36px;
+  color: #49c3cc;
+  font-size: 25px;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-heart {
+  right: 10px;
+  top: 94px;
+  color: rgba(173, 236, 224, .92);
+  font-size: 28px;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-spiral {
+  left: -4px;
+  bottom: 68px;
+  color: #37cfbf;
+  font-size: 34px;
+  transform: scale(1.3, 1.15);
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-choose {
+  left: -2px;
+  bottom: 16px;
+  padding: 9px 6px 8px;
+  background: #29d7df;
+  color: #ff7ccd;
+  font-size: 11px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  border-radius: 0;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-music {
+  left: 50%;
+  bottom: 12px;
+  min-width: 92px;
+  padding: 12px 10px;
+  border-radius: 2px;
+  background: #25d9dd;
+  color: #f8fffd;
+  font-size: 10px;
+  font-weight: 800;
+  transform: translateX(-50%);
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-notes {
+  right: 12px;
+  bottom: 18px;
+  color: rgba(165, 229, 229, .95);
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* D. 第 4 张：金色星星沿边缘覆盖，避免遮挡主体 */
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-stars {
+  background:
+    repeating-linear-gradient(90deg, rgba(251, 224, 232, .44) 0 11px, rgba(255, 245, 247, .95) 11px 22px),
+    #fff9f6 !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-stars .edge-star {
+  position: absolute;
+  display: block;
+  color: #d5b14a;
+  font-size: 28px;
+  line-height: 1;
+  text-shadow: 0 2px 5px rgba(182, 143, 47, .18);
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-stars .star-a {
+  left: -10px;
+  top: 22px;
+  transform: rotate(-8deg);
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-stars .star-b {
+  right: 6px;
+  top: 16px;
+  transform: rotate(10deg);
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-stars .star-c {
+  left: -8px;
+  bottom: 108px;
+  transform: rotate(-10deg);
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-stars .star-d {
+  right: 10px;
+  bottom: 26px;
+  transform: rotate(9deg);
+}
+
+@media (max-width: 480px) {
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-a {
+    width: 72px; height: 72px; left: -18px; top: 28px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-b {
+    width: 98px; height: 98px; right: -10px; top: -8px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-c {
+    width: 62px; height: 62px; left: -24px; bottom: 60px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-a {
+    width: 118px; height: 118px; left: -62px; top: -12px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-a {
+    width: 60px; height: 60px; left: -4px; top: 48px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-note::before {
+    right: 14px;
+    top: 10px;
+    height: 21px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-note::after {
+    left: 14px;
+    top: 10px;
+    font-size: 18px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-333 {
+    left: -5px;
+    top: 18px;
+    font-size: 15px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-hash {
+    right: 18px;
+    top: 16px;
+    font-size: 11px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-star {
+    right: 6px;
+    top: 34px;
+    font-size: 22px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-heart {
+    right: 10px;
+    top: 86px;
+    font-size: 24px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-spiral {
+    left: -2px;
+    bottom: 62px;
+    font-size: 30px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-choose {
+    left: 0;
+    bottom: 14px;
+    padding: 8px 5px 7px;
+    font-size: 10px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-music {
+    min-width: 80px;
+    padding: 10px 8px;
+    font-size: 9px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-swag .swag-notes {
+    right: 9px;
+    bottom: 18px;
+    font-size: 18px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-stars .edge-star {
+    font-size: 24px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-stars .star-a {
+    left: -8px;
+    top: 22px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-stars .star-b {
+    right: 8px;
+    top: 18px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-stars .star-c {
+    left: -6px;
+    bottom: 102px;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-stars .star-d {
+    right: 10px;
+    bottom: 24px;
+  }
+}
