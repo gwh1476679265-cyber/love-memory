@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="鱼鱼和獭獭的小屋" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="pwa-icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260811-phase6-1-eaten" />
+  <link rel="stylesheet" href="style.css?v=20260811-phase7" />
 </head>
 <body>
 
@@ -63,9 +63,20 @@
     会！
   </div>
 
-  <button id="enterBtn" class="main-btn home-knock-btn">
-    敲门进入回忆
-  </button>
+  <div class="home-entry-actions">
+    <button id="enterBtn" class="main-btn home-knock-btn">
+      敲门进入回忆
+    </button>
+
+    <button id="homeMailboxBtn" class="home-mailbox-btn" type="button" aria-label="打开门口信箱">
+      <span class="home-mailbox-icon" aria-hidden="true">📮</span>
+      <span class="home-mailbox-copy">
+        <strong>门口信箱</strong>
+        <small id="homeMailboxHint">看看有没有留给你的信</small>
+      </span>
+      <span id="homeMailboxBadge" class="home-mailbox-badge" hidden>新信</span>
+    </button>
+  </div>
    </main>
 </section>
 
@@ -114,6 +125,78 @@
         点击进入我们的回忆
       </button>
     </div>
+  </div>
+
+
+  <!-- 门口：两个人的信箱 -->
+  <div id="mailboxModal" class="mailbox-modal" aria-hidden="true">
+    <div class="mailbox-modal-mask" data-close-mailbox></div>
+    <section class="mailbox-card" role="dialog" aria-modal="true" aria-labelledby="mailboxTitle">
+      <button id="closeMailboxBtn" class="mailbox-close-btn" type="button" aria-label="关闭信箱">×</button>
+
+      <div class="mailbox-heading">
+        <div class="mailbox-heading-icon" aria-hidden="true">📮</div>
+        <div>
+          <div class="mailbox-kicker">AT OUR DOOR</div>
+          <h2 id="mailboxTitle">门口信箱</h2>
+          <p>写一封留在门口，只等对方来拆。</p>
+        </div>
+      </div>
+
+      <div id="mailboxSyncBar" class="mailbox-sync-bar" data-state="connecting" aria-live="polite">
+        <span class="mailbox-sync-dot" aria-hidden="true"></span>
+        <span id="mailboxSyncText">正在看看信箱里有没有新信…</span>
+      </div>
+
+      <div class="mailbox-tabs" role="tablist" aria-label="信箱功能">
+        <button id="mailboxInboxTab" class="mailbox-tab active" type="button" data-mailbox-tab="inbox" role="tab" aria-selected="true">💌 收信</button>
+        <button id="mailboxWriteTab" class="mailbox-tab" type="button" data-mailbox-tab="write" role="tab" aria-selected="false">✍️ 写信</button>
+      </div>
+
+      <div id="mailboxInboxPanel" class="mailbox-panel active" data-mailbox-panel="inbox">
+        <div id="mailboxInbox" class="mailbox-inbox" aria-live="polite">
+          <div class="mailbox-empty">信箱正在打开… ♡</div>
+        </div>
+      </div>
+
+      <div id="mailboxWritePanel" class="mailbox-panel" data-mailbox-panel="write" hidden>
+        <form id="letterForm" class="letter-form">
+          <label class="letter-field-label" for="letterOccasion">这封信是因为</label>
+          <select id="letterOccasion">
+            <option value="平常的一天">平常的一天</option>
+            <option value="想你了">想你了</option>
+            <option value="纪念日">纪念日</option>
+            <option value="生日">生日</option>
+            <option value="偷偷说">偷偷说</option>
+          </select>
+
+          <label class="letter-field-label" for="letterBody">写给 TA</label>
+          <textarea id="letterBody" maxlength="1200" rows="8" placeholder="写完以后塞进信箱，这台设备不会在收信页显示正文，等 TA 来拆。" autocomplete="off"></textarea>
+
+          <div class="letter-form-footer">
+            <span id="letterCounter">0 / 1200</span>
+            <button id="letterSendBtn" type="submit">塞进信箱 ♡</button>
+          </div>
+          <div id="letterSendStatus" class="letter-send-status" aria-live="polite"></div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <!-- 门口：拆信阅读弹窗 -->
+  <div id="letterReaderModal" class="letter-reader-modal" aria-hidden="true">
+    <div class="letter-reader-mask" data-close-letter-reader></div>
+    <section class="letter-reader-card" role="dialog" aria-modal="true" aria-labelledby="letterReaderTitle">
+      <button id="closeLetterReaderBtn" class="letter-reader-close" type="button" aria-label="收起这封信">×</button>
+      <div class="letter-paper">
+        <div class="letter-paper-tape" aria-hidden="true"></div>
+        <div id="letterReaderOccasion" class="letter-reader-occasion"></div>
+        <h3 id="letterReaderTitle">给你的一封信</h3>
+        <div id="letterReaderBody" class="letter-reader-body"></div>
+        <div id="letterReaderMeta" class="letter-reader-meta"></div>
+      </div>
+      <button id="letterReaderDoneBtn" class="letter-reader-done" type="button">收好这封信 ♡</button>
+    </section>
   </div>
 
 
@@ -168,12 +251,20 @@
     <img src="otter.png" loading="lazy" decoding="async" class="memory-sticker memory-otter" alt="otter">
 
 
-  <!-- 时间轴 -->
-    <main class="timeline-wrap">
-      <div class="timeline-line"></div>
-      
-      <!-- 回忆卡片在这里动态渲染，保持完全独立 -->
-      <div id="timelineList" class="timeline-list"></div>
+  <!-- 客厅照片墙：保留原回忆数据、懒加载、多图切换与详情弹窗 -->
+    <main class="timeline-wrap photo-wall-wrap">
+      <section class="photo-wall-section" aria-labelledby="photoWallTitle">
+        <div class="photo-wall-heading">
+          <span class="photo-wall-heading-icon" aria-hidden="true">🖼️</span>
+          <div>
+            <h3 id="photoWallTitle">客厅照片墙</h3>
+            <p>特别重要的日子，会在墙上占一块更大的位置。</p>
+          </div>
+        </div>
+
+        <!-- 回忆卡片继续由 script.js 动态渲染 -->
+        <div id="timelineList" class="timeline-list photo-wall-grid"></div>
+      </section>
 
       <!-- 客厅最下方：双人留言板 -->
       <div class="timeline-social-zone">
@@ -513,6 +604,6 @@
   <script src="cloudbase-config.js?v=20260810-phase5-1"></script>
 
   <!-- 页面逻辑 -->
-  <script src="script.js?v=20260811-phase6-2-storage-fix"></script>
+  <script src="script.js?v=20260811-phase7"></script>
 </body>
 </html>

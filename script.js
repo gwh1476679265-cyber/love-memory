@@ -157,6 +157,7 @@ window.addEventListener("keydown", (event) => {
 
 const memories = {
   "2026-03-31": {
+    featured: true,
     title: "那一天你走进了我的生命",
     image: "images/20260331.webp",
     text: "小众姓联盟成立！"
@@ -164,6 +165,7 @@ const memories = {
 
 
  "2026-04-14": {
+    featured: true,
     title: "第一次见面",
     images: ["images/20260414-1.webp",
 	"images/20260414-2.webp",
@@ -218,6 +220,7 @@ const memories = {
   },
 
   "2026-05-09": {
+    featured: true,
     title: "在一起",
     images: ["images/20260509-1.webp",
 	 "images/20260509-2.webp",
@@ -342,6 +345,7 @@ const memories = {
   },
 
  "2026-08-08": {
+    featured: true,
     title: "给你庆生！",
     images: ["images/20260808-1.webp",
 	 "images/20260808-2.webp",
@@ -357,7 +361,7 @@ const memories = {
 };
 
 // ===============================
-// 生成从 2026-03-31 到今天的每日时间轴
+// 客厅照片墙沿用原回忆数据（日期仍用于顶部日期跟随）
 // ===============================
 
 const START_DATE = new Date("2026-03-31T00:00:00");
@@ -368,7 +372,7 @@ const timelineList = document.getElementById("timelineList");
 
 
 // ===============================
-// 🚀 第一阶段性能优化：时间轴图片按需加载
+// 🚀 照片墙继续沿用缩略图 + IntersectionObserver 按需加载
 // 只加载视口附近的图片，避免一打开网站就把几十张照片全部下载。
 // ===============================
 const timelineImageObserver = "IntersectionObserver" in window
@@ -482,19 +486,27 @@ function createTimeline() {
 
     const item = document.createElement("div");
 
-    // 按照日期顺序左右交错排列
-    item.className = `timeline-item ${index % 2 === 0 ? "left" : "right"}`;
+    // Phase 7：从纵向时间轴改成照片墙。
+    // featured=true 的重要日子占整行，其余回忆保持小拍立得尺寸。
+    const tiltClass = `wall-tilt-${index % 4}`;
+    item.className = `timeline-item photo-wall-item ${memory.featured ? "featured" : "standard"} ${tiltClass}`;
     item.dataset.date = dateText;
 
     const node = document.createElement("div");
-    node.className = "timeline-node";
+    node.className = "timeline-node photo-frame-pin";
 
     const card = document.createElement("article");
-    card.className = "memory-card";
+    card.className = `memory-card photo-frame${memory.featured ? " featured-frame" : ""}`;
 
     const date = document.createElement("div");
     date.className = "memory-date";
     date.textContent = dateText;
+
+    const specialBadge = memory.featured ? document.createElement("div") : null;
+    if (specialBadge) {
+      specialBadge.className = "memory-special-badge";
+      specialBadge.textContent = "♡ 特别的一天";
+    }
 
 const photo = document.createElement("div");
 photo.className = "memory-photo";
@@ -632,7 +644,7 @@ photo.addEventListener("touchend", () => {
 
     const desc = document.createElement("p");
     desc.className = "memory-desc";
-    desc.textContent = "点击查看这一天的具体记录";
+    desc.textContent = "点开相框，看看这一天";
 
    photo.addEventListener("click", () => {
   if (hasSwiped) {
@@ -647,6 +659,7 @@ photo.addEventListener("touchend", () => {
 });
 
     card.appendChild(date);
+    if (specialBadge) card.appendChild(specialBadge);
     card.appendChild(photo);
     card.appendChild(title);
     card.appendChild(desc);
@@ -1016,6 +1029,29 @@ document.querySelectorAll('.flip-card').forEach(card => {
 // - 文字与元数据保存在 PostgreSQL；图片 / 语音保存在 CloudBase PG 云存储；
 // - “我 / TA”仍只用每台设备长期保存的 deviceId 区分，不改变访问提醒逻辑。
 
+const homeMailboxBtn = document.getElementById('homeMailboxBtn');
+const homeMailboxBadge = document.getElementById('homeMailboxBadge');
+const homeMailboxHint = document.getElementById('homeMailboxHint');
+const mailboxModal = document.getElementById('mailboxModal');
+const closeMailboxBtn = document.getElementById('closeMailboxBtn');
+const mailboxSyncBar = document.getElementById('mailboxSyncBar');
+const mailboxSyncText = document.getElementById('mailboxSyncText');
+const mailboxInbox = document.getElementById('mailboxInbox');
+const mailboxTabs = [...document.querySelectorAll('[data-mailbox-tab]')];
+const mailboxPanels = [...document.querySelectorAll('[data-mailbox-panel]')];
+const letterForm = document.getElementById('letterForm');
+const letterOccasion = document.getElementById('letterOccasion');
+const letterBody = document.getElementById('letterBody');
+const letterCounter = document.getElementById('letterCounter');
+const letterSendBtn = document.getElementById('letterSendBtn');
+const letterSendStatus = document.getElementById('letterSendStatus');
+const letterReaderModal = document.getElementById('letterReaderModal');
+const closeLetterReaderBtn = document.getElementById('closeLetterReaderBtn');
+const letterReaderDoneBtn = document.getElementById('letterReaderDoneBtn');
+const letterReaderOccasion = document.getElementById('letterReaderOccasion');
+const letterReaderBody = document.getElementById('letterReaderBody');
+const letterReaderMeta = document.getElementById('letterReaderMeta');
+
 const todoList = document.getElementById('todoList');
 const todoSyncBar = document.getElementById('todoSyncBar');
 const todoSyncText = document.getElementById('todoSyncText');
@@ -1098,6 +1134,13 @@ let pendingTodoDeleteId = '';
 let cloudMessageSchemaReady = true;
 const messageMediaUrlCache = new Map();
 
+let cloudLetterRefreshing = false;
+let cloudLetterLastFingerprint = '';
+let cloudLetterRowsCache = [];
+let cloudLetterRowsById = new Map();
+let mailboxActiveTab = 'inbox';
+let openedLetterId = '';
+
 let cloudEatenRefreshing = false;
 let cloudEatenTableReady = false;
 let cloudEatenLastFingerprint = '';
@@ -1105,6 +1148,253 @@ let cloudEatenRowsCache = [];
 let pendingEatenImageFile = null;
 let pendingEatenImagePreviewUrl = '';
 const eatenImageUrlCache = new Map();
+
+function setMailboxSyncStatus(state, text) {
+  if (mailboxSyncBar) mailboxSyncBar.dataset.state = state;
+  if (mailboxSyncText) mailboxSyncText.textContent = text;
+}
+
+function setMailboxComposerEnabled(enabled) {
+  if (letterOccasion) letterOccasion.disabled = !enabled;
+  if (letterBody) letterBody.disabled = !enabled;
+  if (letterSendBtn) letterSendBtn.disabled = !enabled || !String(letterBody?.value || '').trim();
+}
+
+function formatLetterDate(value) {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return '';
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const mm = String(date.getMinutes()).padStart(2, '0');
+  return `${y}.${m}.${d} ${hh}:${mm}`;
+}
+
+function fingerprintLetterRows(rows = []) {
+  return rows
+    .map((row) => `${row.id}:${row.created_by || ''}:${row.created_at || ''}:${row.opened_by || ''}:${row.opened_at || ''}:${row.occasion || ''}:${row.body || ''}`)
+    .join('|');
+}
+
+function updateMailboxBadge(rows = cloudLetterRowsCache) {
+  const incoming = rows.filter((row) => String(row.created_by || '') !== String(cloudTodoUid || ''));
+  const unread = incoming.filter((row) => !row.opened_at).length;
+
+  if (homeMailboxBadge) {
+    homeMailboxBadge.hidden = unread <= 0;
+    homeMailboxBadge.textContent = unread > 9 ? '9+' : String(unread || '');
+  }
+  homeMailboxBtn?.classList.toggle('has-new-letter', unread > 0);
+
+  if (homeMailboxHint) {
+    homeMailboxHint.textContent = unread > 0
+      ? `有 ${unread} 封新信等你拆 ♡`
+      : '看看有没有留给你的信';
+  }
+}
+
+function switchMailboxTab(tab) {
+  mailboxActiveTab = tab === 'write' ? 'write' : 'inbox';
+  mailboxTabs.forEach((button) => {
+    const active = button.dataset.mailboxTab === mailboxActiveTab;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-selected', active ? 'true' : 'false');
+  });
+  mailboxPanels.forEach((panel) => {
+    const active = panel.dataset.mailboxPanel === mailboxActiveTab;
+    panel.classList.toggle('active', active);
+    panel.hidden = !active;
+  });
+}
+
+function createMailboxLetterItem(row) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = `mailbox-letter-item${row.opened_at ? ' opened' : ' unread'}`;
+  button.dataset.letterId = String(row.id || '');
+
+  const envelope = document.createElement('span');
+  envelope.className = 'mailbox-letter-envelope';
+  envelope.textContent = row.opened_at ? '💌' : '✉️';
+
+  const copy = document.createElement('span');
+  copy.className = 'mailbox-letter-copy';
+
+  const occasion = document.createElement('strong');
+  occasion.textContent = String(row.occasion || '给你的一封信');
+
+  const meta = document.createElement('small');
+  meta.textContent = row.opened_at
+    ? `${formatLetterDate(row.created_at)} · 已拆`
+    : `${formatLetterDate(row.created_at)} · 等你拆开`;
+
+  copy.append(occasion, meta);
+
+  const seal = document.createElement('span');
+  seal.className = 'mailbox-letter-seal';
+  seal.textContent = row.opened_at ? '♡' : 'NEW';
+
+  button.append(envelope, copy, seal);
+  return button;
+}
+
+function renderMailboxLetters(rows = []) {
+  if (!mailboxInbox) return;
+
+  const incoming = rows
+    .filter((row) => String(row.created_by || '') !== String(cloudTodoUid || ''))
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+  mailboxInbox.innerHTML = '';
+  if (!incoming.length) {
+    const empty = document.createElement('div');
+    empty.className = 'mailbox-empty';
+    empty.innerHTML = '信箱现在空空的。<br><span>也许下一封会在某个普通日子突然出现 ♡</span>';
+    mailboxInbox.appendChild(empty);
+    return;
+  }
+
+  incoming.forEach((row) => mailboxInbox.appendChild(createMailboxLetterItem(row)));
+}
+
+function openMailboxModal() {
+  if (!mailboxModal) return;
+  mailboxModal.classList.add('show');
+  mailboxModal.setAttribute('aria-hidden', 'false');
+  switchMailboxTab('inbox');
+  refreshCloudLetters({ silent: true });
+}
+
+function closeMailboxModal() {
+  mailboxModal?.classList.remove('show');
+  mailboxModal?.setAttribute('aria-hidden', 'true');
+}
+
+function closeLetterReader() {
+  openedLetterId = '';
+  letterReaderModal?.classList.remove('show');
+  letterReaderModal?.setAttribute('aria-hidden', 'true');
+}
+
+async function markLetterOpened(row) {
+  if (!row || row.opened_at || !cloudTodoReady || !cloudTodoDb || !cloudTodoUid) return;
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.letterTable || 'couple_letters').trim();
+
+  try {
+    const { error } = await cloudTodoDb
+      .from(tableName)
+      .update({
+        opened_by: String(cloudTodoUid),
+        opened_at: new Date().toISOString()
+      })
+      .eq('id', String(row.id || ''));
+    if (error) throw error;
+    cloudLetterLastFingerprint = '';
+    await refreshCloudLetters({ silent: true });
+  } catch (error) {
+    console.error('[门口信箱] 标记已读失败：', error);
+    setMailboxSyncStatus('error', '信已经拆开了，但“已读”状态暂时没同步成功');
+  }
+}
+
+async function openLetterReader(row) {
+  if (!row || !letterReaderModal) return;
+  if (String(row.created_by || '') === String(cloudTodoUid || '')) return;
+
+  openedLetterId = String(row.id || '');
+  if (letterReaderOccasion) letterReaderOccasion.textContent = String(row.occasion || '给你的一封信');
+  if (letterReaderBody) letterReaderBody.textContent = String(row.body || '');
+  if (letterReaderMeta) letterReaderMeta.textContent = `TA 写于 ${formatLetterDate(row.created_at)}`;
+
+  letterReaderModal.classList.add('show');
+  letterReaderModal.setAttribute('aria-hidden', 'false');
+
+  if (!row.opened_at) await markLetterOpened(row);
+}
+
+async function refreshCloudLetters({ silent = false } = {}) {
+  if (!cloudTodoReady || !cloudTodoDb || cloudLetterRefreshing || !homeMailboxBtn) return;
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.letterTable || 'couple_letters').trim();
+  cloudLetterRefreshing = true;
+
+  try {
+    const { data, error } = await cloudTodoDb
+      .from(tableName)
+      .select('id,body,occasion,created_by,created_at,opened_by,opened_at')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+
+    const rows = Array.isArray(data) ? data : [];
+    const fingerprint = fingerprintLetterRows(rows);
+    cloudLetterRowsCache = rows.slice();
+    cloudLetterRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
+
+    if (fingerprint !== cloudLetterLastFingerprint) {
+      renderMailboxLetters(rows);
+      updateMailboxBadge(rows);
+      cloudLetterLastFingerprint = fingerprint;
+    } else {
+      updateMailboxBadge(rows);
+    }
+
+    if (!silent) {
+      const unread = rows.filter((row) => String(row.created_by || '') !== String(cloudTodoUid || '') && !row.opened_at).length;
+      setMailboxSyncStatus('online', unread > 0 ? `信箱里有 ${unread} 封新信 ♡` : '信箱已经看过啦，现在没有未拆的新信');
+    } else if (mailboxSyncBar?.dataset.state !== 'online') {
+      setMailboxSyncStatus('online', '信箱已同步');
+    }
+  } catch (error) {
+    console.error('[门口信箱] 读取失败：', error);
+    setMailboxSyncStatus('error', '信箱暂时没有连上，请先执行 Phase 7 信箱 SQL');
+    if (mailboxInbox && !mailboxInbox.querySelector('.mailbox-letter-item')) {
+      mailboxInbox.innerHTML = '<div class="mailbox-empty">信箱暂时打不开，先检查 Phase 7 SQL 是否执行成功。</div>';
+    }
+  } finally {
+    cloudLetterRefreshing = false;
+  }
+}
+
+async function sendCloudLetter(body, occasion) {
+  const cleanBody = String(body || '').trim();
+  const cleanOccasion = String(occasion || '平常的一天').trim().slice(0, 30) || '平常的一天';
+  if (!cleanBody) return;
+
+  if (!cloudTodoReady || !cloudTodoDb || !cloudTodoUid) {
+    if (letterSendStatus) letterSendStatus.textContent = '信箱还没连上云端，等一下再试。';
+    return;
+  }
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.letterTable || 'couple_letters').trim();
+  if (letterSendBtn) letterSendBtn.disabled = true;
+  if (letterSendStatus) letterSendStatus.textContent = '正在把信塞进门口信箱…';
+
+  try {
+    const { error } = await cloudTodoDb.from(tableName).insert({
+      id: makeCloudId('letter').slice(0, 80),
+      body: cleanBody.slice(0, 1200),
+      occasion: cleanOccasion,
+      created_by: String(cloudTodoUid)
+    });
+    if (error) throw error;
+
+    if (letterBody) letterBody.value = '';
+    if (letterCounter) letterCounter.textContent = '0 / 1200';
+    if (letterSendStatus) letterSendStatus.textContent = '已经投递 ♡ 这台设备不会在收信页显示正文，等 TA 来拆。';
+    cloudLetterLastFingerprint = '';
+    await refreshCloudLetters({ silent: true });
+  } catch (error) {
+    console.error('[门口信箱] 投递失败：', error);
+    if (letterSendStatus) letterSendStatus.textContent = `没有投递成功：${String(error?.message || error || '未知错误')}`;
+  } finally {
+    if (letterSendBtn) letterSendBtn.disabled = !String(letterBody?.value || '').trim();
+  }
+}
 
 function setTodoSyncStatus(state, text) {
   if (todoSyncBar) todoSyncBar.dataset.state = state;
@@ -1134,6 +1424,7 @@ function setEatenComposerEnabled(enabled) {
 }
 
 function setCloudComposerEnabled(enabled) {
+  setMailboxComposerEnabled(Boolean(enabled));
   if (todoCreateInput) todoCreateInput.disabled = !enabled;
   if (todoCreateBtn) todoCreateBtn.disabled = !enabled;
   if (messageInput) messageInput.disabled = !enabled;
@@ -1334,8 +1625,17 @@ async function createStickyNoteElement(row, index) {
   const type = getMessageContentType(row);
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = `felt-note ${chooseStickyColor(row, index)} ${mine ? 'mine' : 'other'}`;
+  button.className = `felt-note ${chooseStickyColor(row, index)} ${mine ? 'mine' : 'other'} note-type-${type}`;
   button.dataset.messageId = String(row.id || '');
+
+  // Phase 6.3：便利贴不再固定成同一个尺寸。
+  // 文字按内容长度微调宽度；图片等加载后再按原始宽高比决定横/方/竖贴。
+  if (type === 'text') {
+    const textLength = Array.from(String(row.body || '').trim()).length;
+    if (textLength <= 10) button.classList.add('note-text-short');
+    else if (textLength <= 30) button.classList.add('note-text-medium');
+    else button.classList.add('note-text-long');
+  }
   button.setAttribute('aria-label', `打开${mine ? '我' : 'TA'}的${type === 'text' ? '文字' : type === 'image' ? '图片' : '语音'}便利贴`);
 
   const pin = document.createElement('span');
@@ -1350,9 +1650,24 @@ async function createStickyNoteElement(row, index) {
     image.alt = '图片便利贴';
     image.loading = 'lazy';
     image.decoding = 'async';
+
+    const applyImageNoteRatio = () => {
+      const width = Number(image.naturalWidth || 0);
+      const height = Number(image.naturalHeight || 0);
+      if (!width || !height) return;
+
+      button.classList.remove('note-image-landscape', 'note-image-square', 'note-image-portrait');
+      const ratio = width / height;
+      if (ratio >= 1.28) button.classList.add('note-image-landscape');
+      else if (ratio <= 0.78) button.classList.add('note-image-portrait');
+      else button.classList.add('note-image-square');
+    };
+
+    image.addEventListener('load', applyImageNoteRatio, { once: true });
     content.appendChild(image);
     try {
       image.src = await getMessageMediaUrl(row);
+      if (image.complete) applyImageNoteRatio();
     } catch (error) {
       console.warn('[毛毡板] 图片预览链接获取失败：', error);
       content.classList.add('media-preview-failed');
@@ -1981,6 +2296,10 @@ function shouldPollCloudEatenPlaces() {
   return document.visibilityState === 'visible' && aboutPageEl?.classList.contains('active');
 }
 
+function shouldPollCloudLetters() {
+  return document.visibilityState === 'visible' && homePage?.classList.contains('active');
+}
+
 function startCloudHomePolling() {
   if (cloudHomePollingTimer) window.clearInterval(cloudHomePollingTimer);
 
@@ -1991,11 +2310,12 @@ function startCloudHomePolling() {
     if (shouldPollCloudTodos()) refreshCloudTodos({ silent: true });
     if (shouldPollCloudMessages()) refreshCloudMessages({ silent: true });
     if (shouldPollCloudEatenPlaces()) refreshCloudEatenPlaces({ silent: true });
+    if (shouldPollCloudLetters()) refreshCloudLetters({ silent: true });
   }, pollMs);
 }
 
 async function initCloudHomeSync() {
-  if (!todoList && !messageBoard && !eatenContent) return;
+  if (!todoList && !messageBoard && !eatenContent && !homeMailboxBtn) return;
 
   const config = window.LOVE_HOUSE_CLOUD || {};
   const envId = String(config.envId || '').trim();
@@ -2004,6 +2324,7 @@ async function initCloudHomeSync() {
     setTodoSyncStatus('setup', '还差一步：请在 cloudbase-config.js 填入环境 ID');
     setMessageSyncStatus('setup', '毛毡板等待 CloudBase 环境 ID');
     setEatenSyncStatus('setup', '已吃记录等待 CloudBase 环境 ID');
+    setMailboxSyncStatus('setup', '信箱等待 CloudBase 环境 ID');
     return;
   }
 
@@ -2011,14 +2332,17 @@ async function initCloudHomeSync() {
     setTodoSyncStatus('error', 'CloudBase SDK 加载失败，请检查网络');
     setMessageSyncStatus('error', 'CloudBase SDK 加载失败，请检查网络');
     setEatenSyncStatus('error', 'CloudBase SDK 加载失败，请检查网络');
+    setMailboxSyncStatus('error', 'CloudBase SDK 加载失败，请检查网络');
     return;
   }
 
   setCloudComposerEnabled(false);
   setEatenComposerEnabled(false);
+  setMailboxComposerEnabled(false);
   setTodoSyncStatus('connecting', '正在连接两个人的小屋…');
   setMessageSyncStatus('connecting', '正在连接毛毡板…');
   setEatenSyncStatus('connecting', '正在连接已吃记录…');
+  setMailboxSyncStatus('connecting', '正在看看门口信箱…');
 
   try {
     const publishableKey = String(config.publishableKey || '').trim();
@@ -2049,7 +2373,8 @@ async function initCloudHomeSync() {
     await Promise.all([
       refreshCloudTodos(),
       refreshCloudMessages(),
-      refreshCloudEatenPlaces()
+      refreshCloudEatenPlaces(),
+      refreshCloudLetters()
     ]);
     startCloudHomePolling();
   } catch (error) {
@@ -2058,20 +2383,24 @@ async function initCloudHomeSync() {
     cloudEatenTableReady = false;
     setCloudComposerEnabled(false);
     setEatenComposerEnabled(false);
+    setMailboxComposerEnabled(false);
 
     const message = String(error?.message || error || '');
     if (/publishable|access.?key|api.?key/i.test(message)) {
       setTodoSyncStatus('error', 'CloudBase Publishable Key 配置有误');
       setMessageSyncStatus('error', 'CloudBase Publishable Key 配置有误');
       setEatenSyncStatus('error', 'CloudBase Publishable Key 配置有误');
+      setMailboxSyncStatus('error', 'CloudBase Publishable Key 配置有误');
     } else if (/permission|denied|unauthorized|rls|403/i.test(message)) {
       setTodoSyncStatus('error', 'CloudBase 写权限不足，请检查对应 GRANT / RLS');
       setMessageSyncStatus('error', 'CloudBase 写权限不足，请检查 Phase 6 SQL');
       setEatenSyncStatus('error', 'CloudBase 写权限不足，请检查 Phase 6.1 SQL');
+      setMailboxSyncStatus('error', '信箱写权限不足，请检查 Phase 7 SQL');
     } else {
       setTodoSyncStatus('error', '云同步连接失败，请稍后再试');
       setMessageSyncStatus('error', '毛毡板连接失败，请稍后再试');
       setEatenSyncStatus('error', '已吃记录连接失败，请稍后再试');
+      setMailboxSyncStatus('error', '门口信箱连接失败，请稍后再试');
     }
   }
 }
@@ -2569,7 +2898,38 @@ window.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
   if (stickyNoteModal?.classList.contains('show')) closeStickyNoteModal();
   if (todoDeleteModal?.classList.contains('show')) closeTodoDeleteConfirm();
+  if (letterReaderModal?.classList.contains('show')) closeLetterReader();
+  else if (mailboxModal?.classList.contains('show')) closeMailboxModal();
 });
+
+// ---------- 门口信箱事件 ----------
+homeMailboxBtn?.addEventListener('click', openMailboxModal);
+closeMailboxBtn?.addEventListener('click', closeMailboxModal);
+mailboxModal?.querySelector('[data-close-mailbox]')?.addEventListener('click', closeMailboxModal);
+mailboxTabs.forEach((button) => {
+  button.addEventListener('click', () => switchMailboxTab(button.dataset.mailboxTab || 'inbox'));
+});
+
+letterBody?.addEventListener('input', () => {
+  if (letterCounter) letterCounter.textContent = `${letterBody.value.length} / 1200`;
+  if (letterSendBtn) letterSendBtn.disabled = !cloudTodoReady || !String(letterBody.value || '').trim();
+});
+
+letterForm?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  sendCloudLetter(letterBody?.value || '', letterOccasion?.value || '平常的一天');
+});
+
+mailboxInbox?.addEventListener('click', (event) => {
+  const item = event.target.closest('.mailbox-letter-item[data-letter-id]');
+  if (!item || !mailboxInbox.contains(item)) return;
+  const row = cloudLetterRowsById.get(String(item.dataset.letterId || ''));
+  if (row) openLetterReader(row);
+});
+
+closeLetterReaderBtn?.addEventListener('click', closeLetterReader);
+letterReaderDoneBtn?.addEventListener('click', closeLetterReader);
+letterReaderModal?.querySelector('[data-close-letter-reader]')?.addEventListener('click', closeLetterReader);
 
 copyCloudUidBtn?.addEventListener('click', async () => {
   const uid = copyCloudUidBtn.dataset.uid || cloudTodoUid;
@@ -2592,12 +2952,14 @@ document.addEventListener('visibilitychange', () => {
   if (shouldPollCloudTodos()) refreshCloudTodos({ silent: true });
   if (shouldPollCloudMessages()) refreshCloudMessages({ silent: true });
   if (shouldPollCloudEatenPlaces()) refreshCloudEatenPlaces({ silent: true });
+  if (shouldPollCloudLetters()) refreshCloudLetters({ silent: true });
 });
 
 window.addEventListener('focus', () => {
   if (shouldPollCloudTodos()) refreshCloudTodos({ silent: true });
   if (shouldPollCloudMessages()) refreshCloudMessages({ silent: true });
   if (shouldPollCloudEatenPlaces()) refreshCloudEatenPlaces({ silent: true });
+  if (shouldPollCloudLetters()) refreshCloudLetters({ silent: true });
 });
 
 window.addEventListener('pagehide', () => {

@@ -4765,3 +4765,847 @@ body.birthday-card-lock {
     height: 23px !important;
   }
 }
+
+/* ==========================================
+   Phase 6.3：毛毡板便利贴自适应尺寸
+   - 短文字更小、长文字自然长高
+   - 图片按原始横 / 方 / 竖比例改变便利贴尺寸
+   - 不再强制两列等宽、固定高度
+========================================== */
+.felt-board-surface {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: flex-start !important;
+  align-content: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 13px 11px !important;
+  padding: 20px 11px 14px !important;
+}
+
+.felt-board-surface .message-empty {
+  width: 100%;
+}
+
+.felt-note {
+  flex: 0 0 auto !important;
+  width: 118px;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 19px 9px 8px !important;
+}
+
+.felt-note-pin {
+  top: -7px !important;
+  width: 19px !important;
+  height: 19px !important;
+  border-width: 1.5px !important;
+}
+
+.felt-note-pin::after {
+  top: 15px !important;
+  height: 8px !important;
+}
+
+.felt-note-preview {
+  flex: none !important;
+  width: 100%;
+  min-height: 0 !important;
+  display: block !important;
+  overflow: hidden;
+}
+
+/* 文字便利贴：跟随内容长度改变宽度和高度 */
+.felt-note.note-type-text.note-text-short {
+  width: 104px;
+}
+
+.felt-note.note-type-text.note-text-medium {
+  width: 122px;
+}
+
+.felt-note.note-type-text.note-text-long {
+  width: 142px;
+}
+
+.felt-note-text-preview {
+  width: 100% !important;
+  max-height: 116px !important;
+  min-height: 38px;
+  font-size: 11px !important;
+  line-height: 1.55 !important;
+  display: -webkit-box;
+  -webkit-line-clamp: 7;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.felt-note.note-text-short .felt-note-text-preview {
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+}
+
+.felt-note.note-text-medium .felt-note-text-preview {
+  min-height: 52px;
+}
+
+/* 图片便利贴：保持原图比例，并根据横/方/竖图改变整张贴纸宽度 */
+.felt-note.note-type-image {
+  width: 128px;
+  padding-left: 7px !important;
+  padding-right: 7px !important;
+}
+
+.felt-note.note-type-image.note-image-landscape {
+  width: 150px;
+}
+
+.felt-note.note-type-image.note-image-square {
+  width: 128px;
+}
+
+.felt-note.note-type-image.note-image-portrait {
+  width: 106px;
+}
+
+.felt-note-preview img {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 150px;
+  object-fit: contain !important;
+  border-width: 2px !important;
+}
+
+/* 语音便利贴保持紧凑，不占一大块毛毡板 */
+.felt-note.note-type-audio {
+  width: 114px;
+}
+
+.felt-note-audio-preview {
+  min-height: 58px;
+  justify-content: center;
+}
+
+.felt-note-audio-icon {
+  font-size: 24px !important;
+}
+
+.felt-note-meta {
+  margin-top: 6px !important;
+  font-size: 8px !important;
+}
+
+@media (max-width: 480px) {
+  .felt-board-surface {
+    gap: 12px 9px !important;
+    padding: 19px 9px 13px !important;
+  }
+
+  .felt-note {
+    padding: 18px 8px 8px !important;
+  }
+
+  .felt-note.note-type-text.note-text-short { width: 100px; }
+  .felt-note.note-type-text.note-text-medium { width: 116px; }
+  .felt-note.note-type-text.note-text-long { width: 136px; }
+
+  .felt-note.note-type-image.note-image-landscape { width: 144px; }
+  .felt-note.note-type-image.note-image-square { width: 122px; }
+  .felt-note.note-type-image.note-image-portrait { width: 102px; }
+  .felt-note.note-type-audio { width: 108px; }
+}
+
+
+/* ==========================================
+   Phase 7：门口信箱 + 客厅照片墙
+   只改变“门口/照片墙”的呈现，不改毛毡板上传、约定、Web Push。
+========================================== */
+
+/* ---------- 门口：信箱入口 ---------- */
+.home-entry-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-mailbox-btn {
+  position: relative;
+  width: min(100%, 292px);
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 13px;
+  border: 1.5px solid rgba(255, 198, 220, 0.92);
+  border-radius: 20px;
+  color: #735d69;
+  font-family: inherit;
+  text-align: left;
+  background: rgba(255,255,255,.78);
+  box-shadow: 0 8px 20px rgba(255, 137, 184, .12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.home-mailbox-btn:active { transform: scale(.98); }
+
+.home-mailbox-icon {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  font-size: 23px;
+  background: linear-gradient(145deg, #fff0f6, #e8f7ff);
+  border: 1px solid #ffd3e4;
+}
+
+.home-mailbox-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-mailbox-copy strong {
+  color: #ff78a6;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.home-mailbox-copy small {
+  color: #8a7280;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.home-mailbox-badge {
+  position: absolute;
+  right: -6px;
+  top: -7px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  background: #ff6f9f;
+  border: 2px solid #fff;
+  box-shadow: 0 6px 14px rgba(255, 111, 159, .3);
+}
+
+.home-mailbox-btn.has-new-letter {
+  box-shadow: 0 10px 26px rgba(255, 111, 159, .23);
+  animation: mailboxNewLetter 2.3s ease-in-out infinite;
+}
+
+@keyframes mailboxNewLetter {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* ---------- 门口：信箱弹窗 ---------- */
+.mailbox-modal,
+.letter-reader-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 760;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .25s ease, visibility .25s ease;
+}
+
+.letter-reader-modal { z-index: 780; }
+
+.mailbox-modal.show,
+.letter-reader-modal.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.mailbox-modal-mask,
+.letter-reader-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(74, 53, 68, .46);
+  backdrop-filter: blur(13px);
+  -webkit-backdrop-filter: blur(13px);
+}
+
+.mailbox-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(92vw, 430px);
+  max-height: min(84vh, 720px);
+  overflow-y: auto;
+  transform: translate(-50%, -47%) scale(.97);
+  padding: 22px 18px 20px;
+  border: 2px solid #ffd1e3;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 12% 4%, rgba(255,225,238,.9), transparent 34%),
+    radial-gradient(circle at 94% 12%, rgba(216,243,255,.92), transparent 38%),
+    #fffafd;
+  box-shadow: 0 26px 64px rgba(83,52,70,.28);
+  transition: transform .28s ease;
+}
+
+.mailbox-modal.show .mailbox-card { transform: translate(-50%, -50%) scale(1); }
+
+.mailbox-close-btn,
+.letter-reader-close {
+  position: absolute;
+  right: 13px;
+  top: 12px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: #ff78a6;
+  font-size: 23px;
+  background: rgba(255,255,255,.84);
+  cursor: pointer;
+  z-index: 4;
+}
+
+.mailbox-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 38px;
+  margin-bottom: 14px;
+}
+
+.mailbox-heading-icon {
+  flex: 0 0 auto;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  font-size: 29px;
+  background: rgba(255,255,255,.8);
+  border: 1.5px solid #ffd3e4;
+  box-shadow: 0 8px 18px rgba(255,137,184,.13);
+}
+
+.mailbox-kicker {
+  margin-bottom: 2px;
+  color: #9abdd1;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.mailbox-heading h2 {
+  margin: 0 0 2px;
+  color: #ff78a6;
+  font-size: 22px;
+}
+
+.mailbox-heading p {
+  margin: 0;
+  color: #806a76;
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.mailbox-sync-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 32px;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  border: 1px solid #ffe0eb;
+  border-radius: 999px;
+  color: #8a7280;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+  background: rgba(255,255,255,.72);
+}
+
+.mailbox-sync-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: #d2c2cb;
+}
+
+.mailbox-sync-bar[data-state="connecting"] .mailbox-sync-dot { background: #8bcfff; animation: todoCloudPulse 1.15s ease-in-out infinite; }
+.mailbox-sync-bar[data-state="online"] { color: #6f7f72; border-color: rgba(165,223,183,.78); background: rgba(247,255,250,.9); }
+.mailbox-sync-bar[data-state="online"] .mailbox-sync-dot { background: #81d49a; }
+.mailbox-sync-bar[data-state="error"] { color: #9a6e76; border-color: rgba(255,174,192,.82); background: rgba(255,247,250,.92); }
+.mailbox-sync-bar[data-state="error"] .mailbox-sync-dot { background: #ff91a9; }
+
+.mailbox-tabs {
+  display: flex;
+  padding: 4px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  background: rgba(255,240,247,.76);
+  border: 1px solid #ffd8e6;
+}
+
+.mailbox-tab {
+  flex: 1;
+  height: 38px;
+  border: 0;
+  border-radius: 12px;
+  color: #8a7280;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  background: transparent;
+  cursor: pointer;
+}
+
+.mailbox-tab.active {
+  color: #ff6f9f;
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(255,137,184,.13);
+}
+
+.mailbox-panel { display: none; }
+.mailbox-panel.active { display: block; }
+
+.mailbox-inbox {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 180px;
+}
+
+.mailbox-empty {
+  min-height: 170px;
+  display: grid;
+  place-items: center;
+  padding: 24px 18px;
+  border: 1.5px dashed #ffd4e5;
+  border-radius: 20px;
+  color: #ad97a4;
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.7;
+  text-align: center;
+  background: rgba(255,255,255,.6);
+}
+
+.mailbox-empty span { font-size: 10px; font-weight: 650; }
+
+.mailbox-letter-item {
+  width: 100%;
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid #ffd7e6;
+  border-radius: 18px;
+  color: #65485a;
+  font-family: inherit;
+  text-align: left;
+  background: rgba(255,255,255,.85);
+  cursor: pointer;
+  box-shadow: 0 7px 15px rgba(131,99,117,.07);
+}
+
+.mailbox-letter-item.unread {
+  border-color: #ffb8d1;
+  background: linear-gradient(135deg, #fff7fb, #edf9ff);
+  box-shadow: 0 9px 20px rgba(255,137,184,.14);
+}
+
+.mailbox-letter-envelope {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  font-size: 22px;
+  background: #fff0f6;
+}
+
+.mailbox-letter-copy {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.mailbox-letter-copy strong { font-size: 13px; font-weight: 900; }
+.mailbox-letter-copy small { color: #9a8491; font-size: 9px; font-weight: 700; }
+
+.mailbox-letter-seal {
+  flex: 0 0 auto;
+  min-width: 30px;
+  color: #ff6f9f;
+  font-size: 9px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.letter-form {
+  padding: 14px;
+  border: 1.5px solid #ffd7e6;
+  border-radius: 20px;
+  background: rgba(255,255,255,.72);
+}
+
+.letter-field-label {
+  display: block;
+  margin: 0 0 6px 2px;
+  color: #806a76;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.letter-form select,
+.letter-form textarea {
+  width: 100%;
+  border: 1.5px solid #ffe0ec;
+  border-radius: 14px;
+  outline: none;
+  color: #65485a;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  background: #fffafd;
+}
+
+.letter-form select { height: 40px; padding: 0 11px; margin-bottom: 12px; }
+.letter-form textarea { min-height: 170px; resize: vertical; padding: 12px; line-height: 1.75; }
+.letter-form select:focus,
+.letter-form textarea:focus { border-color: #ff9fc3; box-shadow: 0 0 0 4px rgba(255,159,195,.11); }
+
+.letter-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 9px;
+}
+
+.letter-form-footer span { color: #b19aa8; font-size: 10px; font-weight: 750; }
+
+.letter-form-footer button,
+.letter-reader-done {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff8db8, #8bcfff);
+  box-shadow: 0 7px 15px rgba(255,115,167,.2);
+  cursor: pointer;
+}
+
+.letter-form-footer button:disabled { opacity: .48; cursor: not-allowed; }
+.letter-send-status { min-height: 18px; margin-top: 8px; color: #8a7280; font-size: 10px; font-weight: 700; line-height: 1.5; }
+
+/* 拆开的信 */
+.letter-reader-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(90vw, 400px);
+  max-height: 82vh;
+  overflow-y: auto;
+  transform: translate(-50%, -47%) scale(.96);
+  padding: 22px 16px 18px;
+  border: 2px solid #ffd1e3;
+  border-radius: 28px;
+  background: #fff8fc;
+  box-shadow: 0 26px 64px rgba(83,52,70,.3);
+  transition: transform .28s ease;
+}
+
+.letter-reader-modal.show .letter-reader-card { transform: translate(-50%, -50%) scale(1); }
+
+.letter-paper {
+  position: relative;
+  padding: 34px 24px 28px;
+  border-radius: 8px 8px 20px 20px;
+  color: #65485a;
+  background:
+    repeating-linear-gradient(180deg, transparent 0 30px, rgba(139,207,255,.16) 31px 32px),
+    #fffef9;
+  border: 1px solid #f2dfd0;
+  box-shadow: 0 10px 24px rgba(93,73,62,.12);
+}
+
+.letter-paper-tape {
+  position: absolute;
+  left: 50%;
+  top: -9px;
+  width: 82px;
+  height: 24px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: rgba(255,218,232,.72);
+  border: 1px solid rgba(255,188,214,.52);
+}
+
+.letter-reader-occasion { margin-bottom: 6px; color: #ff78a6; font-size: 10px; font-weight: 900; letter-spacing: .5px; }
+.letter-paper h3 { margin: 0 0 18px; color: #65485a; font-size: 18px; }
+.letter-reader-body { min-height: 120px; white-space: pre-wrap; word-break: break-word; font-size: 13px; font-weight: 650; line-height: 2.25; }
+.letter-reader-meta { margin-top: 22px; color: #a48e9a; font-size: 9px; font-weight: 750; text-align: right; }
+.letter-reader-done { width: 100%; margin-top: 13px; }
+
+/* ---------- 客厅：照片墙 ---------- */
+.timeline-wrap.photo-wall-wrap {
+  width: min(96vw, 760px) !important;
+  margin-top: 12px !important;
+  padding: 18px 0 52px !important;
+}
+
+.photo-wall-section {
+  position: relative;
+  z-index: 3;
+}
+
+.photo-wall-heading {
+  width: min(90vw, 430px);
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  border: 1.5px solid rgba(255,204,224,.88);
+  border-radius: 20px;
+  background: rgba(255,255,255,.72);
+  box-shadow: 0 8px 20px rgba(131,99,117,.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.photo-wall-heading-icon {
+  flex: 0 0 auto;
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  font-size: 21px;
+  background: linear-gradient(145deg, #fff0f6, #e7f7ff);
+  border: 1px solid #ffd5e4;
+}
+
+.photo-wall-heading h3 { margin: 0 0 2px; color: #ff78a6; font-size: 16px; font-weight: 900; }
+.photo-wall-heading p { margin: 0; color: #8a7280; font-size: 10px; line-height: 1.45; font-weight: 700; }
+
+.timeline-list.photo-wall-grid {
+  position: relative;
+  z-index: 2;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 27px 18px;
+  padding: 34px 22px 32px;
+  border: 2px solid rgba(255,199,221,.82);
+  border-radius: 34px;
+  background:
+    radial-gradient(rgba(255,185,211,.20) 1.4px, transparent 1.4px),
+    radial-gradient(rgba(147,215,247,.17) 1.2px, transparent 1.2px),
+    linear-gradient(145deg, rgba(255,246,250,.9), rgba(238,249,255,.9));
+  background-size: 24px 24px, 24px 24px, auto;
+  background-position: 0 0, 12px 12px, 0 0;
+  box-shadow: inset 0 0 32px rgba(255,255,255,.78), 0 16px 38px rgba(131,99,117,.1);
+}
+
+.photo-wall-grid .timeline-item {
+  position: relative !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  display: block !important;
+  align-self: start;
+  transform-origin: 50% 4%;
+  transition: transform .22s ease;
+}
+
+.photo-wall-grid .timeline-item.wall-tilt-0 { transform: rotate(-1.2deg); }
+.photo-wall-grid .timeline-item.wall-tilt-1 { transform: rotate(1.05deg); }
+.photo-wall-grid .timeline-item.wall-tilt-2 { transform: rotate(-.55deg); }
+.photo-wall-grid .timeline-item.wall-tilt-3 { transform: rotate(1.45deg); }
+.photo-wall-grid .timeline-item.featured {
+  grid-column: 1 / -1;
+  width: min(94%, 590px);
+  justify-self: center;
+  transform: rotate(0deg);
+}
+
+.photo-wall-grid .timeline-item:active { transform: scale(.985) rotate(0deg); }
+
+.photo-wall-grid .timeline-node.photo-frame-pin {
+  position: absolute !important;
+  left: 50% !important;
+  top: -10px !important;
+  width: 19px !important;
+  height: 19px !important;
+  transform: translateX(-50%) !important;
+  z-index: 9 !important;
+  border: 4px solid #fff !important;
+  border-radius: 50% !important;
+  background: #ff78a6 !important;
+  box-shadow: 0 2px 0 #c66488, 0 7px 11px rgba(118,75,95,.22) !important;
+}
+
+.photo-wall-grid .timeline-node.photo-frame-pin::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 14px;
+  width: 2px;
+  height: 14px;
+  transform: translateX(-50%);
+  background: rgba(110,83,96,.38);
+  border-radius: 999px;
+}
+
+.photo-wall-grid .memory-card.photo-frame {
+  width: 100% !important;
+  padding: 10px 10px 15px !important;
+  border: 1px solid rgba(229,214,220,.95) !important;
+  border-radius: 7px 7px 13px 13px !important;
+  background: #fffefa !important;
+  box-shadow: 0 11px 24px rgba(93,73,84,.15), 0 2px 5px rgba(93,73,84,.08) !important;
+  backdrop-filter: none !important;
+}
+
+.photo-wall-grid .featured .memory-card.photo-frame {
+  padding: 13px 13px 19px !important;
+  border-radius: 9px 9px 15px 15px !important;
+  box-shadow: 0 16px 32px rgba(93,73,84,.17), 0 3px 7px rgba(93,73,84,.08) !important;
+}
+
+.photo-wall-grid .memory-date {
+  display: inline-flex;
+  margin: 0 0 7px 2px !important;
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: #ff78a6 !important;
+  font-size: 9px !important;
+  font-weight: 850;
+  background: #fff0f6;
+}
+
+.photo-wall-grid .memory-special-badge {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  z-index: 3;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff91bd, #8bcfff);
+  box-shadow: 0 5px 11px rgba(255,137,184,.2);
+}
+
+.photo-wall-grid .memory-photo {
+  border-radius: 3px !important;
+}
+
+.photo-wall-grid .memory-photo.has-image img {
+  border-radius: 3px !important;
+}
+
+.photo-wall-grid .memory-photo.has-image.is-loading { min-height: 105px !important; }
+.photo-wall-grid .featured .memory-photo.has-image.is-loading { min-height: 190px !important; }
+
+.photo-wall-grid .memory-title {
+  margin: 10px 2px 2px !important;
+  color: #65485a !important;
+  font-size: 11px !important;
+  line-height: 1.45;
+  font-weight: 850;
+  text-align: left !important;
+}
+
+.photo-wall-grid .featured .memory-title { font-size: 14px !important; text-align: center !important; }
+
+.photo-wall-grid .memory-desc {
+  margin: 4px 2px 0 !important;
+  color: #a18b97 !important;
+  font-size: 9px !important;
+  line-height: 1.4;
+  text-align: left;
+}
+
+.photo-wall-grid .featured .memory-desc { text-align: center; font-size: 10px !important; }
+
+/* 时间轴中轴线已经由照片墙替代 */
+.photo-wall-wrap > .timeline-line { display: none !important; }
+
+@media (max-width: 480px) {
+  .home-door-card {
+    min-height: 430px !important;
+    padding-bottom: 25px !important;
+  }
+
+  .home-entry-actions { gap: 9px; }
+  .home-mailbox-btn { width: min(100%, 270px); min-height: 54px; padding: 8px 11px; border-radius: 18px; }
+  .home-mailbox-icon { width: 36px; height: 36px; font-size: 21px; }
+  .home-mailbox-copy strong { font-size: 12px; }
+  .home-mailbox-copy small { font-size: 9px; }
+
+  .mailbox-card {
+    top: calc(50% + env(safe-area-inset-top, 0px) / 4);
+    width: min(94vw, 410px);
+    max-height: calc(88vh - env(safe-area-inset-bottom, 0px));
+    padding: 20px 14px 16px;
+  }
+
+  .letter-reader-card { width: 92vw; padding: 20px 13px 15px; }
+  .letter-paper { padding: 31px 20px 25px; }
+
+  .timeline-wrap.photo-wall-wrap { width: 96vw !important; padding-top: 10px !important; }
+  .photo-wall-heading { width: 91vw; padding: 10px 12px; border-radius: 18px; }
+  .photo-wall-heading-icon { width: 35px; height: 35px; font-size: 19px; }
+  .photo-wall-heading h3 { font-size: 14px; }
+  .photo-wall-heading p { font-size: 9px; }
+
+  .timeline-list.photo-wall-grid {
+    gap: 23px 11px;
+    padding: 29px 12px 26px;
+    border-radius: 28px;
+  }
+
+  .photo-wall-grid .timeline-item.featured { width: 98%; }
+  .photo-wall-grid .memory-card.photo-frame { padding: 7px 7px 12px !important; }
+  .photo-wall-grid .featured .memory-card.photo-frame { padding: 10px 10px 16px !important; }
+  .photo-wall-grid .memory-title { font-size: 10px !important; }
+  .photo-wall-grid .featured .memory-title { font-size: 13px !important; }
+  .photo-wall-grid .memory-desc { display: none !important; }
+  .photo-wall-grid .featured .memory-desc { display: block !important; }
+  .photo-wall-grid .memory-special-badge { right: 9px; top: 8px; font-size: 8px; padding: 3px 6px; }
+  .photo-wall-grid .timeline-node.photo-frame-pin { width: 17px !important; height: 17px !important; top: -9px !important; }
+  .photo-wall-grid .timeline-node.photo-frame-pin::after { top: 12px; height: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-mailbox-btn.has-new-letter { animation: none !important; }
+}
