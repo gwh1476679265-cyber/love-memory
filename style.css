@@ -6349,3 +6349,219 @@ body.birthday-card-lock {
     right: 11px !important;
   }
 }
+
+
+/* ==========================================
+   Phase 7.4：已吃记录详情/删除 + 动态拍立得 + 原比例回忆弹窗
+========================================== */
+
+/* “已吃！”卡片现在可以点开预览。 */
+.eaten-place-card[data-eaten-id] {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.eaten-place-card[data-eaten-id]:active {
+  transform: scale(.985);
+}
+
+.eaten-place-card[data-eaten-id]:focus-visible {
+  outline: 2px solid rgba(255,120,166,.42);
+  outline-offset: 3px;
+}
+
+/* 已吃记录详情弹窗：照片完全按原始比例展示，不做裁切。 */
+.eaten-detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 760;
+  display: none;
+}
+
+.eaten-detail-modal.show { display: block; }
+
+.eaten-detail-mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(77,55,70,.42);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.eaten-detail-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(90vw, 430px);
+  max-height: 86vh;
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  padding: 18px 18px 16px;
+  border: 2px solid #ffd3e4;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 12% 4%, rgba(255,225,239,.78), transparent 34%),
+    radial-gradient(circle at 94% 10%, rgba(221,245,255,.82), transparent 36%),
+    #fffafd;
+  box-shadow: 0 24px 58px rgba(83,52,70,.27);
+}
+
+.eaten-detail-close {
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  z-index: 3;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  color: #ff78a6;
+  font-size: 23px;
+  font-weight: 800;
+  background: rgba(255,240,247,.94);
+  cursor: pointer;
+}
+
+.eaten-detail-photo-wrap {
+  width: 100%;
+  margin: 22px 0 14px;
+  overflow: hidden;
+  border: 1.5px solid #ffd6e5;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.eaten-detail-photo-wrap[hidden] { display: none !important; }
+
+.eaten-detail-photo-wrap img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+  object-fit: contain;
+  background: #fff;
+}
+
+.eaten-detail-copy { padding: 0 3px; }
+
+.eaten-detail-copy h3 {
+  margin: 0 0 5px;
+  padding-right: 34px;
+  color: #ff78a6;
+  font-size: 19px;
+  line-height: 1.45;
+}
+
+.eaten-detail-meta {
+  margin-bottom: 12px;
+  color: #8bb7d1;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.eaten-detail-text {
+  color: #6f5865;
+  font-size: 13px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.eaten-detail-delete-btn {
+  width: 100%;
+  margin-top: 18px;
+  padding: 11px 14px;
+  border: 1.5px solid #ffc9dc;
+  border-radius: 999px;
+  color: #e987a8;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  background: rgba(255,255,255,.9);
+  cursor: pointer;
+}
+
+.eaten-detail-delete-btn.confirm {
+  color: #fff;
+  border-color: transparent;
+  background: linear-gradient(135deg, #ff819f, #ff9cbd);
+}
+
+.eaten-detail-delete-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.eaten-detail-delete-hint {
+  min-height: 17px;
+  margin-top: 8px;
+  color: #9b7887;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.55;
+  text-align: center;
+}
+
+/* 拍立得照片窗不再永久锁定第一张图的比例。
+   JS 每次滑动完成后都会把当前图片原比例写入这个 CSS 变量。 */
+.photo-wall-grid .timeline-item.standard .memory-photo {
+  aspect-ratio: var(--polaroid-photo-ratio, 46 / 62) !important;
+  height: auto !important;
+  transition: aspect-ratio .22s ease;
+}
+
+.photo-wall-grid .timeline-item.standard .memory-photo.has-image img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* 回忆详情弹窗统一展示当前点开的高清图原比例，不再固定成裁切画面。 */
+#modalImg {
+  display: none;
+  width: 100% !important;
+  height: auto !important;
+  max-height: 64vh !important;
+  object-fit: contain !important;
+  background: #fff;
+}
+
+@media (max-width: 480px) {
+  .eaten-detail-card {
+    width: 92vw;
+    padding: 16px 14px 14px;
+    border-radius: 25px;
+  }
+
+  .eaten-detail-photo-wrap img {
+    max-height: 57vh;
+  }
+}
+
+/* Phase 7.4 补充：无论当前滑到横图还是竖图，都以当前照片原比例为准。 */
+.photo-wall-grid .timeline-item.standard.landscape-polaroid .memory-photo,
+.photo-wall-grid .timeline-item.standard.portrait-polaroid .memory-photo {
+  aspect-ratio: var(--polaroid-photo-ratio, 46 / 62) !important;
+}
+
+/* 详情图在视口内完整显示，同时严格保持原始宽高比。 */
+#modalImg {
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: 64vh !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.eaten-detail-photo-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eaten-detail-photo-wrap img {
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: 60vh !important;
+  object-fit: contain !important;
+}

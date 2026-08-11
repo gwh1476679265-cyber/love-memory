@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="鱼鱼和獭獭的小屋" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="pwa-icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260811-phase7-3" />
+  <link rel="stylesheet" href="style.css?v=20260811-phase7-4" />
 </head>
 <body>
 
@@ -585,6 +585,24 @@
     </div>
   </div>
 
+  <!-- 卧室“已吃！”：点击记录后的详情 / 删除弹窗 -->
+  <div id="eatenDetailModal" class="eaten-detail-modal" aria-hidden="true">
+    <div class="eaten-detail-mask" data-close-eaten-detail></div>
+    <div class="eaten-detail-card" role="dialog" aria-modal="true" aria-labelledby="eatenDetailTitle">
+      <button id="closeEatenDetailBtn" class="eaten-detail-close" type="button" aria-label="关闭">×</button>
+      <div id="eatenDetailPhotoWrap" class="eaten-detail-photo-wrap" hidden>
+        <img id="eatenDetailPhoto" alt="已吃记录照片" />
+      </div>
+      <div class="eaten-detail-copy">
+        <h3 id="eatenDetailTitle">一起吃过的一顿饭</h3>
+        <div id="eatenDetailMeta" class="eaten-detail-meta"></div>
+        <div id="eatenDetailText" class="eaten-detail-text"></div>
+      </div>
+      <button id="eatenDetailDeleteBtn" class="eaten-detail-delete-btn" type="button">删除这条记录</button>
+      <div id="eatenDetailDeleteHint" class="eaten-detail-delete-hint" aria-live="polite"></div>
+    </div>
+  </div>
+
   <!-- 卧室：删除约定确认弹窗 -->
   <div id="todoDeleteModal" class="todo-delete-modal" aria-hidden="true">
     <div class="todo-delete-mask" data-close-todo-delete></div>
@@ -604,6 +622,6 @@
   <script src="cloudbase-config.js?v=20260810-phase5-1"></script>
 
   <!-- 页面逻辑 -->
-  <script src="script.js?v=20260811-phase7-3"></script>
+  <script src="script.js?v=20260811-phase7-4"></script>
 </body>
 </html>

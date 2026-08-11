@@ -358,6 +358,17 @@ const memories = {
    text: "非常之美丽非常之美味的小蛋糕👸和小蛋糕🎂"
   },
 
+ "2026-08-08": {
+     title: "爱你的人会把你拍得很美",
+    images: ["images/20260808-8.jpg",
+	 "images/20260808-9.jpg",
+	 "images/20260808-10.jpg",
+	 "images/20260808-11.jgp",
+	 "images/20260808-12.jpg",
+	    ],
+   text: "所有人欣赏"
+  },
+
 };
 
 // ===============================
@@ -531,23 +542,44 @@ if (imageList.length > 0) {
 
   // 让卡片在图片真正加载前保留一个柔和占位，避免页面突然跳动。
   photo.classList.add("is-loading");
-  let polaroidOrientationLocked = false;
+
+  // 普通拍立得会跟随“当前正在看的照片”改变照片窗比例。
+  // 第一张加载时先确定初始形态；之后每次左右滑动，横 / 竖版和边框高度都会重新适配。
+  function syncPolaroidToLoadedImage() {
+    if (memory.featured || !img.naturalWidth || !img.naturalHeight) return;
+    const ratio = img.naturalWidth / img.naturalHeight;
+    photo.style.setProperty('--polaroid-photo-ratio', String(ratio));
+    item.classList.toggle("landscape-polaroid", ratio >= 1.16);
+    item.classList.toggle("portrait-polaroid", ratio < 1.16);
+  }
+
+  function loadTimelineMemoryImage(immediate = false) {
+    const fullSrc = imageList[currentImageIndex] || '';
+    const thumbSrc = getThumbnailPath(fullSrc);
+    img.dataset.fullSrc = fullSrc;
+    img.dataset.fallbackTried = '0';
+    setTimelineImageSource(img, thumbSrc, immediate);
+  }
+
   img.addEventListener("load", () => {
     photo.classList.remove("is-loading");
-
-    // 普通拍立得根据“第一张照片”的原始比例决定横版 / 竖版。
-    // 后续左右滑动时不反复改变相纸宽度，避免墙面跳来跳去。
-    if (!memory.featured && !polaroidOrientationLocked && img.naturalWidth && img.naturalHeight) {
-      const ratio = img.naturalWidth / img.naturalHeight;
-      item.classList.toggle("landscape-polaroid", ratio >= 1.16);
-      item.classList.toggle("portrait-polaroid", ratio < 1.16);
-      polaroidOrientationLocked = true;
-    }
+    syncPolaroidToLoadedImage();
   });
-  img.addEventListener("error", () => photo.classList.remove("is-loading"));
+  img.addEventListener("error", () => {
+    // 兼容你原来的更新习惯：只把高清图放进 images/ 也可以。
+    // 如果对应 images/thumbs/ 缩略图还没生成，就自动退回高清图。
+    const fullSrc = String(img.dataset.fullSrc || '');
+    const tried = img.dataset.fallbackTried === '1';
+    if (!tried && fullSrc) {
+      img.dataset.fallbackTried = '1';
+      setTimelineImageSource(img, fullSrc, true);
+      return;
+    }
+    photo.classList.remove("is-loading");
+  });
 
   photo.appendChild(img);
-  setTimelineImageSource(img, getThumbnailPath(imageList[currentImageIndex]));
+  loadTimelineMemoryImage();
 
   if (imageList.length > 1) {
     photo.classList.add("has-multiple");
@@ -563,7 +595,7 @@ if (imageList.length > 0) {
     });
 
     function updateSlide() {
-      setTimelineImageSource(img, getThumbnailPath(imageList[currentImageIndex]), true);
+      loadTimelineMemoryImage(true);
 
       const dotList = dots.querySelectorAll(".dot");
       dotList.forEach((dot, dotIndex) => {
@@ -1146,6 +1178,16 @@ const eatenUploadStatus = document.getElementById('eatenUploadStatus');
 const eatenSaveBtn = document.getElementById('eatenSaveBtn');
 const eatenPlacesList = document.getElementById('eatenPlacesList');
 
+const eatenDetailModal = document.getElementById('eatenDetailModal');
+const closeEatenDetailBtn = document.getElementById('closeEatenDetailBtn');
+const eatenDetailPhotoWrap = document.getElementById('eatenDetailPhotoWrap');
+const eatenDetailPhoto = document.getElementById('eatenDetailPhoto');
+const eatenDetailTitle = document.getElementById('eatenDetailTitle');
+const eatenDetailMeta = document.getElementById('eatenDetailMeta');
+const eatenDetailText = document.getElementById('eatenDetailText');
+const eatenDetailDeleteBtn = document.getElementById('eatenDetailDeleteBtn');
+const eatenDetailDeleteHint = document.getElementById('eatenDetailDeleteHint');
+
 let cloudTodoApp = null;
 let cloudTodoDb = null;
 let cloudTodoUid = '';
@@ -1188,6 +1230,9 @@ let cloudEatenRowsCache = [];
 let pendingEatenImageFile = null;
 let pendingEatenImagePreviewUrl = '';
 const eatenImageUrlCache = new Map();
+let cloudEatenRowsById = new Map();
+let openedEatenPlaceId = '';
+let eatenDeleteArmed = false;
 
 function setMailboxSyncStatus(state, text) {
   if (mailboxSyncBar) mailboxSyncBar.dataset.state = state;
@@ -2154,6 +2199,10 @@ async function createEatenPlaceCard(row) {
   const mine = Boolean(cloudTodoUid && String(row.created_by || '') === String(cloudTodoUid));
   const article = document.createElement('article');
   article.className = 'eaten-place-card';
+  article.dataset.eatenId = String(row.id || '');
+  article.setAttribute('role', 'button');
+  article.setAttribute('tabindex', '0');
+  article.setAttribute('aria-label', `查看已吃记录：${String(row.body || '一起吃过的一顿饭')}`);
 
   const photoWrap = document.createElement('div');
   photoWrap.className = 'eaten-place-photo';
@@ -2195,6 +2244,7 @@ async function createEatenPlaceCard(row) {
 async function renderCloudEatenPlaces(rows = []) {
   if (!eatenPlacesList) return;
   cloudEatenRowsCache = rows.slice();
+  cloudEatenRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
   eatenPlacesList.innerHTML = '';
 
   if (rows.length === 0) {
@@ -2298,6 +2348,114 @@ async function createCloudEatenPlace(body) {
     setEatenSyncStatus('error', `没有保存成功：${formatBoardStorageError(error, '未知错误')}`);
   } finally {
     updateEatenSaveState();
+  }
+}
+
+
+async function removeEatenImage(row) {
+  const path = String(row?.image_path || '').trim();
+  const fileId = String(row?.image_file_id || '').trim();
+  if (!path && !fileId) return;
+
+  try {
+    const bucket = getBoardStorageClient();
+    const candidates = [...new Set([path, fileId].filter(Boolean))];
+    let removed = false;
+    let lastError = null;
+
+    for (const target of candidates) {
+      try {
+        const { error } = await bucket.remove([target]);
+        if (error) throw error;
+        removed = true;
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!removed && lastError) throw lastError;
+    eatenImageUrlCache.delete(`${getBoardStorageConfig().bucket}:eaten:${fileId || path}`);
+  } catch (error) {
+    // 数据库记录删除优先；附件清理失败只留日志，避免给用户造成“记录没删掉”的错觉。
+    console.warn('[已吃记录] 记录已删除，但照片附件清理失败：', error);
+  }
+}
+
+async function openEatenDetail(row) {
+  if (!row || !eatenDetailModal) return;
+  openedEatenPlaceId = String(row.id || '');
+  eatenDeleteArmed = false;
+  eatenDetailDeleteBtn?.classList.remove('confirm');
+  if (eatenDetailDeleteBtn) eatenDetailDeleteBtn.textContent = '删除这条记录';
+  if (eatenDetailDeleteHint) eatenDetailDeleteHint.textContent = '';
+
+  const mine = Boolean(cloudTodoUid && String(row.created_by || '') === String(cloudTodoUid));
+  if (eatenDetailTitle) eatenDetailTitle.textContent = '🍽️ 已吃记录';
+  if (eatenDetailMeta) eatenDetailMeta.textContent = `${mine ? '我' : 'TA'} · ${formatMessageTime(row.created_at)}`;
+  if (eatenDetailText) eatenDetailText.textContent = String(row.body || '');
+
+  if (eatenDetailPhotoWrap) eatenDetailPhotoWrap.hidden = true;
+  if (eatenDetailPhoto) eatenDetailPhoto.removeAttribute('src');
+  if (row.image_path || row.image_file_id) {
+    try {
+      const url = await getEatenImageUrl(row);
+      if (eatenDetailPhoto) eatenDetailPhoto.src = url;
+      if (eatenDetailPhotoWrap) eatenDetailPhotoWrap.hidden = false;
+    } catch (error) {
+      console.warn('[已吃记录] 详情照片链接获取失败：', error);
+    }
+  }
+
+  eatenDetailModal.classList.add('show');
+  eatenDetailModal.setAttribute('aria-hidden', 'false');
+}
+
+function closeEatenDetail() {
+  openedEatenPlaceId = '';
+  eatenDeleteArmed = false;
+  eatenDetailModal?.classList.remove('show');
+  eatenDetailModal?.setAttribute('aria-hidden', 'true');
+  eatenDetailDeleteBtn?.classList.remove('confirm');
+  if (eatenDetailDeleteBtn) eatenDetailDeleteBtn.textContent = '删除这条记录';
+  if (eatenDetailDeleteHint) eatenDetailDeleteHint.textContent = '';
+  if (eatenDetailPhoto) eatenDetailPhoto.removeAttribute('src');
+  if (eatenDetailPhotoWrap) eatenDetailPhotoWrap.hidden = true;
+}
+
+async function deleteOpenedEatenPlace() {
+  const id = openedEatenPlaceId;
+  const row = cloudEatenRowsById.get(String(id || ''));
+  if (!id || !row || !cloudTodoReady || !cloudTodoDb) return;
+
+  if (!eatenDeleteArmed) {
+    eatenDeleteArmed = true;
+    eatenDetailDeleteBtn?.classList.add('confirm');
+    if (eatenDetailDeleteBtn) eatenDetailDeleteBtn.textContent = '确认删除';
+    if (eatenDetailDeleteHint) eatenDetailDeleteHint.textContent = '再点一次“确认删除”，这条吃饭记录就会从两个人的小屋里消失。';
+    return;
+  }
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.eatenTable || 'couple_eaten_places').trim();
+  if (eatenDetailDeleteBtn) eatenDetailDeleteBtn.disabled = true;
+  setEatenSyncStatus('syncing', '正在删掉这条吃饭记录…');
+
+  try {
+    const { error } = await cloudTodoDb.from(tableName).delete().eq('id', id);
+    if (error) throw error;
+
+    closeEatenDetail();
+    await removeEatenImage(row);
+    cloudEatenLastFingerprint = '';
+    await refreshCloudEatenPlaces({ silent: true });
+    setEatenSyncStatus('online', '这条吃饭记录已经删掉了');
+  } catch (error) {
+    console.error('[已吃记录] 删除失败：', error);
+    if (eatenDetailDeleteHint) eatenDetailDeleteHint.textContent = `删除失败：${String(error?.message || error || '未知错误')}`;
+    setEatenSyncStatus('error', '这条吃饭记录暂时没删掉');
+  } finally {
+    if (eatenDetailDeleteBtn) eatenDetailDeleteBtn.disabled = false;
   }
 }
 
@@ -2959,6 +3117,27 @@ eatenCreateForm?.addEventListener('submit', (event) => {
   createCloudEatenPlace(eatenTextInput?.value || '');
 });
 
+
+eatenPlacesList?.addEventListener('click', (event) => {
+  const card = event.target.closest('.eaten-place-card[data-eaten-id]');
+  if (!card || !eatenPlacesList.contains(card)) return;
+  const row = cloudEatenRowsById.get(String(card.dataset.eatenId || ''));
+  if (row) openEatenDetail(row);
+});
+
+eatenPlacesList?.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const card = event.target.closest('.eaten-place-card[data-eaten-id]');
+  if (!card || !eatenPlacesList.contains(card)) return;
+  event.preventDefault();
+  const row = cloudEatenRowsById.get(String(card.dataset.eatenId || ''));
+  if (row) openEatenDetail(row);
+});
+
+closeEatenDetailBtn?.addEventListener('click', closeEatenDetail);
+eatenDetailModal?.querySelector('[data-close-eaten-detail]')?.addEventListener('click', closeEatenDetail);
+eatenDetailDeleteBtn?.addEventListener('click', deleteOpenedEatenPlace);
+
 // ---------- 毛毡板编辑器事件 ----------
 messageModeButtons.forEach((button) => {
   button.addEventListener('click', () => setMessageMode(button.dataset.messageMode || 'text'));
@@ -3021,6 +3200,7 @@ window.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
   if (stickyNoteModal?.classList.contains('show')) closeStickyNoteModal();
   if (todoDeleteModal?.classList.contains('show')) closeTodoDeleteConfirm();
+  if (eatenDetailModal?.classList.contains('show')) closeEatenDetail();
   if (letterReaderModal?.classList.contains('show')) closeLetterReader();
   else if (mailboxModal?.classList.contains('show')) closeMailboxModal();
 });
