@@ -8169,3 +8169,146 @@ body.birthday-card-lock {
     bottom: 20px !important;
   }
 }
+
+
+/* ==========================================
+   Phase 7.8.3：仅继续外推第 1 张波点到卡片与墙面交界处
+========================================== */
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .collage-dots-decor {
+  z-index: 5 !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-a {
+  width: 74px !important;
+  height: 74px !important;
+  left: -26px !important;
+  top: 76px !important;
+  opacity: .72 !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-b {
+  width: 108px !important;
+  height: 108px !important;
+  right: -28px !important;
+  top: 18px !important;
+  opacity: .88 !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-c {
+  width: 76px !important;
+  height: 76px !important;
+  left: -28px !important;
+  bottom: 28px !important;
+  opacity: .68 !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-d {
+  width: 42px !important;
+  height: 42px !important;
+  right: -18px !important;
+  top: 47% !important;
+  opacity: .58 !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-a {
+  width: 88px !important;
+  height: 88px !important;
+  left: -42px !important;
+  top: 28px !important;
+  border-width: 2.5px !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-b {
+  width: 50px !important;
+  height: 50px !important;
+  right: -20px !important;
+  bottom: 46px !important;
+  border-width: 2.5px !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-a {
+  width: 64px !important;
+  height: 64px !important;
+  left: -20px !important;
+  top: 112px !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-b {
+  width: 48px !important;
+  height: 48px !important;
+  right: -18px !important;
+  top: 34% !important;
+}
+
+.photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-c {
+  width: 48px !important;
+  height: 48px !important;
+  right: -18px !important;
+  bottom: 18px !important;
+}
+
+@media (max-width: 480px) {
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-a {
+    width: 66px !important;
+    height: 66px !important;
+    left: -24px !important;
+    top: 78px !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-b {
+    width: 96px !important;
+    height: 96px !important;
+    right: -24px !important;
+    top: 22px !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-c {
+    width: 68px !important;
+    height: 68px !important;
+    left: -24px !important;
+    bottom: 30px !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-solid-d {
+    width: 38px !important;
+    height: 38px !important;
+    right: -16px !important;
+    top: 47% !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-a {
+    width: 78px !important;
+    height: 78px !important;
+    left: -38px !important;
+    top: 30px !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-ring-b {
+    width: 44px !important;
+    height: 44px !important;
+    right: -17px !important;
+    bottom: 46px !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-a {
+    width: 58px !important;
+    height: 58px !important;
+    left: -18px !important;
+    top: 112px !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-b {
+    width: 44px !important;
+    height: 44px !important;
+    right: -16px !important;
+    top: 35% !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.collage-card.featured-card-dots .dot-grid-c {
+    width: 44px !important;
+    height: 44px !important;
+    right: -16px !important;
+    bottom: 22px !important;
+  }
+}
