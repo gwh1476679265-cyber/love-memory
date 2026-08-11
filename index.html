@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="鱼鱼和獭獭的小屋" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="pwa-icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260811-phase6-feltboard" />
+  <link rel="stylesheet" href="style.css?v=20260811-phase6-1-eaten" />
 </head>
 <body>
 
@@ -290,9 +290,10 @@
       
       <!-- 模块一：喜恶切客切换（吃喝雷达） -->
       <section class="yunyaun-section">
-        <div class="toggle-tabs">
-          <button id="tabLike" class="tab-btn active" type="button">芸芸超爱 💖</button>
-          <button id="tabDislike" class="tab-btn" type="button">芸芸退散 ❌</button>
+        <div class="toggle-tabs food-toggle-tabs">
+          <button id="tabLike" class="tab-btn active" type="button">好吃！</button>
+          <button id="tabDislike" class="tab-btn" type="button">不好吃！</button>
+          <button id="tabEaten" class="tab-btn" type="button">已吃！</button>
         </div>
         
         <!-- 爱吃内容 -->
@@ -330,6 +331,48 @@
             <div class="tags-pool dislike">
               <span>碳酸饮料（带气泡）</span><span>咖啡</span>
             </div>
+          </div>
+        </div>
+
+        <!-- 已吃记录：两个人共同上传照片 + 文字 -->
+        <div id="eatenContent" class="food-grid-content eaten-content">
+          <div class="eaten-heading">
+            <div>
+              <h4>🍽️ 我们已经吃过</h4>
+              <p>把一起吃过的店、菜和照片留在这里。</p>
+            </div>
+          </div>
+
+          <div id="eatenSyncBar" class="eaten-sync-bar" data-state="connecting" aria-live="polite">
+            <span class="eaten-sync-dot" aria-hidden="true"></span>
+            <span id="eatenSyncText">正在连接已吃记录…</span>
+          </div>
+
+          <form id="eatenCreateForm" class="eaten-create-form">
+            <label class="sr-only" for="eatenTextInput">记录这次吃过的地方</label>
+            <textarea id="eatenTextInput" maxlength="300" rows="3" placeholder="例如：木屋烧烤，鸡肫和娃娃菜都好吃！" autocomplete="off"></textarea>
+
+            <div class="eaten-image-row">
+              <label class="eaten-image-picker" for="eatenImageInput">
+                <span>＋ 选一张照片</span>
+                <input id="eatenImageInput" type="file" accept="image/*" hidden />
+              </label>
+              <span id="eatenCounter" class="eaten-counter">0 / 300</span>
+            </div>
+
+            <div id="eatenImagePreviewWrap" class="eaten-image-preview-wrap" hidden>
+              <img id="eatenImagePreview" alt="已吃记录图片预览" />
+              <button id="eatenImageClearBtn" class="eaten-image-clear-btn" type="button" aria-label="移除已选择图片">×</button>
+            </div>
+
+            <div class="eaten-form-footer">
+              <span id="eatenUploadStatus" class="eaten-upload-status">照片可以不选，文字至少写一句。</span>
+              <button id="eatenSaveBtn" type="submit">记下这顿饭 ♡</button>
+            </div>
+          </form>
+
+          <div id="eatenPlacesList" class="eaten-places-list" aria-live="polite">
+            <div class="eaten-empty">还没有记录，下一顿吃完就来留一张吧 ♡</div>
           </div>
         </div>
       </section>
@@ -470,6 +513,6 @@
   <script src="cloudbase-config.js?v=20260810-phase5-1"></script>
 
   <!-- 页面逻辑 -->
-  <script src="script.js?v=20260811-phase6-feltboard"></script>
+  <script src="script.js?v=20260811-phase6-1-eaten"></script>
 </body>
 </html>

@@ -949,6 +949,9 @@ function openBedroomPage(e) {
   if (typeof refreshCloudTodos === "function") {
     refreshCloudTodos({ silent: true });
   }
+  if (typeof refreshCloudEatenPlaces === "function") {
+    refreshCloudEatenPlaces({ silent: true });
+  }
 }
 
 enterBedroomBtn?.addEventListener("click", openBedroomPage);
@@ -967,27 +970,35 @@ backToMemoryBtnEl?.addEventListener("click", () => {
 // 卧室页面交互逻辑
 // ==========================================
 
-// 1. 选项卡切换（超爱 vs 退散）
+// 1. 吃喝雷达：好吃 / 不好吃 / 已吃
 const tabLike = document.getElementById("tabLike");
 const tabDislike = document.getElementById("tabDislike");
+const tabEaten = document.getElementById("tabEaten");
 const likeContent = document.getElementById("likeContent");
 const dislikeContent = document.getElementById("dislikeContent");
+const eatenContent = document.getElementById("eatenContent");
 
-if (tabLike && tabDislike && likeContent && dislikeContent) {
-  tabLike.addEventListener("click", () => {
-    tabLike.classList.add("active");
-    tabDislike.classList.remove("active");
-    likeContent.classList.add("active");
-    dislikeContent.classList.remove("active");
+function switchFoodTab(target) {
+  const tabs = [
+    [tabLike, likeContent, 'like'],
+    [tabDislike, dislikeContent, 'dislike'],
+    [tabEaten, eatenContent, 'eaten']
+  ];
+
+  tabs.forEach(([tab, content, name]) => {
+    const active = name === target;
+    tab?.classList.toggle('active', active);
+    content?.classList.toggle('active', active);
   });
 
-  tabDislike.addEventListener("click", () => {
-    tabDislike.classList.add("active");
-    tabLike.classList.remove("active");
-    dislikeContent.classList.add("active");
-    likeContent.classList.remove("active");
-  });
+  if (target === 'eaten' && typeof refreshCloudEatenPlaces === 'function') {
+    refreshCloudEatenPlaces({ silent: true });
+  }
 }
+
+tabLike?.addEventListener('click', () => switchFoodTab('like'));
+tabDislike?.addEventListener('click', () => switchFoodTab('dislike'));
+tabEaten?.addEventListener('click', () => switchFoodTab('eaten'));
 
 // 2. 宝藏私房榜卡片 3D 翻转
 document.querySelectorAll('.flip-card').forEach(card => {
@@ -1046,6 +1057,19 @@ const todoDeleteText = document.getElementById('todoDeleteText');
 const todoDeleteCancelBtn = document.getElementById('todoDeleteCancelBtn');
 const todoDeleteConfirmBtn = document.getElementById('todoDeleteConfirmBtn');
 
+const eatenSyncBar = document.getElementById('eatenSyncBar');
+const eatenSyncText = document.getElementById('eatenSyncText');
+const eatenCreateForm = document.getElementById('eatenCreateForm');
+const eatenTextInput = document.getElementById('eatenTextInput');
+const eatenCounter = document.getElementById('eatenCounter');
+const eatenImageInput = document.getElementById('eatenImageInput');
+const eatenImagePreviewWrap = document.getElementById('eatenImagePreviewWrap');
+const eatenImagePreview = document.getElementById('eatenImagePreview');
+const eatenImageClearBtn = document.getElementById('eatenImageClearBtn');
+const eatenUploadStatus = document.getElementById('eatenUploadStatus');
+const eatenSaveBtn = document.getElementById('eatenSaveBtn');
+const eatenPlacesList = document.getElementById('eatenPlacesList');
+
 let cloudTodoApp = null;
 let cloudTodoDb = null;
 let cloudTodoUid = '';
@@ -1074,6 +1098,14 @@ let pendingTodoDeleteId = '';
 let cloudMessageSchemaReady = true;
 const messageMediaUrlCache = new Map();
 
+let cloudEatenRefreshing = false;
+let cloudEatenTableReady = false;
+let cloudEatenLastFingerprint = '';
+let cloudEatenRowsCache = [];
+let pendingEatenImageFile = null;
+let pendingEatenImagePreviewUrl = '';
+const eatenImageUrlCache = new Map();
+
 function setTodoSyncStatus(state, text) {
   if (todoSyncBar) todoSyncBar.dataset.state = state;
   if (todoSyncText) todoSyncText.textContent = text;
@@ -1082,6 +1114,23 @@ function setTodoSyncStatus(state, text) {
 function setMessageSyncStatus(state, text) {
   if (messageSyncBar) messageSyncBar.dataset.state = state;
   if (messageSyncText) messageSyncText.textContent = text;
+}
+
+function setEatenSyncStatus(state, text) {
+  if (eatenSyncBar) eatenSyncBar.dataset.state = state;
+  if (eatenSyncText) eatenSyncText.textContent = text;
+}
+
+function updateEatenSaveState() {
+  const hasText = Boolean(String(eatenTextInput?.value || '').trim());
+  if (eatenSaveBtn) eatenSaveBtn.disabled = !cloudTodoReady || !cloudEatenTableReady || !hasText;
+}
+
+function setEatenComposerEnabled(enabled) {
+  if (eatenTextInput) eatenTextInput.disabled = !enabled;
+  if (eatenImageInput) eatenImageInput.disabled = !enabled;
+  if (!enabled && eatenSaveBtn) eatenSaveBtn.disabled = true;
+  if (enabled) updateEatenSaveState();
 }
 
 function setCloudComposerEnabled(enabled) {
@@ -1094,6 +1143,7 @@ function setCloudComposerEnabled(enabled) {
   if (messageImageSendBtn) messageImageSendBtn.disabled = !enabled || !pendingImageFile;
   if (voiceRecordBtn) voiceRecordBtn.disabled = !enabled;
   if (voiceSendBtn) voiceSendBtn.disabled = !enabled || !pendingVoiceBlob;
+  setEatenComposerEnabled(Boolean(enabled && cloudEatenTableReady));
 }
 
 function makeCloudId(prefix) {
@@ -1137,7 +1187,7 @@ function createTodoElement(row) {
   deleteBtn.type = 'button';
   deleteBtn.dataset.todoDelete = String(row.id || '');
   deleteBtn.setAttribute('aria-label', `删除约定：${String(row.title || '新的约定')}`);
-  deleteBtn.textContent = '×';
+  deleteBtn.textContent = '';
 
   item.append(checkbox, text, deleteBtn);
   return item;
@@ -1560,6 +1610,233 @@ async function removeMessageMedia(row) {
   }
 }
 
+function clearPendingEatenImage() {
+  pendingEatenImageFile = null;
+  if (pendingEatenImagePreviewUrl) URL.revokeObjectURL(pendingEatenImagePreviewUrl);
+  pendingEatenImagePreviewUrl = '';
+  if (eatenImageInput) eatenImageInput.value = '';
+  if (eatenImagePreview) eatenImagePreview.removeAttribute('src');
+  if (eatenImagePreviewWrap) eatenImagePreviewWrap.hidden = true;
+  if (eatenUploadStatus) eatenUploadStatus.textContent = '照片可以不选，文字至少写一句。';
+}
+
+async function getEatenImageUrl(row) {
+  const path = String(row?.image_path || '').trim();
+  const fileId = String(row?.image_file_id || '').trim();
+  if (!path && !fileId) return '';
+
+  const cacheKey = `${getBoardStorageConfig().bucket}:eaten:${fileId || path}`;
+  const cached = eatenImageUrlCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.url;
+
+  const bucket = getBoardStorageClient();
+  const candidates = [...new Set([path, fileId].filter(Boolean))];
+  let lastError = null;
+
+  for (const target of candidates) {
+    try {
+      const { data, error } = await bucket.createSignedUrl(target, 3600);
+      if (error) throw error;
+      const url = data?.signedUrl || data?.fullSignedURL || data?.fullSignedUrl || '';
+      if (!url) throw new Error('云存储没有返回可访问链接');
+      eatenImageUrlCache.set(cacheKey, { url, expiresAt: Date.now() + 50 * 60 * 1000 });
+      return url;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error('已吃照片链接获取失败');
+}
+
+async function uploadEatenImage(file) {
+  if (!file) return null;
+  if (!cloudTodoReady || !cloudTodoApp || !cloudTodoUid) throw new Error('已吃记录还没连上云端');
+  if (file.size > 10 * 1024 * 1024) throw new Error('这张图片超过 10MB，请换一张小一点的图片');
+
+  const mime = file.type || 'image/jpeg';
+  const extension = getMediaExtension(file.name || 'eaten.jpg', mime, 'image');
+  const date = new Date();
+  const month = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
+  const objectId = makeCloudId('eaten').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 70);
+  const path = `board/eaten/${month}/${cloudTodoUid}/${objectId}.${extension}`;
+  const bucket = getBoardStorageClient();
+  const { data, error } = await bucket.upload(path, file, {
+    contentType: mime,
+    upsert: false,
+    metadata: {
+      usage: 'love-house-eaten-place',
+      deviceId: cloudTodoUid
+    }
+  });
+
+  if (error) throw error;
+  return {
+    path: data?.path || path,
+    fileId: data?.id || data?.fileID || data?.fileId || '',
+    mime,
+    name: file.name || `eaten.${extension}`
+  };
+}
+
+function fingerprintEatenRows(rows = []) {
+  return rows.map((row) => [
+    row.id || '', row.body || '', row.image_path || '', row.image_file_id || '',
+    row.created_at || '', row.created_by || ''
+  ].join(':')).join('|');
+}
+
+async function createEatenPlaceCard(row) {
+  const mine = Boolean(cloudTodoUid && String(row.created_by || '') === String(cloudTodoUid));
+  const article = document.createElement('article');
+  article.className = 'eaten-place-card';
+
+  const photoWrap = document.createElement('div');
+  photoWrap.className = 'eaten-place-photo';
+
+  if (row.image_path || row.image_file_id) {
+    const img = document.createElement('img');
+    img.alt = String(row.body || '已吃记录');
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    photoWrap.appendChild(img);
+    try {
+      img.src = await getEatenImageUrl(row);
+    } catch (error) {
+      console.warn('[已吃记录] 图片链接获取失败：', error);
+      photoWrap.classList.add('is-empty');
+      photoWrap.textContent = '🍽️';
+    }
+  } else {
+    photoWrap.classList.add('is-empty');
+    photoWrap.textContent = '🍽️';
+  }
+
+  const body = document.createElement('div');
+  body.className = 'eaten-place-body';
+
+  const text = document.createElement('div');
+  text.className = 'eaten-place-text';
+  text.textContent = String(row.body || '一起吃过的一顿饭');
+
+  const meta = document.createElement('div');
+  meta.className = 'eaten-place-meta';
+  meta.textContent = `${mine ? '我' : 'TA'} · ${formatMessageTime(row.created_at)}`;
+
+  body.append(text, meta);
+  article.append(photoWrap, body);
+  return article;
+}
+
+async function renderCloudEatenPlaces(rows = []) {
+  if (!eatenPlacesList) return;
+  cloudEatenRowsCache = rows.slice();
+  eatenPlacesList.innerHTML = '';
+
+  if (rows.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'eaten-empty';
+    empty.textContent = '还没有记录，下一顿吃完就来留一张吧 ♡';
+    eatenPlacesList.appendChild(empty);
+    return;
+  }
+
+  for (const row of rows) {
+    eatenPlacesList.appendChild(await createEatenPlaceCard(row));
+  }
+}
+
+async function refreshCloudEatenPlaces({ silent = false } = {}) {
+  if (!eatenContent || !cloudTodoReady || !cloudTodoDb || cloudEatenRefreshing) return;
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.eatenTable || 'couple_eaten_places').trim();
+  cloudEatenRefreshing = true;
+
+  try {
+    const { data, error } = await cloudTodoDb
+      .from(tableName)
+      .select('id,body,image_path,image_file_id,image_name,image_mime,created_at,created_by')
+      .order('created_at', { ascending: false })
+      .limit(60);
+
+    if (error) throw error;
+
+    cloudEatenTableReady = true;
+    setEatenComposerEnabled(true);
+    const rows = Array.isArray(data) ? data : [];
+    const nextFingerprint = fingerprintEatenRows(rows);
+    if (nextFingerprint !== cloudEatenLastFingerprint) {
+      await renderCloudEatenPlaces(rows);
+      cloudEatenLastFingerprint = nextFingerprint;
+    } else {
+      cloudEatenRowsCache = rows.slice();
+    }
+
+    if (!silent) {
+      const seconds = Math.max(1, Math.round(Number(config.pollMs || 4000) / 1000));
+      setEatenSyncStatus('online', `已吃记录已同步 · 约 ${seconds} 秒自动更新一次 ♡`);
+    } else if (eatenSyncBar?.dataset.state !== 'online') {
+      setEatenSyncStatus('online', '已吃记录已连上云端 ♡');
+    }
+  } catch (error) {
+    console.error('[已吃记录] SQL 读取失败：', error);
+    cloudEatenTableReady = false;
+    setEatenComposerEnabled(false);
+    setEatenSyncStatus('error', '已吃记录还没准备好，请先执行 Phase 6.1 SQL');
+  } finally {
+    cloudEatenRefreshing = false;
+  }
+}
+
+async function createCloudEatenPlace(body) {
+  const cleanBody = String(body || '').trim();
+  if (!cleanBody) return;
+  if (!cloudTodoReady || !cloudTodoDb || !cloudEatenTableReady) {
+    setEatenSyncStatus('error', '已吃记录还没连上云端');
+    return;
+  }
+
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const tableName = String(config.eatenTable || 'couple_eaten_places').trim();
+  let uploaded = null;
+
+  if (eatenSaveBtn) eatenSaveBtn.disabled = true;
+  setEatenSyncStatus('syncing', pendingEatenImageFile ? '正在上传照片并记下这顿饭…' : '正在记下这顿饭…');
+
+  try {
+    if (pendingEatenImageFile) uploaded = await uploadEatenImage(pendingEatenImageFile);
+
+    const row = {
+      id: makeCloudId('eaten').slice(0, 80),
+      body: cleanBody.slice(0, 300),
+      created_by: String(cloudTodoUid),
+      image_path: uploaded?.path || null,
+      image_file_id: uploaded?.fileId || null,
+      image_name: uploaded?.name ? String(uploaded.name).slice(0, 180) : null,
+      image_mime: uploaded?.mime ? String(uploaded.mime).slice(0, 100) : null
+    };
+
+    const { error } = await cloudTodoDb.from(tableName).insert(row);
+    if (error) throw error;
+
+    if (eatenTextInput) eatenTextInput.value = '';
+    if (eatenCounter) eatenCounter.textContent = '0 / 300';
+    clearPendingEatenImage();
+    cloudEatenLastFingerprint = '';
+    await refreshCloudEatenPlaces({ silent: true });
+    setEatenSyncStatus('online', '这顿饭已经记下来啦 ♡');
+  } catch (error) {
+    console.error('[已吃记录] 保存失败：', error);
+    if (uploaded?.path || uploaded?.fileId) {
+      await removeMessageMedia({ media_path: uploaded?.path, media_file_id: uploaded?.fileId });
+    }
+    setEatenSyncStatus('error', `没有保存成功：${String(error?.message || error || '未知错误')}`);
+  } finally {
+    updateEatenSaveState();
+  }
+}
+
 async function refreshCloudTodos({ silent = false } = {}) {
   if (!cloudTodoReady || !cloudTodoDb || cloudTodoRefreshing) return;
 
@@ -1674,6 +1951,10 @@ function shouldPollCloudMessages() {
   return document.visibilityState === 'visible' && memoryPageEl?.classList.contains('active');
 }
 
+function shouldPollCloudEatenPlaces() {
+  return document.visibilityState === 'visible' && aboutPageEl?.classList.contains('active');
+}
+
 function startCloudHomePolling() {
   if (cloudHomePollingTimer) window.clearInterval(cloudHomePollingTimer);
 
@@ -1683,11 +1964,12 @@ function startCloudHomePolling() {
   cloudHomePollingTimer = window.setInterval(() => {
     if (shouldPollCloudTodos()) refreshCloudTodos({ silent: true });
     if (shouldPollCloudMessages()) refreshCloudMessages({ silent: true });
+    if (shouldPollCloudEatenPlaces()) refreshCloudEatenPlaces({ silent: true });
   }, pollMs);
 }
 
 async function initCloudHomeSync() {
-  if (!todoList && !messageBoard) return;
+  if (!todoList && !messageBoard && !eatenContent) return;
 
   const config = window.LOVE_HOUSE_CLOUD || {};
   const envId = String(config.envId || '').trim();
@@ -1695,18 +1977,22 @@ async function initCloudHomeSync() {
   if (!envId || envId === 'YOUR_CLOUDBASE_ENV_ID') {
     setTodoSyncStatus('setup', '还差一步：请在 cloudbase-config.js 填入环境 ID');
     setMessageSyncStatus('setup', '毛毡板等待 CloudBase 环境 ID');
+    setEatenSyncStatus('setup', '已吃记录等待 CloudBase 环境 ID');
     return;
   }
 
   if (!window.cloudbase || typeof window.cloudbase.init !== 'function') {
     setTodoSyncStatus('error', 'CloudBase SDK 加载失败，请检查网络');
     setMessageSyncStatus('error', 'CloudBase SDK 加载失败，请检查网络');
+    setEatenSyncStatus('error', 'CloudBase SDK 加载失败，请检查网络');
     return;
   }
 
   setCloudComposerEnabled(false);
+  setEatenComposerEnabled(false);
   setTodoSyncStatus('connecting', '正在连接两个人的小屋…');
   setMessageSyncStatus('connecting', '正在连接毛毡板…');
+  setEatenSyncStatus('connecting', '正在连接已吃记录…');
 
   try {
     const publishableKey = String(config.publishableKey || '').trim();
@@ -1736,24 +2022,30 @@ async function initCloudHomeSync() {
 
     await Promise.all([
       refreshCloudTodos(),
-      refreshCloudMessages()
+      refreshCloudMessages(),
+      refreshCloudEatenPlaces()
     ]);
     startCloudHomePolling();
   } catch (error) {
     console.error('[小屋云同步] 初始化失败：', error);
     cloudTodoReady = false;
+    cloudEatenTableReady = false;
     setCloudComposerEnabled(false);
+    setEatenComposerEnabled(false);
 
     const message = String(error?.message || error || '');
     if (/publishable|access.?key|api.?key/i.test(message)) {
       setTodoSyncStatus('error', 'CloudBase Publishable Key 配置有误');
       setMessageSyncStatus('error', 'CloudBase Publishable Key 配置有误');
+      setEatenSyncStatus('error', 'CloudBase Publishable Key 配置有误');
     } else if (/permission|denied|unauthorized|rls|403/i.test(message)) {
       setTodoSyncStatus('error', 'CloudBase 写权限不足，请检查对应 GRANT / RLS');
       setMessageSyncStatus('error', 'CloudBase 写权限不足，请检查 Phase 6 SQL');
+      setEatenSyncStatus('error', 'CloudBase 写权限不足，请检查 Phase 6.1 SQL');
     } else {
       setTodoSyncStatus('error', '云同步连接失败，请稍后再试');
       setMessageSyncStatus('error', '毛毡板连接失败，请稍后再试');
+      setEatenSyncStatus('error', '已吃记录连接失败，请稍后再试');
     }
   }
 }
@@ -2152,6 +2444,43 @@ todoDeleteCancelBtn?.addEventListener('click', closeTodoDeleteConfirm);
 todoDeleteConfirmBtn?.addEventListener('click', () => deleteCloudTodo(pendingTodoDeleteId));
 todoDeleteModal?.querySelector('[data-close-todo-delete]')?.addEventListener('click', closeTodoDeleteConfirm);
 
+// ---------- “已吃！”记录事件 ----------
+eatenTextInput?.addEventListener('input', () => {
+  if (eatenCounter) eatenCounter.textContent = `${eatenTextInput.value.length} / 300`;
+  updateEatenSaveState();
+});
+
+eatenImageInput?.addEventListener('change', () => {
+  const file = eatenImageInput.files?.[0];
+  clearPendingEatenImage();
+  if (!file) return;
+  if (!String(file.type || '').startsWith('image/')) {
+    setEatenSyncStatus('error', '请选择图片文件');
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    setEatenSyncStatus('error', '图片不能超过 10MB');
+    return;
+  }
+
+  pendingEatenImageFile = file;
+  pendingEatenImagePreviewUrl = URL.createObjectURL(file);
+  if (eatenImagePreview) eatenImagePreview.src = pendingEatenImagePreviewUrl;
+  if (eatenImagePreviewWrap) eatenImagePreviewWrap.hidden = false;
+  if (eatenUploadStatus) eatenUploadStatus.textContent = `${file.name || '这张照片'} · ${(file.size / 1024 / 1024).toFixed(1)}MB`;
+  updateEatenSaveState();
+});
+
+eatenImageClearBtn?.addEventListener('click', () => {
+  clearPendingEatenImage();
+  updateEatenSaveState();
+});
+
+eatenCreateForm?.addEventListener('submit', (event) => {
+  event.preventDefault();
+  createCloudEatenPlace(eatenTextInput?.value || '');
+});
+
 // ---------- 毛毡板编辑器事件 ----------
 messageModeButtons.forEach((button) => {
   button.addEventListener('click', () => setMessageMode(button.dataset.messageMode || 'text'));
@@ -2236,17 +2565,20 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
   if (shouldPollCloudTodos()) refreshCloudTodos({ silent: true });
   if (shouldPollCloudMessages()) refreshCloudMessages({ silent: true });
+  if (shouldPollCloudEatenPlaces()) refreshCloudEatenPlaces({ silent: true });
 });
 
 window.addEventListener('focus', () => {
   if (shouldPollCloudTodos()) refreshCloudTodos({ silent: true });
   if (shouldPollCloudMessages()) refreshCloudMessages({ silent: true });
+  if (shouldPollCloudEatenPlaces()) refreshCloudEatenPlaces({ silent: true });
 });
 
 window.addEventListener('pagehide', () => {
   stopVoiceStream();
   if (pendingImagePreviewUrl) URL.revokeObjectURL(pendingImagePreviewUrl);
   if (pendingVoicePreviewUrl) URL.revokeObjectURL(pendingVoicePreviewUrl);
+  if (pendingEatenImagePreviewUrl) URL.revokeObjectURL(pendingEatenImagePreviewUrl);
 });
 
 setMessageMode('text');

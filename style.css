@@ -4411,3 +4411,357 @@ body.birthday-card-lock {
     animation: none !important;
   }
 }
+
+/* ==========================================
+   Phase 6.1：吃喝雷达三标签 + “已吃！”记录
+========================================== */
+.food-toggle-tabs {
+  gap: 4px;
+}
+
+.food-toggle-tabs .tab-btn {
+  min-width: 0;
+  padding: 9px 6px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.eaten-content {
+  padding-top: 2px;
+}
+
+.eaten-heading {
+  margin: 2px 2px 12px;
+}
+
+.eaten-heading h4 {
+  margin: 0 0 4px;
+  color: #ff78a6;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.eaten-heading p {
+  margin: 0;
+  color: #8a7280;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.55;
+}
+
+.eaten-sync-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 32px;
+  margin-bottom: 12px;
+  padding: 6px 10px;
+  border: 1px solid #ffe0eb;
+  border-radius: 999px;
+  color: #8a7280;
+  font-size: 10px;
+  font-weight: 800;
+  text-align: center;
+  background: rgba(255, 250, 253, 0.82);
+}
+
+.eaten-sync-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d2c2cb;
+}
+
+.eaten-sync-bar[data-state="connecting"] .eaten-sync-dot,
+.eaten-sync-bar[data-state="syncing"] .eaten-sync-dot {
+  background: #8bcfff;
+  box-shadow: 0 0 0 4px rgba(139, 207, 255, .17);
+  animation: todoCloudPulse 1.15s ease-in-out infinite;
+}
+
+.eaten-sync-bar[data-state="online"] {
+  color: #6f7f72;
+  border-color: rgba(165, 223, 183, .78);
+  background: rgba(247, 255, 250, .88);
+}
+
+.eaten-sync-bar[data-state="online"] .eaten-sync-dot {
+  background: #81d49a;
+  box-shadow: 0 0 0 4px rgba(129, 212, 154, .16);
+}
+
+.eaten-sync-bar[data-state="error"] {
+  color: #9a6e76;
+  border-color: rgba(255, 174, 192, .82);
+  background: rgba(255, 247, 250, .9);
+}
+
+.eaten-sync-bar[data-state="error"] .eaten-sync-dot {
+  background: #ff91a9;
+}
+
+.eaten-create-form {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1.5px solid #ffd7e6;
+  border-radius: 20px;
+  background: rgba(255,255,255,.82);
+  box-shadow: 0 8px 20px rgba(255, 137, 184, .08);
+}
+
+.eaten-create-form textarea {
+  display: block;
+  width: 100%;
+  min-height: 82px;
+  resize: vertical;
+  padding: 11px 12px;
+  border: 1.5px solid #ffe0ec;
+  border-radius: 14px;
+  outline: none;
+  color: #65485a;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.65;
+  background: #fffafd;
+}
+
+.eaten-create-form textarea:focus {
+  border-color: #ff9fc3;
+  box-shadow: 0 0 0 4px rgba(255, 159, 195, .11);
+}
+
+.eaten-create-form textarea:disabled {
+  opacity: .5;
+}
+
+.eaten-image-row,
+.eaten-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+}
+
+.eaten-image-row {
+  margin-top: 10px;
+}
+
+.eaten-image-picker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1.5px solid #ffd2e2;
+  border-radius: 12px;
+  color: #ff78a6;
+  font-size: 11px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #fff3f8, #eef9ff);
+  cursor: pointer;
+}
+
+.eaten-counter {
+  color: #b095a5;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.eaten-image-preview-wrap {
+  position: relative;
+  margin-top: 10px;
+  overflow: hidden;
+  border: 1.5px solid #ffd5e4;
+  border-radius: 16px;
+  background: #fffafd;
+}
+
+.eaten-image-preview-wrap img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+}
+
+.eaten-image-clear-btn {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1.5px solid rgba(255, 202, 220, .95);
+  border-radius: 50%;
+  color: #ff719e;
+  font-size: 17px;
+  line-height: 1;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 4px 12px rgba(80, 56, 69, .12);
+  cursor: pointer;
+}
+
+.eaten-form-footer {
+  align-items: flex-end;
+  margin-top: 11px;
+}
+
+.eaten-upload-status {
+  flex: 1;
+  color: #a08a96;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+#eatenSaveBtn {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #ff8fbd, #8bcfff);
+  box-shadow: 0 7px 15px rgba(255,137,184,.2);
+  cursor: pointer;
+}
+
+#eatenSaveBtn:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.eaten-places-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.eaten-place-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1.5px solid #ffd5e4;
+  border-radius: 18px;
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 7px 17px rgba(131,99,117,.08);
+}
+
+.eaten-place-photo {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1.16 / 1;
+  overflow: hidden;
+  color: #ff9fc3;
+  font-size: 30px;
+  background: linear-gradient(135deg, #fff0f7, #eaf8ff);
+}
+
+.eaten-place-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.eaten-place-photo.is-empty {
+  border-bottom: 1px dashed #ffd8e6;
+}
+
+.eaten-place-body {
+  padding: 9px 10px 10px;
+}
+
+.eaten-place-text {
+  color: #65485a;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.eaten-place-meta {
+  margin-top: 6px;
+  color: #b197a5;
+  font-size: 8px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.eaten-empty {
+  grid-column: 1 / -1;
+  padding: 24px 10px;
+  border: 1.5px dashed #ffd5e4;
+  border-radius: 17px;
+  color: #b29aa8;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.6;
+  text-align: center;
+  background: rgba(255,255,255,.58);
+}
+
+/* 约定右侧叉叉：缩小，并把叉叉真正居中在圆圈里 */
+.todo-delete-btn {
+  display: grid !important;
+  place-items: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+  font-size: 0 !important;
+}
+
+.todo-delete-btn::before {
+  content: "×";
+  display: block;
+  color: inherit;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  transform: translateY(-.5px);
+}
+
+@media (max-width: 480px) {
+  .food-toggle-tabs .tab-btn {
+    padding-inline: 4px;
+    font-size: 11px;
+  }
+
+  .eaten-create-form {
+    padding: 10px;
+  }
+
+  .eaten-form-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  #eatenSaveBtn {
+    width: 100%;
+  }
+
+  .eaten-places-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .eaten-place-body {
+    padding: 8px;
+  }
+
+  .todo-delete-btn {
+    width: 23px !important;
+    height: 23px !important;
+  }
+}
