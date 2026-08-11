@@ -6136,3 +6136,216 @@ body.birthday-card-lock {
     right: 10px !important;
   }
 }
+
+/* ==========================================
+   Phase 7.3：照片墙相纸 / 相框比例精修
+   - 普通回忆参考真实拍立得相纸：窄侧边、顶部信息区、较宽底边
+   - 横版拍立得沿用相同“相纸”逻辑
+   - 特别日子相框减一层；日期与“特别的一天”同排在顶部左右
+   - 照片墙文字恢复站点默认字体
+========================================== */
+
+/* ---------- 普通拍立得：更接近真实相纸的边框比例 ---------- */
+.photo-wall-grid .timeline-item.standard .memory-card.photo-frame {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  padding: 6px 7px 8px !important;
+  border: 1px solid rgba(226, 219, 221, .96) !important;
+  border-radius: 3px !important;
+  background: #fffefa !important;
+  box-shadow:
+    0 10px 22px rgba(93, 73, 84, .12),
+    0 2px 5px rgba(93, 73, 84, .06) !important;
+  overflow: visible !important;
+}
+
+/* 顶部白边：日期回到左上，放在留白内并上下居中。 */
+.photo-wall-grid .timeline-item.standard .memory-date {
+  position: static !important;
+  flex: 0 0 auto;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-height: 29px !important;
+  margin: 0 !important;
+  padding: 0 4px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: #e789ae !important;
+  background: transparent !important;
+  font-family: inherit !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  line-height: 1.15 !important;
+  text-align: left !important;
+}
+
+/* 真实拍立得相纸的“照片窗”占主体；竖版参考 Instax Mini 的画面比例。 */
+.photo-wall-grid .timeline-item.standard .memory-photo {
+  flex: 0 0 auto;
+  width: 100% !important;
+  aspect-ratio: 46 / 62 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 1px !important;
+  background: #f6f3f3 !important;
+}
+
+.photo-wall-grid .timeline-item.standard .memory-photo.has-image img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  object-fit: cover !important;
+  border-radius: 1px !important;
+}
+
+/* 底部白边明显比顶部/侧边更宽；标题在这块留白中上下居中。 */
+.photo-wall-grid .timeline-item.standard .memory-title {
+  flex: 1 0 auto;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-height: 45px !important;
+  margin: 0 !important;
+  padding: 4px 4px 1px !important;
+  color: #604c58 !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+}
+
+/* 横版拍立得：仍然是相纸，不是普通横卡；画面窗对应横向 instant-film 比例。 */
+.photo-wall-row .timeline-item.standard.landscape-polaroid {
+  width: min(74%, 440px) !important;
+}
+
+.photo-wall-grid .timeline-item.standard.landscape-polaroid .memory-photo {
+  aspect-ratio: 62 / 46 !important;
+}
+
+.photo-wall-grid .timeline-item.standard.landscape-polaroid .memory-date {
+  min-height: 28px !important;
+}
+
+.photo-wall-grid .timeline-item.standard.landscape-polaroid .memory-title {
+  min-height: 43px !important;
+}
+
+/* ---------- 特别的一天：相框减掉一层，顶部左右放同规格信息 ---------- */
+.photo-wall-grid .featured .memory-card.photo-frame {
+  position: relative !important;
+  padding: 48px 12px 16px !important;
+  border: 2px solid rgba(255, 188, 214, .92) !important;
+  border-radius: 12px !important;
+  background: #fffafc !important;
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 255, 255, .94),
+    0 15px 30px rgba(93, 73, 84, .14) !important;
+}
+
+/* 去掉照片窗自身那一层细框，视觉上只剩“外相框 + 白色内衬”。 */
+.photo-wall-grid .featured .memory-photo {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 3px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+.photo-wall-grid .featured .memory-photo.has-image img {
+  border-radius: 2px !important;
+}
+
+/* 日期 / 特别的一天：左上与右上，同高度、同字号、同视觉重量。 */
+.photo-wall-grid .featured .memory-date,
+.photo-wall-grid .featured .memory-special-badge {
+  position: absolute !important;
+  top: 13px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 27px !important;
+  margin: 0 !important;
+  padding: 5px 9px !important;
+  border-radius: 999px !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+  white-space: nowrap !important;
+}
+
+.photo-wall-grid .featured .memory-date {
+  left: 13px !important;
+  right: auto !important;
+  color: #eb7fab !important;
+  background: rgba(255, 241, 247, .94) !important;
+}
+
+.photo-wall-grid .featured .memory-special-badge {
+  left: auto !important;
+  right: 13px !important;
+  color: #fff !important;
+  background: linear-gradient(135deg, #ef8fba, #83c8f7) !important;
+}
+
+.photo-wall-grid .featured .memory-title {
+  font-family: inherit !important;
+  margin: 12px 4px 2px !important;
+  font-size: 14px !important;
+  text-align: center !important;
+}
+
+@media (max-width: 480px) {
+  .photo-wall-grid .timeline-item.standard .memory-card.photo-frame {
+    padding: 5px 6px 7px !important;
+  }
+
+  .photo-wall-grid .timeline-item.standard .memory-date {
+    min-height: 27px !important;
+    padding: 0 3px !important;
+    font-size: 10px !important;
+  }
+
+  .photo-wall-grid .timeline-item.standard .memory-title {
+    min-height: 42px !important;
+    padding: 4px 3px 0 !important;
+    font-size: 11.5px !important;
+  }
+
+  .photo-wall-row .timeline-item.standard.landscape-polaroid {
+    width: 75% !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.photo-frame {
+    padding: 45px 10px 14px !important;
+  }
+
+  .photo-wall-grid .featured .memory-date,
+  .photo-wall-grid .featured .memory-special-badge {
+    top: 11px !important;
+    min-height: 26px !important;
+    padding: 5px 8px !important;
+    font-size: 11.5px !important;
+  }
+
+  .photo-wall-grid .featured .memory-date {
+    left: 11px !important;
+  }
+
+  .photo-wall-grid .featured .memory-special-badge {
+    right: 11px !important;
+  }
+}
