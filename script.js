@@ -211,7 +211,7 @@ const memories = {
   },
 
  "2026-04-26": {
-    title: "I ♥ YOU",
+    title: "I ❤️ YOU",
     image: "images/20260426-1.jpg",
     text: "回头看都是小巧思"
   },
