@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="鱼鱼和獭獭的小屋" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="pwa-icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260811-phase7-5" />
+  <link rel="stylesheet" href="style.css?v=20260811-phase7-6" />
 </head>
 <body>
 
@@ -74,8 +74,12 @@
         <strong>大门信箱</strong>
         <small id="homeMailboxHint">看看有没有留给你的信</small>
       </span>
-      <span id="homeMailboxBadge" class="home-mailbox-badge" hidden>新信</span>
+      <span id="homeMailboxBadge" class="home-mailbox-badge" hidden>1</span>
     </button>
+  </div>
+
+  <div id="homeLiveStatus" class="home-live-status" hidden>
+    今天有人回过家 ♡
   </div>
    </main>
 </section>
@@ -258,7 +262,7 @@
           <span class="photo-wall-heading-icon" aria-hidden="true">🖼️</span>
           <div>
             <h3 id="photoWallTitle">客厅照片墙</h3>
-            <p>特别重要的日子，会在墙上占一块更大的位置。</p>
+            <p>特别重要的日子会挂成相框，普通回忆会变成拍立得或胶带照片。</p>
           </div>
         </div>
 
@@ -380,29 +384,37 @@
     <main class="about-content-wrap">
       
       <!-- 模块一：喜恶切客切换（吃喝雷达） -->
-      <section class="yunyaun-section">
+      <section class="yunyaun-section kitchen-room-section">
+        <div class="kitchen-room-heading">
+          <div class="kitchen-room-heading-icon" aria-hidden="true">🧊</div>
+          <div>
+            <h3>厨房冰箱</h3>
+            <p>好吃的像冰箱贴，不好吃的像划掉的小纸条，已吃记录像贴在冰箱上的菜单与照片。</p>
+          </div>
+        </div>
+
         <div class="toggle-tabs food-toggle-tabs">
-          <button id="tabLike" class="tab-btn active" type="button">好吃！</button>
-          <button id="tabDislike" class="tab-btn" type="button">不好吃！</button>
-          <button id="tabEaten" class="tab-btn" type="button">已吃！</button>
+          <button id="tabLike" class="tab-btn active" type="button">好吃贴</button>
+          <button id="tabDislike" class="tab-btn" type="button">划掉</button>
+          <button id="tabEaten" class="tab-btn" type="button">今天吃了</button>
         </div>
         
         <!-- 爱吃内容 -->
         <div id="likeContent" class="food-grid-content active">
           <div class="food-category">
-            <h4>🏷️ 类型 & 口味</h4>
+            <h4>🧲 冰箱贴：喜欢吃的</h4>
             <div class="tags-pool">
               <span>烤肉</span><span>铁板烧</span><span>烧烤</span><span>融合式西餐</span><span>家常菜</span><span>辣</span><span>甜</span><span>香菜</span><span>叉烧</span><span>抹茶+红豆</span><span>烤鸡</span><span>牛肉卷</span>
             </div>
           </div>
           <div class="food-category">
-            <h4>🍓 水果 & 面包</h4>
+            <h4>🍓 冰箱下层</h4>
             <div class="tags-pool">
               <span>西瓜 🍉</span><span>凤梨 🍍</span><span>榴莲 👑</span><span>芒果 🥭</span><span>肉松面包</span><span>红豆面包</span><span>布丁</span><span>抹茶泡芙</span>
             </div>
           </div>
           <div class="food-category">
-            <h4>🥤 喜欢喝的</h4>
+            <h4>🥤 冷藏饮料区</h4>
             <div class="tags-pool">
               <span>霸王茶姬 (白雾红尘 标准糖)</span><span>一点点 (抹茶)</span><span>阿嬷奶茶</span><span>喜茶 (茉莉浓抹)</span>
             </div>
@@ -412,13 +424,13 @@
         <!-- 不吃内容（默认隐藏） -->
         <div id="dislikeContent" class="food-grid-content">
           <div class="food-category">
-            <h4>🚫 不爱吃</h4>
+            <h4>🗒️ 划掉的小纸条</h4>
             <div class="tags-pool dislike">
               <span>三文鱼</span><span>荠菜</span><span>韭菜</span><span>云贵菜</span><span>芭乐</span><span>沙茶</span><span>海鲜</span><span>锅巴</span><span>血糯米</span><span>紫米糯米球</span><span>蒜苗（看情况）</span><span>日料</span><span>酸黄瓜</span><span>羊肉</span>
             </div>
           </div>
           <div class="food-category">
-            <h4>🙅 不爱喝</h4>
+            <h4>🥤 暂时先划掉</h4>
             <div class="tags-pool dislike">
               <span>碳酸饮料（带气泡）</span><span>咖啡</span>
             </div>
@@ -429,8 +441,8 @@
         <div id="eatenContent" class="food-grid-content eaten-content">
           <div class="eaten-heading">
             <div>
-              <h4>🍽️ 我们已经吃过</h4>
-              <p>把一起吃过的店、菜和照片留在这里。</p>
+              <h4>🍽️ 冰箱侧边菜单</h4>
+              <p>把一起吃过的店、菜和照片像菜单一样留在冰箱侧边。</p>
             </div>
           </div>
 
@@ -469,8 +481,8 @@
       </section>
 
       <!-- 模块二：3D翻转甜品/餐厅卡片 -->
-      <section class="yunyaun-section">
-        <div class="section-title">🍰 芸芸的宝藏私房榜 (点击翻面)</div>
+      <section class="yunyaun-section kitchen-treasure-section">
+        <div class="section-title">🍰 厨房里的宝藏私房榜 (点击翻面)</div>
         <div class="cards-market">
           
           <!-- 卡片1 -->
@@ -662,6 +674,6 @@
   <script src="cloudbase-config.js?v=20260810-phase5-1"></script>
 
   <!-- 页面逻辑 -->
-  <script src="script.js?v=20260811-phase7-5"></script>
+  <script src="script.js?v=20260811-phase7-6"></script>
 </body>
 </html>

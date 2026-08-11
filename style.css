@@ -7065,3 +7065,346 @@ body.birthday-card-lock {
   .todo-notebook-panel { animation: none !important; }
   .todo-book-button { transition: none !important; }
 }
+
+/* ======================================================
+   Phase 7.6：大门回家状态 / 真相框 / 厨房冰箱化
+   ====================================================== */
+
+.home-door-card {
+  position: relative;
+}
+
+.home-live-status {
+  margin: 14px auto 0;
+  padding: 10px 16px;
+  width: min(100%, 290px);
+  border-radius: 999px;
+  border: 1px solid rgba(255, 150, 191, .28);
+  background: linear-gradient(90deg, rgba(255, 233, 242, .95), rgba(235, 244, 255, .96));
+  color: #a86483;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  box-shadow: 0 10px 24px rgba(255, 154, 197, .14);
+}
+
+.home-live-status::before {
+  content: "♡";
+  display: inline-block;
+  margin-right: 6px;
+  color: #ff84b2;
+}
+
+.home-door-card.has-presence .house-name-board {
+  box-shadow: 0 18px 36px rgba(255, 161, 198, .16), 0 0 0 2px rgba(255, 208, 225, .38) inset;
+}
+
+.home-mailbox-btn {
+  overflow: visible;
+}
+
+.home-mailbox-icon {
+  position: relative;
+  overflow: visible;
+}
+
+.home-mailbox-badge {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+.home-mailbox-btn.has-new-letter .home-mailbox-icon::after {
+  content: "";
+  position: absolute;
+  right: -3px;
+  top: -5px;
+  width: 13px;
+  height: 12px;
+  background: linear-gradient(180deg, #ff8cb7, #ff5a93);
+  clip-path: polygon(0 0, 100% 18%, 62% 52%, 100% 100%, 0 86%);
+  border-radius: 2px;
+  box-shadow: 0 2px 6px rgba(255, 82, 140, .28);
+  transform-origin: left center;
+  animation: mailboxFlagWave 1.8s ease-in-out infinite;
+}
+
+.home-mailbox-btn.has-new-letter .home-mailbox-icon::before {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: -4px;
+  width: 2px;
+  height: 18px;
+  background: linear-gradient(180deg, #e79db9, #d98ca9);
+  border-radius: 999px;
+}
+
+@keyframes mailboxFlagWave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(8deg); }
+  75% { transform: rotate(-6deg); }
+}
+
+/* ===== 客厅照片墙：真正的相框 ===== */
+.photo-wall-grid > .timeline-item.featured .timeline-node,
+.photo-wall-grid > .timeline-item.featured .photo-frame-pin {
+  display: none !important;
+}
+
+.photo-wall-grid > .timeline-item.featured {
+  margin-top: 10px;
+  transform-origin: center top;
+}
+
+.photo-wall-grid .featured .memory-card.photo-frame {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 16px 18px !important;
+  border-radius: 30px !important;
+  border: 5px solid #9fc19d !important;
+  background:
+    radial-gradient(circle at 14px 14px, rgba(144, 183, 136, .72) 0 2px, transparent 2.4px) 0 0 / 28px 28px,
+    radial-gradient(circle at 14px 14px, rgba(255, 255, 255, .35) 0 9px, transparent 9.4px) 14px 14px / 28px 28px,
+    linear-gradient(180deg, #fcecf2 0%, #f9e7ee 100%);
+  box-shadow:
+    0 18px 30px rgba(184, 143, 160, .16),
+    0 0 0 5px rgba(232, 247, 226, .95) inset,
+    0 0 0 8px rgba(157, 188, 155, .18) inset !important;
+}
+
+.photo-wall-grid .featured .memory-card.photo-frame::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 24px;
+  border: 2px solid rgba(255, 255, 255, .58);
+  pointer-events: none;
+}
+
+.photo-wall-grid .featured .memory-date,
+.photo-wall-grid .featured .memory-special-badge {
+  top: 14px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  z-index: 3;
+  box-shadow: 0 6px 15px rgba(187, 150, 167, .12);
+}
+
+.photo-wall-grid .featured .memory-date {
+  left: 14px !important;
+  padding: 6px 11px !important;
+  color: #dd76a6 !important;
+  background: rgba(255, 246, 250, .92) !important;
+  border: 1px solid rgba(235, 180, 203, .6);
+  border-radius: 999px !important;
+}
+
+.photo-wall-grid .featured .memory-special-badge {
+  right: 14px !important;
+  padding: 6px 11px !important;
+  color: #fff !important;
+  background: linear-gradient(90deg, #e9a8c1, #adcfff) !important;
+  border-radius: 999px !important;
+}
+
+.photo-wall-grid .featured .memory-photo {
+  position: relative;
+  margin-top: 34px !important;
+  padding: 12px !important;
+  border-radius: 24px !important;
+  background: rgba(255, 255, 255, .74) !important;
+  border: 2px solid rgba(218, 231, 214, .95) !important;
+  box-shadow: 0 10px 22px rgba(173, 151, 162, .10) inset;
+}
+
+.photo-wall-grid .featured .memory-photo.has-image img {
+  border-radius: 18px !important;
+  display: block;
+  width: 100%;
+  box-shadow: 0 8px 20px rgba(145, 117, 131, .08);
+}
+
+.photo-wall-grid .featured .memory-title {
+  margin-top: 12px !important;
+  padding: 0 6px 2px;
+  color: #6c5760 !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+  text-align: center !important;
+}
+
+/* ===== 厨房冰箱化 ===== */
+.kitchen-room-section,
+.kitchen-treasure-section {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(251,253,255,.98));
+  border: 1.5px solid rgba(198, 219, 240, .58);
+  box-shadow: 0 18px 36px rgba(179, 198, 222, .12);
+}
+
+.kitchen-room-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  background: linear-gradient(90deg, rgba(238, 246, 255, .98), rgba(255, 243, 249, .96));
+  border: 1px solid rgba(214, 229, 244, .95);
+}
+
+.kitchen-room-heading-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #ffffff, #eef5ff);
+  box-shadow: 0 10px 20px rgba(172, 193, 222, .18);
+  font-size: 22px;
+}
+
+.kitchen-room-heading h3 {
+  margin: 0 0 4px;
+  color: #6b7da6;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.kitchen-room-heading p {
+  margin: 0;
+  color: #8290aa;
+  font-size: 11px;
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.food-toggle-tabs {
+  padding: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(243, 248, 255, .98), rgba(255, 246, 250, .98));
+  border: 1px solid rgba(214, 226, 242, .9);
+}
+
+.food-toggle-tabs .tab-btn {
+  border-radius: 999px;
+  font-weight: 900;
+  letter-spacing: .3px;
+}
+
+.food-toggle-tabs .tab-btn.active {
+  background: linear-gradient(90deg, #ffd6e6, #d8ebff) !important;
+  color: #6a6080 !important;
+  box-shadow: 0 8px 16px rgba(189, 200, 227, .18);
+}
+
+.kitchen-room-section .food-category {
+  border-radius: 24px;
+  border: 1px solid rgba(223, 232, 243, .95);
+  background: rgba(255, 255, 255, .94);
+  box-shadow: 0 14px 28px rgba(183, 196, 218, .08);
+}
+
+.kitchen-room-section #likeContent .tags-pool span {
+  border-radius: 999px;
+  border: 1px solid rgba(232, 196, 213, .82);
+  background: linear-gradient(180deg, #fff7fb, #fff0f8);
+  box-shadow: 0 8px 14px rgba(240, 198, 214, .10);
+}
+
+.kitchen-room-section #dislikeContent .tags-pool span {
+  border-radius: 14px;
+  border: 1px dashed rgba(205, 183, 183, .9);
+  background: linear-gradient(180deg, #fffdfb, #fff8f5);
+  color: #857278;
+  text-decoration: line-through 2px rgba(255, 128, 163, .75);
+  text-decoration-skip-ink: none;
+}
+
+.kitchen-room-section .eaten-heading h4,
+.kitchen-room-section .food-category h4,
+.kitchen-treasure-section .section-title {
+  color: #6f7fa2;
+}
+
+.kitchen-room-section .eaten-content {
+  border-radius: 26px;
+  border: 1px solid rgba(218, 229, 242, .95);
+  background: linear-gradient(180deg, #ffffff, #fcfdff);
+}
+
+.kitchen-room-section .eaten-create-form {
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 248, 251, .95), rgba(244, 249, 255, .95));
+  border: 1px solid rgba(224, 231, 242, .92);
+}
+
+.kitchen-room-section .eaten-place-card {
+  border-radius: 24px;
+  border: 1px solid rgba(219, 228, 240, .95);
+  background: linear-gradient(180deg, #fff, #fcfdff);
+  box-shadow: 0 14px 26px rgba(183, 197, 221, .10);
+}
+
+.kitchen-treasure-section .cards-market {
+  padding-top: 4px;
+}
+
+.kitchen-treasure-section .flip-card-front {
+  background: linear-gradient(180deg, #eef5ff, #fff4f8);
+  color: #6e7595;
+}
+
+.kitchen-treasure-section .flip-card-back {
+  background: linear-gradient(180deg, #fff, #f7fbff);
+}
+
+@media (max-width: 480px) {
+  .home-live-status {
+    width: min(100%, 252px);
+    font-size: 11px;
+    padding: 9px 14px;
+  }
+
+  .photo-wall-grid .featured .memory-card.photo-frame {
+    padding: 16px 12px 16px !important;
+    border-radius: 26px !important;
+  }
+
+  .photo-wall-grid .featured .memory-photo {
+    margin-top: 32px !important;
+    padding: 10px !important;
+  }
+
+  .photo-wall-grid .featured .memory-date,
+  .photo-wall-grid .featured .memory-special-badge {
+    font-size: 10px !important;
+    padding: 5px 9px !important;
+  }
+
+  .kitchen-room-heading {
+    padding: 12px 14px;
+  }
+
+  .kitchen-room-heading-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .kitchen-room-heading h3 {
+    font-size: 16px;
+  }
+
+  .kitchen-room-heading p {
+    font-size: 10px;
+  }
+}

@@ -1182,6 +1182,8 @@ todoNotebookCloseBtn?.addEventListener('click', () => {
 const homeMailboxBtn = document.getElementById('homeMailboxBtn');
 const homeMailboxBadge = document.getElementById('homeMailboxBadge');
 const homeMailboxHint = document.getElementById('homeMailboxHint');
+const homeLiveStatus = document.getElementById('homeLiveStatus');
+const homeDoorCard = document.querySelector('.home-door-card');
 const mailboxModal = document.getElementById('mailboxModal');
 const closeMailboxBtn = document.getElementById('closeMailboxBtn');
 const mailboxSyncBar = document.getElementById('mailboxSyncBar');
@@ -1340,6 +1342,69 @@ function fingerprintLetterRows(rows = []) {
     .join('|');
 }
 
+function isSameLocalDay(value, compare = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  return date.getFullYear() === compare.getFullYear()
+    && date.getMonth() === compare.getMonth()
+    && date.getDate() === compare.getDate();
+}
+
+function formatClockTime(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+}
+
+function extractTodayActivityTimeFromRow(row, now = new Date()) {
+  if (!row || typeof row !== 'object') return 0;
+  let latest = 0;
+  Object.entries(row).forEach(([key, value]) => {
+    if (value == null) return;
+    const keyText = String(key || '');
+    const looksLikeTimeKey = /(?:^|_)(created|updated|opened|done|checked|completed|deleted|visited|last|modified)(?:_at|_time|_date)?$/i.test(keyText)
+      || /(?:_at|_time|_date)$/i.test(keyText);
+    if (!looksLikeTimeKey) return;
+
+    const candidate = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(candidate.getTime())) return;
+    if (!isSameLocalDay(candidate, now)) return;
+    latest = Math.max(latest, candidate.getTime());
+  });
+  return latest;
+}
+
+function updateHomePresenceStatus() {
+  if (!homeLiveStatus) return;
+
+  const now = new Date();
+  let latest = 0;
+
+  try {
+    const visitPing = Number(localStorage.getItem('love_house_visit_ping_at_v2') || 0);
+    if (visitPing && isSameLocalDay(visitPing, now)) latest = Math.max(latest, visitPing);
+  } catch (_) {}
+
+  [cloudTodoRowsCache, cloudMessageRowsCache, cloudLetterRowsCache, cloudEatenRowsCache].forEach((rows) => {
+    (rows || []).forEach((row) => {
+      latest = Math.max(latest, extractTodayActivityTimeFromRow(row, now));
+    });
+  });
+
+  const active = latest > 0;
+  homeLiveStatus.hidden = !active;
+  homeDoorCard?.classList.toggle('has-presence', active);
+
+  if (active) {
+    const timeText = formatClockTime(latest);
+    homeLiveStatus.textContent = timeText
+      ? `今天有人回过家 ♡ ${timeText}`
+      : '今天有人回过家 ♡';
+  } else {
+    homeLiveStatus.textContent = '今天有人回过家 ♡';
+  }
+}
+
 function updateMailboxBadge(rows = cloudLetterRowsCache) {
   const incoming = rows.filter((row) => String(row.created_by || '') !== String(cloudTodoUid || ''));
   const unread = incoming.filter((row) => !row.opened_at).length;
@@ -1347,14 +1412,17 @@ function updateMailboxBadge(rows = cloudLetterRowsCache) {
   if (homeMailboxBadge) {
     homeMailboxBadge.hidden = unread <= 0;
     homeMailboxBadge.textContent = unread > 9 ? '9+' : String(unread || '');
+    homeMailboxBadge.setAttribute('aria-label', unread > 0 ? `有 ${unread} 封新信` : '当前没有新信');
   }
   homeMailboxBtn?.classList.toggle('has-new-letter', unread > 0);
 
   if (homeMailboxHint) {
     homeMailboxHint.textContent = unread > 0
-      ? `有 ${unread} 封新信等你拆 ♡`
-      : '看看有没有留给你的信';
+      ? `信箱举起了红旗，有 ${unread} 封新信 ♡`
+      : '信箱安安静静的，等下一封信来';
   }
+
+  updateHomePresenceStatus();
 }
 
 function switchMailboxTab(tab) {
@@ -1495,6 +1563,7 @@ async function refreshCloudLetters({ silent = false } = {}) {
     const rows = Array.isArray(data) ? data : [];
     const fingerprint = fingerprintLetterRows(rows);
     cloudLetterRowsCache = rows.slice();
+    updateHomePresenceStatus();
     cloudLetterRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
 
     if (fingerprint !== cloudLetterLastFingerprint) {
@@ -1734,6 +1803,7 @@ function renderCloudTodos(rows = []) {
   if (!todoList) return;
 
   cloudTodoRowsCache = rows.slice();
+  updateHomePresenceStatus();
   todoList.innerHTML = '';
 
   if (rows.length === 0) {
@@ -1947,6 +2017,7 @@ async function renderCloudMessages(rows = []) {
   if (!messageList) return;
 
   cloudMessageRowsCache = rows.slice();
+  updateHomePresenceStatus();
   cloudMessageRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
   messageList.innerHTML = '';
 
@@ -2322,6 +2393,7 @@ async function createEatenPlaceCard(row) {
 async function renderCloudEatenPlaces(rows = []) {
   if (!eatenPlacesList) return;
   cloudEatenRowsCache = rows.slice();
+  updateHomePresenceStatus();
   cloudEatenRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
   eatenPlacesList.innerHTML = '';
 
@@ -2363,6 +2435,7 @@ async function refreshCloudEatenPlaces({ silent = false } = {}) {
       cloudEatenLastFingerprint = nextFingerprint;
     } else {
       cloudEatenRowsCache = rows.slice();
+      updateHomePresenceStatus();
     }
 
     if (!silent) {
@@ -2560,6 +2633,7 @@ async function refreshCloudTodos({ silent = false } = {}) {
       cloudTodoLastFingerprint = nextFingerprint;
     } else {
       cloudTodoRowsCache = rows.slice();
+      updateHomePresenceStatus();
     }
 
     if (!silent) {
@@ -2628,6 +2702,7 @@ async function refreshCloudMessages({ silent = false } = {}) {
       cloudMessageLastFingerprint = nextFingerprint;
     } else {
       cloudMessageRowsCache = rows.slice();
+      updateHomePresenceStatus();
       cloudMessageRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
     }
 
@@ -2735,6 +2810,7 @@ async function initCloudHomeSync() {
       refreshCloudEatenPlaces(),
       refreshCloudLetters()
     ]);
+    updateHomePresenceStatus();
     startCloudHomePolling();
   } catch (error) {
     console.error('[小屋云同步] 初始化失败：', error);
@@ -3351,10 +3427,12 @@ window.addEventListener('pagehide', () => {
 });
 
 setMessageMode('text');
+updateHomePresenceStatus();
 
 // 网站加载后连接一次；访客提醒仍然保持独立，不受这里的 SQL / 云存储同步影响。
 initCloudHomeSync();
 window.setTimeout(() => {
+  updateHomePresenceStatus();
   initVisitTracking();
   initNotificationSetup();
   initStandaloneNotifyShortcut();
@@ -3483,6 +3561,7 @@ async function initVisitTracking() {
     }
 
     localStorage.setItem(key, String(now));
+    updateHomePresenceStatus();
     console.log('[访客记录] 云端已接收：', result);
   } catch (error) {
     // 访问提醒失败绝不能影响网站本身。
