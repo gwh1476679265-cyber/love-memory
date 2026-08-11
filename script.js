@@ -167,7 +167,7 @@ const memories = {
   },
 
  "2026-04-03": {
-    title: "心跳114，心跳要要死",
+    title: "心跳114，心动要要死",
     images: ["images/20260403-1.jpg",
 	"images/20260403-2.jpg",
 	"images/20260403-3.jpg",
