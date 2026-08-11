@@ -562,11 +562,9 @@ function createTimeline() {
     date.className = "memory-date";
     date.textContent = dateText;
 
-    const specialBadge = memory.featured ? document.createElement("div") : null;
-    if (specialBadge) {
-      specialBadge.className = "memory-special-badge";
-      specialBadge.textContent = "♡ 特别的一天";
-    }
+    // Phase 7.7：特别日子的相框只保留“上方日期 + 下方标题”，
+    // 不再额外叠加“特别的一天”徽章，避免层次过多。
+    const specialBadge = null;
 
     const photo = document.createElement("div");
     photo.className = "memory-photo";

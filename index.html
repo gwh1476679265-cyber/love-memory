@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="鱼鱼和獭獭的小屋" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="pwa-icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260811-phase7-6" />
+  <link rel="stylesheet" href="style.css?v=20260811-phase7-7" />
 </head>
 <body>
 
@@ -77,11 +77,12 @@
       <span id="homeMailboxBadge" class="home-mailbox-badge" hidden>1</span>
     </button>
   </div>
+   </main>
 
   <div id="homeLiveStatus" class="home-live-status" hidden>
     今天有人回过家 ♡
   </div>
-   </main>
+  <div class="home-doormat" aria-hidden="true">WELCOME HOME</div>
 </section>
 
 
@@ -394,9 +395,9 @@
         </div>
 
         <div class="toggle-tabs food-toggle-tabs">
-          <button id="tabLike" class="tab-btn active" type="button">好吃贴</button>
-          <button id="tabDislike" class="tab-btn" type="button">划掉</button>
-          <button id="tabEaten" class="tab-btn" type="button">今天吃了</button>
+          <button id="tabLike" class="tab-btn active" type="button">好吃！</button>
+          <button id="tabDislike" class="tab-btn" type="button">不好吃！</button>
+          <button id="tabEaten" class="tab-btn" type="button">已吃！</button>
         </div>
         
         <!-- 爱吃内容 -->
@@ -674,6 +675,6 @@
   <script src="cloudbase-config.js?v=20260810-phase5-1"></script>
 
   <!-- 页面逻辑 -->
-  <script src="script.js?v=20260811-phase7-6"></script>
+  <script src="script.js?v=20260811-phase7-7"></script>
 </body>
 </html>
