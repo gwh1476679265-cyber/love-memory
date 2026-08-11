@@ -857,10 +857,13 @@ body {
 }
 
 .album-item.active .album-cover {
-  animation: discRotate 4s linear infinite;
   box-shadow:
     0 0 0 4px rgba(255, 151, 190, 0.28),
     0 12px 24px rgba(255, 137, 184, 0.3);
+}
+
+.album-item.active.playing .album-cover {
+  animation: discRotate 4s linear infinite;
 }
 
 .album-item.active .album-title {
@@ -5819,5 +5822,317 @@ body.birthday-card-lock {
 
   .photo-wall-grid .featured .memory-title {
     font-size: 12px !important;
+  }
+}
+
+
+/* ==========================================
+   Phase 7.2：照片墙单层化 + 相框/拍立得 + 唱片内暂停
+   只覆盖照片墙和唱片机，不改毛毡板、信箱、约定、Web Push。
+========================================== */
+
+/* ---------- 唱片机：只有弹窗内“正在播放”的唱片才旋转 ---------- */
+.album-item.active:not(.playing) .album-cover {
+  animation: none !important;
+}
+
+.album-item.active.playing .album-cover {
+  animation: discRotate 4s linear infinite !important;
+}
+
+/* ---------- 照片墙：删掉外层深色/白色卡片，只保留一层浅色波点墙 ---------- */
+.timeline-wrap.photo-wall-wrap {
+  width: 100% !important;
+  max-width: none !important;
+  padding: 14px 0 54px !important;
+}
+
+.photo-wall-section {
+  position: relative;
+  width: min(94vw, 740px) !important;
+  margin: 0 auto !important;
+  padding: 18px 16px 38px !important;
+  border: 2px solid rgba(255, 199, 221, .84) !important;
+  border-radius: 34px !important;
+  background:
+    radial-gradient(rgba(255,185,211,.20) 1.4px, transparent 1.4px),
+    radial-gradient(rgba(147,215,247,.17) 1.2px, transparent 1.2px),
+    linear-gradient(145deg, rgba(255,246,250,.92), rgba(238,249,255,.92)) !important;
+  background-size: 24px 24px, 24px 24px, auto !important;
+  background-position: 0 0, 12px 12px, 0 0 !important;
+  box-shadow: inset 0 0 34px rgba(255,255,255,.82), 0 15px 34px rgba(131,99,117,.09) !important;
+}
+
+.photo-wall-heading {
+  width: 100% !important;
+  margin: 0 0 22px !important;
+  padding: 2px 3px 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.photo-wall-heading h3 {
+  font-size: 19px !important;
+}
+
+.photo-wall-heading p {
+  font-size: 10px !important;
+}
+
+/* 原本“照片放置”的第二层波点框取消；现在照片直接挂在同一面墙上。 */
+.timeline-list.photo-wall-grid {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  gap: 54px !important;
+  padding: 24px 7px 8px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ---------- 时间行：仍按日期从上到下，但允许横版拍立得独占一行 ---------- */
+.photo-wall-row {
+  position: relative;
+  width: 100%;
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  column-gap: 7.5%;
+  row-gap: 42px;
+}
+
+.photo-wall-row .timeline-item.standard {
+  width: 100% !important;
+  margin: 0 !important;
+  justify-self: stretch;
+}
+
+/* 同一时间组里的后一张只能向下，不会越过前一日期。 */
+.photo-wall-row .timeline-item.row-second:not(.landscape-polaroid) {
+  margin-top: 18px !important;
+}
+
+.photo-wall-row.row-pattern-0 .row-first,
+.photo-wall-row.row-pattern-1 .row-first,
+.photo-wall-row.row-pattern-2 .row-first,
+.photo-wall-row.row-pattern-3 .row-first,
+.photo-wall-row.row-pattern-0 .row-second,
+.photo-wall-row.row-pattern-1 .row-second,
+.photo-wall-row.row-pattern-2 .row-second,
+.photo-wall-row.row-pattern-3 .row-second {
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* 横版拍立得：检测第一张照片比例后自动横跨两列。 */
+.photo-wall-row .timeline-item.standard.landscape-polaroid {
+  grid-column: 1 / -1;
+  width: min(72%, 430px) !important;
+  justify-self: center;
+  margin-top: 4px !important;
+}
+
+/* ---------- 普通拍立得：相纸边距 + 大底边；时间移到右下角 ---------- */
+.photo-wall-grid .timeline-item.standard {
+  transform-origin: 50% 5%;
+}
+
+.photo-wall-grid .timeline-item.standard.wall-tilt-0 { transform: rotate(-1.35deg); }
+.photo-wall-grid .timeline-item.standard.wall-tilt-1 { transform: rotate(.95deg); }
+.photo-wall-grid .timeline-item.standard.wall-tilt-2 { transform: rotate(-.55deg); }
+.photo-wall-grid .timeline-item.standard.wall-tilt-3 { transform: rotate(1.15deg); }
+.photo-wall-grid .timeline-item.standard.wall-tilt-4 { transform: rotate(-.75deg); }
+.photo-wall-grid .timeline-item.standard.wall-tilt-5 { transform: rotate(.45deg); }
+
+.photo-wall-grid .timeline-item.standard .memory-card.photo-frame {
+  position: relative !important;
+  width: 100% !important;
+  padding: 9px 9px 47px !important;
+  border: 1px solid rgba(225,214,218,.96) !important;
+  border-radius: 4px !important;
+  background: #fffefa !important;
+  box-shadow: 0 10px 22px rgba(93,73,84,.13), 0 2px 5px rgba(93,73,84,.07) !important;
+}
+
+/* 图片保持自身比例；横图会自然变成横版拍立得。 */
+.photo-wall-grid .timeline-item.standard .memory-photo,
+.photo-wall-grid .timeline-item.standard .memory-photo.has-image img {
+  width: 100% !important;
+  height: auto !important;
+  border-radius: 1px !important;
+}
+
+/* 拍立得标题保留在照片下方左侧；标题和日期都改为楷体/手写感字体。 */
+.photo-wall-grid .timeline-item.standard .memory-title {
+  margin: 10px 4px 0 !important;
+  padding-right: 4px;
+  color: #604c58 !important;
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "FangSong", cursive !important;
+  font-size: 13px !important;
+  line-height: 1.35 !important;
+  font-weight: 700 !important;
+  text-align: left !important;
+}
+
+.photo-wall-grid .timeline-item.standard .memory-date {
+  position: absolute !important;
+  right: 12px !important;
+  bottom: 11px !important;
+  left: auto !important;
+  top: auto !important;
+  z-index: 4;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  color: #a98396 !important;
+  background: transparent !important;
+  font-family: "Kaiti SC", "STKaiti", "KaiTi", "FangSong", cursive !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+}
+
+/* ---------- “特别的一天”：保持当前大小，改成正挂的相框 ---------- */
+.photo-wall-grid > .timeline-item.featured,
+.photo-wall-grid > .timeline-item.featured.wall-tilt-0,
+.photo-wall-grid > .timeline-item.featured.wall-tilt-1,
+.photo-wall-grid > .timeline-item.featured.wall-tilt-2,
+.photo-wall-grid > .timeline-item.featured.wall-tilt-3,
+.photo-wall-grid > .timeline-item.featured.wall-tilt-4,
+.photo-wall-grid > .timeline-item.featured.wall-tilt-5 {
+  width: min(88%, 560px) !important;
+  align-self: center !important;
+  margin: 0 auto !important;
+  transform: rotate(0deg) !important;
+}
+
+.photo-wall-grid .featured .memory-card.photo-frame {
+  position: relative !important;
+  padding: 15px 15px 18px !important;
+  border: 3px solid rgba(255,190,216,.9) !important;
+  border-radius: 13px !important;
+  background: linear-gradient(145deg, #fffdfb, #fff7fb) !important;
+  box-shadow:
+    inset 0 0 0 5px rgba(255,255,255,.95),
+    inset 0 0 0 7px rgba(230,215,222,.70),
+    0 15px 30px rgba(93,73,84,.15) !important;
+}
+
+.photo-wall-grid .featured .memory-photo {
+  margin-top: 8px;
+  padding: 5px;
+  border: 1px solid rgba(215,196,205,.8) !important;
+  border-radius: 4px !important;
+  background: #fff !important;
+  box-shadow: inset 0 0 0 2px rgba(255,244,249,.9);
+}
+
+.photo-wall-grid .featured .memory-photo.has-image img {
+  border-radius: 2px !important;
+}
+
+.photo-wall-grid .featured .memory-date,
+.photo-wall-grid .featured .memory-special-badge {
+  top: 11px !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  font-weight: 900 !important;
+}
+
+.photo-wall-grid .featured .memory-date {
+  margin: 0 0 8px 2px !important;
+  padding: 4px 8px !important;
+}
+
+.photo-wall-grid .featured .memory-special-badge {
+  right: 12px !important;
+  padding: 4px 8px !important;
+}
+
+.photo-wall-grid .featured .memory-title {
+  margin: 12px 4px 2px !important;
+  font-size: 14px !important;
+  text-align: center !important;
+}
+
+/* ---------- 照片墙取消左右箭头：JS 已不生成；此处兼容旧缓存 DOM ---------- */
+.photo-wall-grid .slide-btn {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  .photo-wall-section {
+    width: 95vw !important;
+    padding: 16px 12px 34px !important;
+    border-radius: 28px !important;
+  }
+
+  .photo-wall-heading {
+    margin-bottom: 18px !important;
+  }
+
+  .photo-wall-heading h3 { font-size: 18px !important; }
+  .photo-wall-heading p { font-size: 9.5px !important; }
+
+  .timeline-list.photo-wall-grid {
+    gap: 50px !important;
+    padding: 22px 4px 7px !important;
+  }
+
+  .photo-wall-row {
+    column-gap: 8.5%;
+    row-gap: 38px;
+  }
+
+  .photo-wall-row .timeline-item.row-second:not(.landscape-polaroid) {
+    margin-top: 16px !important;
+  }
+
+  .photo-wall-row .timeline-item.standard.landscape-polaroid {
+    width: 72% !important;
+  }
+
+  .photo-wall-grid .timeline-item.standard .memory-card.photo-frame {
+    padding: 7px 7px 43px !important;
+  }
+
+  .photo-wall-grid .timeline-item.standard .memory-title {
+    margin-top: 9px !important;
+    font-size: 12px !important;
+  }
+
+  .photo-wall-grid .timeline-item.standard .memory-date {
+    right: 10px !important;
+    bottom: 10px !important;
+    font-size: 11px !important;
+  }
+
+  .photo-wall-grid > .timeline-item.featured,
+  .photo-wall-grid > .timeline-item.featured.wall-tilt-0,
+  .photo-wall-grid > .timeline-item.featured.wall-tilt-1,
+  .photo-wall-grid > .timeline-item.featured.wall-tilt-2,
+  .photo-wall-grid > .timeline-item.featured.wall-tilt-3,
+  .photo-wall-grid > .timeline-item.featured.wall-tilt-4,
+  .photo-wall-grid > .timeline-item.featured.wall-tilt-5 {
+    width: 91% !important;
+  }
+
+  .photo-wall-grid .featured .memory-card.photo-frame {
+    padding: 13px 13px 16px !important;
+  }
+
+  .photo-wall-grid .featured .memory-date,
+  .photo-wall-grid .featured .memory-special-badge {
+    top: 9px !important;
+    font-size: 10px !important;
+  }
+
+  .photo-wall-grid .featured .memory-special-badge {
+    right: 10px !important;
   }
 }

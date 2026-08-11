@@ -531,7 +531,19 @@ if (imageList.length > 0) {
 
   // 让卡片在图片真正加载前保留一个柔和占位，避免页面突然跳动。
   photo.classList.add("is-loading");
-  img.addEventListener("load", () => photo.classList.remove("is-loading"));
+  let polaroidOrientationLocked = false;
+  img.addEventListener("load", () => {
+    photo.classList.remove("is-loading");
+
+    // 普通拍立得根据“第一张照片”的原始比例决定横版 / 竖版。
+    // 后续左右滑动时不反复改变相纸宽度，避免墙面跳来跳去。
+    if (!memory.featured && !polaroidOrientationLocked && img.naturalWidth && img.naturalHeight) {
+      const ratio = img.naturalWidth / img.naturalHeight;
+      item.classList.toggle("landscape-polaroid", ratio >= 1.16);
+      item.classList.toggle("portrait-polaroid", ratio < 1.16);
+      polaroidOrientationLocked = true;
+    }
+  });
   img.addEventListener("error", () => photo.classList.remove("is-loading"));
 
   photo.appendChild(img);
@@ -540,14 +552,7 @@ if (imageList.length > 0) {
   if (imageList.length > 1) {
     photo.classList.add("has-multiple");
 
-    const prevBtn = document.createElement("button");
-    prevBtn.className = "slide-btn slide-prev";
-    prevBtn.textContent = "‹";
-
-    const nextBtn = document.createElement("button");
-    nextBtn.className = "slide-btn slide-next";
-    nextBtn.textContent = "›";
-
+    // 照片墙只保留左右滑动 + 圆点，不再显示左右箭头。
     const dots = document.createElement("div");
     dots.className = "slide-dots";
 
@@ -577,18 +582,6 @@ if (imageList.length > 0) {
         (currentImageIndex + 1) % imageList.length;
       updateSlide();
     }
-
-    prevBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      hasSwiped = true;
-      showPrev();
-    });
-
-    nextBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      hasSwiped = true;
-      showNext();
-    });
 
     dots.querySelectorAll(".dot").forEach((dot, dotIndex) => {
       dot.addEventListener("click", (e) => {
@@ -632,8 +625,6 @@ photo.addEventListener("touchend", () => {
   endX = 0;
 });
 
-    photo.appendChild(prevBtn);
-    photo.appendChild(nextBtn);
     photo.appendChild(dots);
   }
 } else {
@@ -857,23 +848,30 @@ function createAlbumList() {
 
 function playMusic(index) {
   const music = musicList[index];
+  const isCurrent = index === currentMusicIndex && Boolean(bgMusic.src);
 
-  // 暂停后重新选择同一张唱片时，从原来的进度继续；
-  // 选择另一张唱片时才真正切歌。
-  if (index === currentMusicIndex && bgMusic.src && bgMusic.paused) {
-    bgMusic.play();
-    musicPlayerBtn.classList.add("playing");
+  // 弹窗里正在旋转的同一张唱片：再点一次 = 暂停。
+  // 弹窗保持打开，让“停止旋转”这个反馈能直接看到。
+  if (isCurrent && !bgMusic.paused) {
+    bgMusic.pause();
+    updateActiveAlbum();
+    return;
+  }
+
+  // 已暂停的同一张唱片：从当前位置继续。
+  if (isCurrent && bgMusic.paused) {
+    bgMusic.play().catch((error) => console.warn('[唱片机] 继续播放失败：', error));
     updateActiveAlbum();
     closeMusicPanel();
     return;
   }
 
+  // 选择另一张唱片：切歌并从头播放。
   currentMusicIndex = index;
   bgMusic.src = music.src;
   bgMusic.loop = true;
-  bgMusic.play();
+  bgMusic.play().catch((error) => console.warn('[唱片机] 播放失败：', error));
 
-  musicPlayerBtn.classList.add("playing");
   playerDisc.classList.remove("empty");
   playerDisc.innerHTML = `<img src="${music.cover}" alt="${music.title}">`;
 
@@ -883,9 +881,13 @@ function playMusic(index) {
 
 function updateActiveAlbum() {
   const albumItems = document.querySelectorAll(".album-item");
+  const isPlaying = Boolean(bgMusic && !bgMusic.paused && !bgMusic.ended);
 
   albumItems.forEach((item, index) => {
-    item.classList.toggle("active", index === currentMusicIndex);
+    const isCurrent = index === currentMusicIndex;
+    item.classList.toggle("active", isCurrent);
+    item.classList.toggle("playing", isCurrent && isPlaying);
+    item.setAttribute("aria-pressed", isCurrent && isPlaying ? "true" : "false");
   });
 }
 
@@ -898,24 +900,22 @@ function closeMusicPanel() {
   musicPanel.classList.remove("show");
 }
 
-musicPlayerBtn.addEventListener("click", () => {
-  // 唱片正在转时，再点一次右上角唱片机：暂停播放并停止转动。
-  if (bgMusic && !bgMusic.paused) {
-    bgMusic.pause();
-    return;
-  }
-  openMusicPanel();
-});
+// 右上角“唱片机”只负责打开唱片选择弹窗，不承担暂停。
+musicPlayerBtn.addEventListener("click", openMusicPanel);
 closeMusicPanelBtn.addEventListener("click", closeMusicPanel);
 musicPanelMask.addEventListener("click", closeMusicPanel);
 
 bgMusic.addEventListener("pause", () => {
   musicPlayerBtn.classList.remove("playing");
+  updateActiveAlbum();
 });
 
 bgMusic.addEventListener("play", () => {
   musicPlayerBtn.classList.add("playing");
+  updateActiveAlbum();
 });
+
+bgMusic.addEventListener("ended", updateActiveAlbum);
 
 createAlbumList();
 // ===============================
