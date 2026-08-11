@@ -166,6 +166,28 @@ const memories = {
     text: "小众姓联盟成立！"
   },
 
+ "2026-04-03": {
+    title: "心跳114，心跳要要死",
+    images: ["images/20260403-1.jpg",
+	"images/20260403-2.jpg",
+	"images/20260403-3.jpg",
+	    ],
+    text: "请评价！"
+  },
+
+ "2026-04-09": {
+    title: "LOVE-Rs",
+    images: ["images/20260409-1.jpg",
+	"images/20260409-2.jpg",
+		    ],
+    text: "请评价！"
+  },
+
+ "2026-04-10": {
+    title: "我也看到这了分享给你",
+    image: "images/20260410.jpg",
+    text: "边芸芸速度第一次震惊我"
+  },
 
  "2026-04-14": {
     featured: true,
@@ -188,6 +210,11 @@ const memories = {
     text: "可惜没有多拍几张照片"
   },
 
+ "2026-04-26": {
+    title: "I ♥ YOU",
+    image: "images/20260426-1.jpg",
+    text: "回头看都是小巧思"
+  },
 
  "2026-04-28": {
     title: "小狗假意收伞，趁机智取小手",
