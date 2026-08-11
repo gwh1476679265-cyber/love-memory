@@ -500,6 +500,14 @@ function getMemoryEntriesInOrder() {
   return entries;
 }
 
+const COLLAGE_SKINS = ['cream', 'pink', 'blue'];
+
+function getCollageSkin(memory, featuredIndex) {
+  const requested = String(memory?.collage || '').trim().toLowerCase();
+  if (COLLAGE_SKINS.includes(requested)) return requested;
+  return COLLAGE_SKINS[featuredIndex % COLLAGE_SKINS.length];
+}
+
 function createTimeline() {
   timelineList.innerHTML = "";
 
@@ -510,6 +518,7 @@ function createTimeline() {
   let standardCountInRow = 0;
   let wallRowIndex = 0;
   let tapeItemIndex = 0;
+  let featuredItemIndex = 0;
 
   function closeCurrentWallRow() {
     currentWallRow = null;
@@ -530,18 +539,21 @@ function createTimeline() {
     const dateText = formatDateText(dateKey);
     const imageList = getMemoryImages(memory);
 
-    // 默认规则：featured=true → 相框；只有 1 张图 → 胶带照片；其他 → 拍立得。
+    // 默认规则：featured=true → 拼贴挂画卡；只有 1 张图 → 胶带照片；其他 → 拍立得。
+    // featured 可以可选写 collage: "cream" / "pink" / "blue"；不写时会按 featured 顺序自动循环。
     // 如果以后某张单图仍想强制做拍立得，可以在该条回忆里写 display: "polaroid"。
     // 也支持 display: "tape" 手动指定胶带照片。
     const useTapeStyle = !memory.featured && (
       memory.display === 'tape' ||
       (imageList.length === 1 && memory.display !== 'polaroid')
     );
+    const collageSkin = memory.featured ? getCollageSkin(memory, featuredItemIndex) : '';
+    if (memory.featured) featuredItemIndex += 1;
 
     const item = document.createElement("div");
     const tiltClass = `wall-tilt-${index % 6}`;
-    const layoutClass = memory.featured ? 'featured' : (useTapeStyle ? 'taped' : 'standard');
-    item.className = `timeline-item photo-wall-item ${layoutClass} ${tiltClass}`;
+    const layoutClass = memory.featured ? 'featured collage-item' : (useTapeStyle ? 'taped' : 'standard');
+    item.className = `timeline-item photo-wall-item ${layoutClass} ${tiltClass}${collageSkin ? ` collage-${collageSkin}` : ''}`;
     item.dataset.date = dateText;
     item.dataset.memoryIndex = String(index);
     item.dataset.sameDayIndex = String(sameDayIndex);
@@ -551,20 +563,20 @@ function createTimeline() {
     }
 
     const node = document.createElement("div");
-    node.className = useTapeStyle
-      ? "timeline-node photo-tape-strip"
-      : "timeline-node photo-frame-pin";
+    node.className = memory.featured
+      ? "timeline-node collage-wall-anchor"
+      : (useTapeStyle ? "timeline-node photo-tape-strip" : "timeline-node photo-frame-pin");
 
     const card = document.createElement("article");
-    card.className = `memory-card photo-frame${memory.featured ? " featured-frame" : ""}${useTapeStyle ? " taped-photo-card" : ""}`;
+    card.className = memory.featured
+      ? `memory-card collage-card collage-${collageSkin}`
+      : `memory-card photo-frame${useTapeStyle ? " taped-photo-card" : ""}`;
 
     const date = document.createElement("div");
     date.className = "memory-date";
     date.textContent = dateText;
 
-    // Phase 7.7：特别日子的相框只保留“上方日期 + 下方标题”，
-    // 不再额外叠加“特别的一天”徽章，避免层次过多。
-    const specialBadge = null;
+    // featured 的重要程度直接由拼贴挂画卡本身表达，不再额外显示“特别的一天”徽章。
 
     const photo = document.createElement("div");
     photo.className = "memory-photo";
@@ -584,6 +596,12 @@ function createTimeline() {
       function syncWallItemToLoadedImage() {
         if (!img.naturalWidth || !img.naturalHeight) return;
         const ratio = img.naturalWidth / img.naturalHeight;
+
+        if (memory.featured) {
+          item.classList.toggle('collage-landscape', ratio >= 1.18);
+          item.classList.toggle('collage-portrait', ratio < 0.86);
+          item.classList.toggle('collage-squareish', ratio >= 0.86 && ratio < 1.18);
+        }
 
         if (!memory.featured && !useTapeStyle) {
           photo.style.setProperty('--polaroid-photo-ratio', String(ratio));
@@ -716,7 +734,6 @@ function createTimeline() {
     });
 
     card.appendChild(date);
-    if (specialBadge) card.appendChild(specialBadge);
     card.appendChild(photo);
     card.appendChild(title);
 
@@ -1180,8 +1197,6 @@ todoNotebookCloseBtn?.addEventListener('click', () => {
 const homeMailboxBtn = document.getElementById('homeMailboxBtn');
 const homeMailboxBadge = document.getElementById('homeMailboxBadge');
 const homeMailboxHint = document.getElementById('homeMailboxHint');
-const homeLiveStatus = document.getElementById('homeLiveStatus');
-const homeDoorCard = document.querySelector('.home-door-card');
 const mailboxModal = document.getElementById('mailboxModal');
 const closeMailboxBtn = document.getElementById('closeMailboxBtn');
 const mailboxSyncBar = document.getElementById('mailboxSyncBar');
@@ -1340,69 +1355,6 @@ function fingerprintLetterRows(rows = []) {
     .join('|');
 }
 
-function isSameLocalDay(value, compare = new Date()) {
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return false;
-  return date.getFullYear() === compare.getFullYear()
-    && date.getMonth() === compare.getMonth()
-    && date.getDate() === compare.getDate();
-}
-
-function formatClockTime(value) {
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-}
-
-function extractTodayActivityTimeFromRow(row, now = new Date()) {
-  if (!row || typeof row !== 'object') return 0;
-  let latest = 0;
-  Object.entries(row).forEach(([key, value]) => {
-    if (value == null) return;
-    const keyText = String(key || '');
-    const looksLikeTimeKey = /(?:^|_)(created|updated|opened|done|checked|completed|deleted|visited|last|modified)(?:_at|_time|_date)?$/i.test(keyText)
-      || /(?:_at|_time|_date)$/i.test(keyText);
-    if (!looksLikeTimeKey) return;
-
-    const candidate = value instanceof Date ? value : new Date(value);
-    if (Number.isNaN(candidate.getTime())) return;
-    if (!isSameLocalDay(candidate, now)) return;
-    latest = Math.max(latest, candidate.getTime());
-  });
-  return latest;
-}
-
-function updateHomePresenceStatus() {
-  if (!homeLiveStatus) return;
-
-  const now = new Date();
-  let latest = 0;
-
-  try {
-    const visitPing = Number(localStorage.getItem('love_house_visit_ping_at_v2') || 0);
-    if (visitPing && isSameLocalDay(visitPing, now)) latest = Math.max(latest, visitPing);
-  } catch (_) {}
-
-  [cloudTodoRowsCache, cloudMessageRowsCache, cloudLetterRowsCache, cloudEatenRowsCache].forEach((rows) => {
-    (rows || []).forEach((row) => {
-      latest = Math.max(latest, extractTodayActivityTimeFromRow(row, now));
-    });
-  });
-
-  const active = latest > 0;
-  homeLiveStatus.hidden = !active;
-  homeDoorCard?.classList.toggle('has-presence', active);
-
-  if (active) {
-    const timeText = formatClockTime(latest);
-    homeLiveStatus.textContent = timeText
-      ? `今天有人回过家 ♡ ${timeText}`
-      : '今天有人回过家 ♡';
-  } else {
-    homeLiveStatus.textContent = '今天有人回过家 ♡';
-  }
-}
-
 function updateMailboxBadge(rows = cloudLetterRowsCache) {
   const incoming = rows.filter((row) => String(row.created_by || '') !== String(cloudTodoUid || ''));
   const unread = incoming.filter((row) => !row.opened_at).length;
@@ -1419,8 +1371,6 @@ function updateMailboxBadge(rows = cloudLetterRowsCache) {
       ? `信箱举起了红旗，有 ${unread} 封新信 ♡`
       : '信箱安安静静的，等下一封信来';
   }
-
-  updateHomePresenceStatus();
 }
 
 function switchMailboxTab(tab) {
@@ -1561,7 +1511,6 @@ async function refreshCloudLetters({ silent = false } = {}) {
     const rows = Array.isArray(data) ? data : [];
     const fingerprint = fingerprintLetterRows(rows);
     cloudLetterRowsCache = rows.slice();
-    updateHomePresenceStatus();
     cloudLetterRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
 
     if (fingerprint !== cloudLetterLastFingerprint) {
@@ -1801,7 +1750,6 @@ function renderCloudTodos(rows = []) {
   if (!todoList) return;
 
   cloudTodoRowsCache = rows.slice();
-  updateHomePresenceStatus();
   todoList.innerHTML = '';
 
   if (rows.length === 0) {
@@ -2015,7 +1963,6 @@ async function renderCloudMessages(rows = []) {
   if (!messageList) return;
 
   cloudMessageRowsCache = rows.slice();
-  updateHomePresenceStatus();
   cloudMessageRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
   messageList.innerHTML = '';
 
@@ -2391,7 +2338,6 @@ async function createEatenPlaceCard(row) {
 async function renderCloudEatenPlaces(rows = []) {
   if (!eatenPlacesList) return;
   cloudEatenRowsCache = rows.slice();
-  updateHomePresenceStatus();
   cloudEatenRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
   eatenPlacesList.innerHTML = '';
 
@@ -2433,7 +2379,6 @@ async function refreshCloudEatenPlaces({ silent = false } = {}) {
       cloudEatenLastFingerprint = nextFingerprint;
     } else {
       cloudEatenRowsCache = rows.slice();
-      updateHomePresenceStatus();
     }
 
     if (!silent) {
@@ -2631,7 +2576,6 @@ async function refreshCloudTodos({ silent = false } = {}) {
       cloudTodoLastFingerprint = nextFingerprint;
     } else {
       cloudTodoRowsCache = rows.slice();
-      updateHomePresenceStatus();
     }
 
     if (!silent) {
@@ -2700,7 +2644,6 @@ async function refreshCloudMessages({ silent = false } = {}) {
       cloudMessageLastFingerprint = nextFingerprint;
     } else {
       cloudMessageRowsCache = rows.slice();
-      updateHomePresenceStatus();
       cloudMessageRowsById = new Map(rows.map((row) => [String(row.id || ''), row]));
     }
 
@@ -2808,7 +2751,6 @@ async function initCloudHomeSync() {
       refreshCloudEatenPlaces(),
       refreshCloudLetters()
     ]);
-    updateHomePresenceStatus();
     startCloudHomePolling();
   } catch (error) {
     console.error('[小屋云同步] 初始化失败：', error);
@@ -3425,12 +3367,9 @@ window.addEventListener('pagehide', () => {
 });
 
 setMessageMode('text');
-updateHomePresenceStatus();
-
 // 网站加载后连接一次；访客提醒仍然保持独立，不受这里的 SQL / 云存储同步影响。
 initCloudHomeSync();
 window.setTimeout(() => {
-  updateHomePresenceStatus();
   initVisitTracking();
   initNotificationSetup();
   initStandaloneNotifyShortcut();
@@ -3559,7 +3498,6 @@ async function initVisitTracking() {
     }
 
     localStorage.setItem(key, String(now));
-    updateHomePresenceStatus();
     console.log('[访客记录] 云端已接收：', result);
   } catch (error) {
     // 访问提醒失败绝不能影响网站本身。
