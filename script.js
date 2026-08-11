@@ -547,23 +547,7 @@ function applyPhotoWallFeaturedVariant(card, item, variantName) {
   }
 
   if (variantName === 'featured-card-swag') {
-    const decor = buildDecoration('div', 'collage-extra-decor collage-swag-decor');
-    const swagDefs = [
-      ['span', 'swag-chip swag-333', '<333*'],
-      ['span', 'swag-chip swag-hash', '#SWAG'],
-      ['span', 'swag-chip swag-star', '★'],
-      ['span', 'swag-chip swag-heart', '♡'],
-      ['span', 'swag-chip swag-spiral', '◌'],
-      ['span', 'swag-chip swag-choose', 'CHOOSE YOU'],
-      ['span', 'swag-chip swag-music', 'i♡ music'],
-      ['span', 'swag-chip swag-notes', '𝄞♪♬']
-    ];
-
-    swagDefs.forEach(([tag, className, content]) => {
-      decor.appendChild(buildDecoration(tag, className, content));
-    });
-
-    card.appendChild(decor);
+    // 这张卡只保留顶部红色胶带；格子底由 CSS 处理，不再生成额外拼贴素材。
     return;
   }
 
