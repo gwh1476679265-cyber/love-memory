@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="鱼鱼和獭獭的小屋" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="pwa-icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260811-phase7" />
+  <link rel="stylesheet" href="style.css?v=20260811-phase7-1" />
 </head>
 <body>
 
@@ -68,10 +68,10 @@
       敲门进入回忆
     </button>
 
-    <button id="homeMailboxBtn" class="home-mailbox-btn" type="button" aria-label="打开门口信箱">
+    <button id="homeMailboxBtn" class="home-mailbox-btn" type="button" aria-label="打开大门信箱">
       <span class="home-mailbox-icon" aria-hidden="true">📮</span>
       <span class="home-mailbox-copy">
-        <strong>门口信箱</strong>
+        <strong>大门信箱</strong>
         <small id="homeMailboxHint">看看有没有留给你的信</small>
       </span>
       <span id="homeMailboxBadge" class="home-mailbox-badge" hidden>新信</span>
@@ -128,7 +128,7 @@
   </div>
 
 
-  <!-- 门口：两个人的信箱 -->
+  <!-- 大门：两个人的信箱 -->
   <div id="mailboxModal" class="mailbox-modal" aria-hidden="true">
     <div class="mailbox-modal-mask" data-close-mailbox></div>
     <section class="mailbox-card" role="dialog" aria-modal="true" aria-labelledby="mailboxTitle">
@@ -137,9 +137,9 @@
       <div class="mailbox-heading">
         <div class="mailbox-heading-icon" aria-hidden="true">📮</div>
         <div>
-          <div class="mailbox-kicker">AT OUR DOOR</div>
-          <h2 id="mailboxTitle">门口信箱</h2>
-          <p>写一封留在门口，只等对方来拆。</p>
+          <div class="mailbox-kicker">AT OUR GATE</div>
+          <h2 id="mailboxTitle">大门信箱</h2>
+          <p>写一封留在大门，只等对方来拆。</p>
         </div>
       </div>
 
@@ -183,7 +183,7 @@
     </section>
   </div>
 
-  <!-- 门口：拆信阅读弹窗 -->
+  <!-- 大门：拆信阅读弹窗 -->
   <div id="letterReaderModal" class="letter-reader-modal" aria-hidden="true">
     <div class="letter-reader-mask" data-close-letter-reader></div>
     <section class="letter-reader-card" role="dialog" aria-modal="true" aria-labelledby="letterReaderTitle">
@@ -207,7 +207,7 @@
 <!-- 左上角返回小屋 -->
   <button id="backBtn" class="back-btn" type="button">
     <div class="back-icon">←</div>
-    <div class="back-text">门口</div>
+    <div class="back-text">大门</div>
   </button>
 
 <!-- 客厅标题：只显示，不再承担页面跳转 -->
@@ -604,6 +604,6 @@
   <script src="cloudbase-config.js?v=20260810-phase5-1"></script>
 
   <!-- 页面逻辑 -->
-  <script src="script.js?v=20260811-phase7"></script>
+  <script src="script.js?v=20260811-phase7-1"></script>
 </body>
 </html>

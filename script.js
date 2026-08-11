@@ -465,10 +465,15 @@ function getThumbnailPath(imagePath) {
 function createTimeline() {
   timelineList.innerHTML = "";
 
-  // 只获取 memories 里面已经填写的日期，并按照日期从早到晚排序
+  // 只获取 memories 里面已经填写的日期，并按照日期从早到晚排序。
+  // 普通拍立得每两个组成一“时间行”，保证上方永远比下方更早；
+  // 行内第二张略微下沉，制造自然摆放感，但不会跑到更早日期上方。
   const memoryDates = Object.keys(memories).sort((a, b) => {
     return new Date(a) - new Date(b);
   });
+  let currentWallRow = null;
+  let standardCountInRow = 0;
+  let wallRowIndex = 0;
 
   // 如果还没有任何回忆，就显示一个提示
   if (memoryDates.length === 0) {
@@ -488,7 +493,7 @@ function createTimeline() {
 
     // Phase 7：从纵向时间轴改成照片墙。
     // featured=true 的重要日子占整行，其余回忆保持小拍立得尺寸。
-    const tiltClass = `wall-tilt-${index % 4}`;
+    const tiltClass = `wall-tilt-${index % 6}`;
     item.className = `timeline-item photo-wall-item ${memory.featured ? "featured" : "standard"} ${tiltClass}`;
     item.dataset.date = dateText;
 
@@ -642,10 +647,6 @@ photo.addEventListener("touchend", () => {
     title.className = "memory-title";
     title.textContent = memory.title || "这一天的回忆";
 
-    const desc = document.createElement("p");
-    desc.className = "memory-desc";
-    desc.textContent = "点开相框，看看这一天";
-
    photo.addEventListener("click", () => {
   if (hasSwiped) {
     hasSwiped = false;
@@ -662,12 +663,34 @@ photo.addEventListener("touchend", () => {
     if (specialBadge) card.appendChild(specialBadge);
     card.appendChild(photo);
     card.appendChild(title);
-    card.appendChild(desc);
 
     item.appendChild(node);
     item.appendChild(card);
 
-    timelineList.appendChild(item);
+    if (memory.featured) {
+      // 特别日子独占一行，但保留一点轻微歪斜，不再摆得特别正。
+      currentWallRow = null;
+      standardCountInRow = 0;
+      timelineList.appendChild(item);
+    } else {
+      if (!currentWallRow || standardCountInRow >= 2) {
+        currentWallRow = document.createElement("div");
+        currentWallRow.className = `photo-wall-row row-pattern-${wallRowIndex % 4}`;
+        currentWallRow.dataset.rowIndex = String(wallRowIndex);
+        timelineList.appendChild(currentWallRow);
+        wallRowIndex += 1;
+        standardCountInRow = 0;
+      }
+
+      item.classList.add(standardCountInRow === 0 ? "row-first" : "row-second");
+      currentWallRow.appendChild(item);
+      standardCountInRow += 1;
+
+      if (standardCountInRow >= 2) {
+        currentWallRow = null;
+        standardCountInRow = 0;
+      }
+    }
   });
 }
 
@@ -834,8 +857,18 @@ function createAlbumList() {
 
 function playMusic(index) {
   const music = musicList[index];
-  currentMusicIndex = index;
 
+  // 暂停后重新选择同一张唱片时，从原来的进度继续；
+  // 选择另一张唱片时才真正切歌。
+  if (index === currentMusicIndex && bgMusic.src && bgMusic.paused) {
+    bgMusic.play();
+    musicPlayerBtn.classList.add("playing");
+    updateActiveAlbum();
+    closeMusicPanel();
+    return;
+  }
+
+  currentMusicIndex = index;
   bgMusic.src = music.src;
   bgMusic.loop = true;
   bgMusic.play();
@@ -865,7 +898,14 @@ function closeMusicPanel() {
   musicPanel.classList.remove("show");
 }
 
-musicPlayerBtn.addEventListener("click", openMusicPanel);
+musicPlayerBtn.addEventListener("click", () => {
+  // 唱片正在转时，再点一次右上角唱片机：暂停播放并停止转动。
+  if (bgMusic && !bgMusic.paused) {
+    bgMusic.pause();
+    return;
+  }
+  openMusicPanel();
+});
 closeMusicPanelBtn.addEventListener("click", closeMusicPanel);
 musicPanelMask.addEventListener("click", closeMusicPanel);
 
@@ -1283,18 +1323,18 @@ async function markLetterOpened(row) {
   const tableName = String(config.letterTable || 'couple_letters').trim();
 
   try {
-    const { error } = await cloudTodoDb
-      .from(tableName)
-      .update({
+    await updateLetterOpenedWithRestFallback(
+      tableName,
+      String(row.id || ''),
+      {
         opened_by: String(cloudTodoUid),
         opened_at: new Date().toISOString()
-      })
-      .eq('id', String(row.id || ''));
-    if (error) throw error;
+      }
+    );
     cloudLetterLastFingerprint = '';
     await refreshCloudLetters({ silent: true });
   } catch (error) {
-    console.error('[门口信箱] 标记已读失败：', error);
+    console.error('[大门信箱] 标记已读失败：', error);
     setMailboxSyncStatus('error', '信已经拆开了，但“已读”状态暂时没同步成功');
   }
 }
@@ -1349,13 +1389,95 @@ async function refreshCloudLetters({ silent = false } = {}) {
       setMailboxSyncStatus('online', '信箱已同步');
     }
   } catch (error) {
-    console.error('[门口信箱] 读取失败：', error);
+    console.error('[大门信箱] 读取失败：', error);
     setMailboxSyncStatus('error', '信箱暂时没有连上，请先执行 Phase 7 信箱 SQL');
     if (mailboxInbox && !mailboxInbox.querySelector('.mailbox-letter-item')) {
       mailboxInbox.innerHTML = '<div class="mailbox-empty">信箱暂时打不开，先检查 Phase 7 SQL 是否执行成功。</div>';
     }
   } finally {
     cloudLetterRefreshing = false;
+  }
+}
+
+async function callCloudRdbRest(tableName, { method = 'GET', body = null, query = '' } = {}) {
+  const config = window.LOVE_HOUSE_CLOUD || {};
+  const envId = String(config.envId || '').trim();
+  const publishableKey = String(config.publishableKey || '').trim();
+
+  if (!envId) throw new Error('缺少 CloudBase 环境 ID');
+  if (!publishableKey) throw new Error('缺少 CloudBase Publishable Key');
+
+  const safeTable = encodeURIComponent(String(tableName || '').trim());
+  const suffix = query ? `?${query}` : '';
+  const url = `https://${envId}.api.tcloudbasegateway.com/v1/rdb/rest/${safeTable}${suffix}`;
+
+  const response = await fetch(url, {
+    method,
+    headers: {
+      'Authorization': `Bearer ${publishableKey}`,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: body == null ? undefined : JSON.stringify(body),
+    cache: 'no-store'
+  });
+
+  const raw = await response.text();
+  let payload = null;
+  if (raw) {
+    try { payload = JSON.parse(raw); }
+    catch (_) { payload = { message: raw }; }
+  }
+
+  if (!response.ok) {
+    const message = payload?.message || payload?.error || payload?.hint || `${response.status} ${response.statusText}`.trim();
+    const error = new Error(`CloudBase 数据库请求失败：${message}`);
+    error.status = response.status;
+    error.payload = payload;
+    throw error;
+  }
+
+  return payload;
+}
+
+async function insertLetterWithRestFallback(tableName, row) {
+  // iPhone PWA 上 CloudBase SDK insert() 偶发 TypeError: Load failed。
+  // 信箱写入优先走官方 PostgREST HTTP API；Publishable Key / GRANT / RLS 仍完全相同。
+  try {
+    await callCloudRdbRest(tableName, { method: 'POST', body: row });
+    return;
+  } catch (restError) {
+    console.warn('[大门信箱] REST 投递失败，尝试 SDK 回退：', restError);
+
+    // 如果请求其实已经到达云端，只是 Safari 没拿到响应，不重复写同一个主键。
+    try {
+      const { data } = await cloudTodoDb
+        .from(tableName)
+        .select('id')
+        .eq('id', String(row.id || ''))
+        .limit(1);
+      if (Array.isArray(data) && data.some((item) => String(item.id || '') === String(row.id || ''))) return;
+    } catch (_) {}
+
+    const result = await cloudTodoDb.from(tableName).insert(row);
+    if (result?.error) throw result.error;
+  }
+}
+
+async function updateLetterOpenedWithRestFallback(tableName, rowId, values) {
+  const query = new URLSearchParams({ id: `eq.${String(rowId || '')}` }).toString();
+
+  try {
+    await callCloudRdbRest(tableName, { method: 'PATCH', query, body: values });
+    return;
+  } catch (restError) {
+    console.warn('[大门信箱] REST 已读同步失败，尝试 SDK 回退：', restError);
+    const result = await cloudTodoDb
+      .from(tableName)
+      .update(values)
+      .eq('id', String(rowId || ''));
+    if (result?.error) throw result.error;
   }
 }
 
@@ -1372,16 +1494,17 @@ async function sendCloudLetter(body, occasion) {
   const config = window.LOVE_HOUSE_CLOUD || {};
   const tableName = String(config.letterTable || 'couple_letters').trim();
   if (letterSendBtn) letterSendBtn.disabled = true;
-  if (letterSendStatus) letterSendStatus.textContent = '正在把信塞进门口信箱…';
+  if (letterSendStatus) letterSendStatus.textContent = '正在把信塞进大门信箱…';
 
   try {
-    const { error } = await cloudTodoDb.from(tableName).insert({
+    const row = {
       id: makeCloudId('letter').slice(0, 80),
       body: cleanBody.slice(0, 1200),
       occasion: cleanOccasion,
       created_by: String(cloudTodoUid)
-    });
-    if (error) throw error;
+    };
+
+    await insertLetterWithRestFallback(tableName, row);
 
     if (letterBody) letterBody.value = '';
     if (letterCounter) letterCounter.textContent = '0 / 1200';
@@ -1389,7 +1512,7 @@ async function sendCloudLetter(body, occasion) {
     cloudLetterLastFingerprint = '';
     await refreshCloudLetters({ silent: true });
   } catch (error) {
-    console.error('[门口信箱] 投递失败：', error);
+    console.error('[大门信箱] 投递失败：', error);
     if (letterSendStatus) letterSendStatus.textContent = `没有投递成功：${String(error?.message || error || '未知错误')}`;
   } finally {
     if (letterSendBtn) letterSendBtn.disabled = !String(letterBody?.value || '').trim();
@@ -2342,7 +2465,7 @@ async function initCloudHomeSync() {
   setTodoSyncStatus('connecting', '正在连接两个人的小屋…');
   setMessageSyncStatus('connecting', '正在连接毛毡板…');
   setEatenSyncStatus('connecting', '正在连接已吃记录…');
-  setMailboxSyncStatus('connecting', '正在看看门口信箱…');
+  setMailboxSyncStatus('connecting', '正在看看大门信箱…');
 
   try {
     const publishableKey = String(config.publishableKey || '').trim();
@@ -2400,7 +2523,7 @@ async function initCloudHomeSync() {
       setTodoSyncStatus('error', '云同步连接失败，请稍后再试');
       setMessageSyncStatus('error', '毛毡板连接失败，请稍后再试');
       setEatenSyncStatus('error', '已吃记录连接失败，请稍后再试');
-      setMailboxSyncStatus('error', '门口信箱连接失败，请稍后再试');
+      setMailboxSyncStatus('error', '大门信箱连接失败，请稍后再试');
     }
   }
 }
@@ -2902,7 +3025,7 @@ window.addEventListener('keydown', (event) => {
   else if (mailboxModal?.classList.contains('show')) closeMailboxModal();
 });
 
-// ---------- 门口信箱事件 ----------
+// ---------- 大门信箱事件 ----------
 homeMailboxBtn?.addEventListener('click', openMailboxModal);
 closeMailboxBtn?.addEventListener('click', closeMailboxModal);
 mailboxModal?.querySelector('[data-close-mailbox]')?.addEventListener('click', closeMailboxModal);

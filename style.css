@@ -5609,3 +5609,215 @@ body.birthday-card-lock {
 @media (prefers-reduced-motion: reduce) {
   .home-mailbox-btn.has-new-letter { animation: none !important; }
 }
+
+/* ==========================================
+   Phase 7.1：大门信箱 + 照片墙自然排版 + 唱片机暂停
+   只做视觉/交互修正，不改毛毡板、约定、Web Push。
+========================================== */
+
+/* 1) 没有未读信时，强制隐藏角标。
+   iOS Safari / PWA 下避免 author CSS 的 display:grid 覆盖 hidden。 */
+.home-mailbox-badge[hidden] {
+  display: none !important;
+}
+
+/* 2) “客厅照片墙”标题直接融进照片墙大模块，结构和毛毡板一致。 */
+.timeline-wrap.photo-wall-wrap {
+  width: 100% !important;
+  max-width: none !important;
+  padding-top: 14px !important;
+}
+
+.photo-wall-section {
+  width: min(93vw, 720px);
+  margin: 0 auto;
+  padding: 18px 16px 20px;
+  border: 2px solid #ffd3e4;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(255, 226, 239, .72), transparent 32%),
+    radial-gradient(circle at 96% 4%, rgba(221, 245, 255, .76), transparent 34%),
+    rgba(255,255,255,.94);
+  box-shadow: 0 16px 38px rgba(255,145,189,.14);
+}
+
+.photo-wall-heading {
+  width: 100%;
+  margin: 0 0 15px;
+  padding: 0 2px;
+  gap: 11px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.photo-wall-heading-icon {
+  width: 43px;
+  height: 43px;
+  border-radius: 16px;
+  font-size: 22px;
+}
+
+.photo-wall-heading h3 {
+  font-size: 18px;
+}
+
+.photo-wall-heading p {
+  font-size: 10px;
+}
+
+/* 3) 照片墙不再用 CSS Grid 自动塞格子。
+   JS 会按时间顺序每两个普通日子组成一行：更早的一定在上面。 */
+.timeline-list.photo-wall-grid {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 43px;
+  padding: 36px 16px 34px;
+  border-radius: 25px;
+}
+
+.photo-wall-row {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 7%;
+}
+
+.photo-wall-row .timeline-item.standard {
+  flex: 0 0 auto;
+  width: 43.5%;
+}
+
+/* 同一时间行里：后一个日期只允许往下沉，不允许跑到前一个日期上方。 */
+.photo-wall-row .timeline-item.row-second {
+  margin-top: 12px !important;
+}
+
+/* 每一行略微改变宽度与水平位置，避免“标准商品宫格”感。 */
+.photo-wall-row.row-pattern-0 .row-first { width: 44.5%; margin-left: 1%; }
+.photo-wall-row.row-pattern-0 .row-second { width: 42%; margin-right: 1.5%; }
+.photo-wall-row.row-pattern-1 .row-first { width: 41.5%; margin-left: 4%; }
+.photo-wall-row.row-pattern-1 .row-second { width: 45%; margin-right: .5%; margin-top: 16px !important; }
+.photo-wall-row.row-pattern-2 .row-first { width: 45%; margin-left: .5%; }
+.photo-wall-row.row-pattern-2 .row-second { width: 41.5%; margin-right: 4%; margin-top: 9px !important; }
+.photo-wall-row.row-pattern-3 .row-first { width: 42%; margin-left: 2%; }
+.photo-wall-row.row-pattern-3 .row-second { width: 44%; margin-right: 2%; margin-top: 18px !important; }
+
+/* 4) 拍立得轻微歪斜，6 种固定节奏；歪但不乱时间。 */
+.photo-wall-grid .timeline-item.wall-tilt-0 { transform: rotate(-1.25deg); }
+.photo-wall-grid .timeline-item.wall-tilt-1 { transform: rotate(.8deg); }
+.photo-wall-grid .timeline-item.wall-tilt-2 { transform: rotate(-.45deg); }
+.photo-wall-grid .timeline-item.wall-tilt-3 { transform: rotate(1.3deg); }
+.photo-wall-grid .timeline-item.wall-tilt-4 { transform: rotate(-.85deg); }
+.photo-wall-grid .timeline-item.wall-tilt-5 { transform: rotate(.45deg); }
+
+/* 特别日子仍独占一行，但缩小一点，并且也会轻微歪着挂。 */
+.photo-wall-grid > .timeline-item.featured {
+  width: min(88%, 560px) !important;
+  align-self: center;
+  justify-self: auto;
+  margin: 1px auto 0 !important;
+}
+
+.photo-wall-grid > .timeline-item.featured.wall-tilt-0 { transform: rotate(-.65deg); }
+.photo-wall-grid > .timeline-item.featured.wall-tilt-1 { transform: rotate(.55deg); }
+.photo-wall-grid > .timeline-item.featured.wall-tilt-2 { transform: rotate(-.35deg); }
+.photo-wall-grid > .timeline-item.featured.wall-tilt-3 { transform: rotate(.72deg); }
+.photo-wall-grid > .timeline-item.featured.wall-tilt-4 { transform: rotate(-.5deg); }
+.photo-wall-grid > .timeline-item.featured.wall-tilt-5 { transform: rotate(.38deg); }
+
+/* “特别的一天”只做小标记，不抢照片。 */
+.photo-wall-grid .memory-special-badge {
+  right: 10px;
+  top: 9px;
+  padding: 2px 5px;
+  font-size: 7.5px;
+  letter-spacing: 0;
+  box-shadow: 0 3px 8px rgba(255,137,184,.17);
+  opacity: .9;
+}
+
+/* 删除旧“点开相框……”之后，标题和相框底部留白收紧。 */
+.photo-wall-grid .memory-title {
+  margin-bottom: 1px !important;
+}
+
+/* 更大的行距、较窄的小相框，让照片墙更松弛。 */
+.photo-wall-grid .memory-card.photo-frame {
+  box-shadow: 0 10px 22px rgba(93,73,84,.13), 0 2px 5px rgba(93,73,84,.07) !important;
+}
+
+@media (max-width: 480px) {
+  .photo-wall-section {
+    width: 94vw;
+    padding: 16px 12px 18px;
+    border-radius: 27px;
+  }
+
+  .photo-wall-heading {
+    width: 100%;
+    padding: 0 2px;
+    margin-bottom: 13px;
+  }
+
+  .photo-wall-heading-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 21px;
+  }
+
+  .photo-wall-heading h3 { font-size: 17px; }
+  .photo-wall-heading p { font-size: 9px; }
+
+  .timeline-list.photo-wall-grid {
+    gap: 39px;
+    padding: 32px 10px 30px;
+    border-radius: 23px;
+  }
+
+  .photo-wall-row {
+    gap: 6.5%;
+  }
+
+  .photo-wall-row .timeline-item.standard {
+    width: 43%;
+  }
+
+  .photo-wall-row .timeline-item.row-second {
+    margin-top: 11px !important;
+  }
+
+  .photo-wall-row.row-pattern-0 .row-first { width: 44%; margin-left: 1%; }
+  .photo-wall-row.row-pattern-0 .row-second { width: 41%; margin-right: 2%; }
+  .photo-wall-row.row-pattern-1 .row-first { width: 41%; margin-left: 4%; }
+  .photo-wall-row.row-pattern-1 .row-second { width: 44%; margin-right: 1%; margin-top: 15px !important; }
+  .photo-wall-row.row-pattern-2 .row-first { width: 44%; margin-left: 0; }
+  .photo-wall-row.row-pattern-2 .row-second { width: 40.5%; margin-right: 4%; margin-top: 8px !important; }
+  .photo-wall-row.row-pattern-3 .row-first { width: 41.5%; margin-left: 2.5%; }
+  .photo-wall-row.row-pattern-3 .row-second { width: 43.5%; margin-right: 1.5%; margin-top: 17px !important; }
+
+  .photo-wall-grid > .timeline-item.featured {
+    width: 91% !important;
+  }
+
+  .photo-wall-grid .memory-special-badge {
+    right: 8px;
+    top: 7px;
+    padding: 2px 4px;
+    font-size: 7px;
+  }
+
+  .photo-wall-grid .featured .memory-card.photo-frame {
+    padding: 9px 9px 13px !important;
+  }
+
+  .photo-wall-grid .featured .memory-title {
+    font-size: 12px !important;
+  }
+}
