@@ -202,7 +202,7 @@ const birthdayCinemaFinishBtn = document.getElementById("birthdayCinemaFinishBtn
 const birthdayCinemaMask = document.querySelector(".birthday-cinema-mask");
 
 // ★ 放映速度就在这里调：2000 = 2 秒，1500 = 1.5 秒，3000 = 3 秒。
-const BIRTHDAY_CINEMA_SLIDE_MS = 2000;
+const BIRTHDAY_CINEMA_SLIDE_MS = 3720;
 const BIRTHDAY_CINEMA_MUSIC_SRC = "music/放映厅.mp3";
 const BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP = 200;
 
