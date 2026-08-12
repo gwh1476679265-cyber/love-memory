@@ -177,7 +177,13 @@ function updateBirthdayCountdown() {
 updateBirthdayCountdown();
 
 // ===============================
-// 8.19：照片墙全集自动放映厅
+// 8.19：芸芸时间线自动放映厅
+// 照片不再读取照片墙 memories，而是依次读取：
+// images/littleyun/1.jpg...  → 小时候
+// images/youngyun/1.jpg...   → 较早时期
+// images/noguyun/1.jpg...    → 这一年的她
+// images/guyun/1.jpg...      → 恋爱后的她
+// 每个文件夹都请从 1.jpg 开始连续编号，不要中间跳号。
 // ===============================
 
 const birthdayCinema = document.getElementById("birthdayCinema");
@@ -194,31 +200,169 @@ const birthdayCinemaProgressBar = document.getElementById("birthdayCinemaProgres
 const birthdayCinemaFinishBtn = document.getElementById("birthdayCinemaFinishBtn");
 const birthdayCinemaMask = document.querySelector(".birthday-cinema-mask");
 
+// ★ 放映速度就在这里调：2000 = 2 秒，1500 = 1.5 秒，3000 = 3 秒。
 const BIRTHDAY_CINEMA_SLIDE_MS = 2000;
 const BIRTHDAY_CINEMA_MUSIC_SRC = "music/放映厅.mp3";
+const BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP = 200;
+
+// 四个阶段的顺序就是放映顺序。
+// captions 会按照照片序号循环使用；以后想换文案，只需要改这里。
+const BIRTHDAY_CINEMA_GROUPS = [
+  {
+    folder: "littleyun",
+    chapter: "第一幕 · 小时候",
+    title: "小时候的你",
+    captions: [
+      "原来小时候的你，就已经这么可爱了。",
+      "这些我没来得及认识的小时候，现在也一点点被我看见。",
+      "想把这些小小的你，也一起好好收藏起来。",
+      "看着以前的照片，好像也陪你往小时候走了一小段。"
+    ]
+  },
+  {
+    folder: "youngyun",
+    chapter: "第二幕 · 较早时期",
+    title: "还没遇见我的你",
+    captions: [
+      "那时候我们还不认识，你已经在认真长成现在的样子。",
+      "我喜欢现在的你，也很想认识每一个过去的你。",
+      "原来在遇见我以前，你已经留下了这么多漂亮的瞬间。",
+      "那些我缺席过的日子，现在可以借这些照片慢慢补回来。"
+    ]
+  },
+  {
+    folder: "noguyun",
+    chapter: "第三幕 · 这一年的你",
+    title: "越来越靠近相遇的你",
+    captions: [
+      "这一年的你，有很多我后来才一张张补看的瞬间。",
+      "从朋友圈慢慢往前翻，像是在重新认识这一年的你。",
+      "现在再看这些照片，会觉得我们离相遇越来越近了。",
+      "那时的你还不知道，后面的日子里会多一个很喜欢你的人。"
+    ]
+  },
+  {
+    folder: "guyun",
+    chapter: "第四幕 · 恋爱以后",
+    title: "后来，我也在你的故事里了",
+    captions: [
+      "后来，我终于不只是隔着照片看你了。",
+      "以前只能看见你的某一个瞬间，后来可以站在你身边。",
+      "喜欢镜头里的你，也更喜欢照片拍完以后还在我身边的你。",
+      "希望以后再往后翻，每一年都能看到我们一起留下的日子。"
+    ]
+  }
+];
+
 let birthdayCinemaSlides = [];
 let birthdayCinemaIndex = 0;
 let birthdayCinemaTimer = null;
 let birthdayCinemaMusicState = null;
 let birthdayCinemaOwnsMusic = false;
 let birthdayCinemaNeedsMusicGesture = false;
+let birthdayCinemaSlidesCache = null;
 
-function buildBirthdayCinemaSlides() {
+async function birthdayCinemaImageExists(path) {
+  try {
+    const headResponse = await fetch(path, {
+      method: "HEAD",
+      cache: "no-cache"
+    });
+
+    if (headResponse.ok) {
+      const type = String(headResponse.headers.get("content-type") || "").toLowerCase();
+      return !type || type.startsWith("image/");
+    }
+
+    // 少数静态托管不支持 HEAD 时，再退回 GET，只读取响应头后立即取消正文。
+    if (headResponse.status !== 405 && headResponse.status !== 501) return false;
+  } catch (_) {
+    // 继续走 GET fallback。
+  }
+
+  try {
+    const response = await fetch(path, {
+      method: "GET",
+      headers: { Range: "bytes=0-0" },
+      cache: "no-cache"
+    });
+    const type = String(response.headers.get("content-type") || "").toLowerCase();
+    const exists = response.ok && (!type || type.startsWith("image/"));
+    try { await response.body?.cancel(); } catch (_) {}
+    return exists;
+  } catch (_) {
+    return false;
+  }
+}
+
+// 利用“1.jpg、2.jpg、3.jpg 连续编号”这个规则，用指数探测 + 二分查找快速找到每组最后一张。
+// 即使有几十张照片，也不需要一张一张发请求去数。
+async function findBirthdayCinemaGroupCount(group) {
+  const base = `images/${group.folder}`;
+  const exists = (index) => birthdayCinemaImageExists(`${base}/${index}.jpg`);
+
+  if (!(await exists(1))) return 0;
+
+  let lastKnown = 1;
+  let probe = 2;
+
+  while (probe <= BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP && await exists(probe)) {
+    lastKnown = probe;
+    probe *= 2;
+  }
+
+  let left = lastKnown + 1;
+  let right = Math.min(probe - 1, BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP);
+  let best = lastKnown;
+
+  // 如果指数探测直接越过上限，仍检查到上限范围内的最后一张。
+  if (probe > BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP) {
+    right = BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP;
+  }
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    if (await exists(mid)) {
+      best = mid;
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+
+  return best;
+}
+
+async function buildBirthdayCinemaSlides() {
+  if (birthdayCinemaSlidesCache) return birthdayCinemaSlidesCache.slice();
+
+  const counts = await Promise.all(
+    BIRTHDAY_CINEMA_GROUPS.map((group) => findBirthdayCinemaGroupCount(group))
+  );
+
   const slides = [];
 
-  // 直接读取照片墙的唯一数据源 memories：日期顺序、同日多条顺序、每条内部图片顺序全部保持一致。
-  getMemoryEntriesInOrder().forEach(({ dateKey, memory }) => {
-    const images = getMemoryImages(memory);
-    images.forEach((image, imageIndex) => {
+  BIRTHDAY_CINEMA_GROUPS.forEach((group, groupIndex) => {
+    const count = counts[groupIndex] || 0;
+
+    for (let imageIndex = 1; imageIndex <= count; imageIndex += 1) {
+      const captions = Array.isArray(group.captions) && group.captions.length
+        ? group.captions
+        : [""];
+
       slides.push({
-        date: formatDateText(dateKey),
-        title: String(memory?.title || "这一天的照片"),
-        text: String(memory?.text || "这里还没有写下具体记录。"),
-        image
+        date: `${group.chapter} · ${String(imageIndex).padStart(2, "0")}`,
+        title: group.title,
+        text: captions[(imageIndex - 1) % captions.length],
+        image: `images/${group.folder}/${imageIndex}.jpg`,
+        group: group.folder,
+        groupIndex,
+        imageIndex
       });
-    });
+    }
   });
 
+  birthdayCinemaSlidesCache = slides.slice();
   return slides;
 }
 
@@ -286,7 +430,7 @@ function renderBirthdayCinemaSlide(index) {
     birthdayCinemaPhoto.classList.remove("cinema-photo-motion");
     void birthdayCinemaPhoto.offsetWidth;
     birthdayCinemaPhoto.classList.add("cinema-photo-motion");
-    birthdayCinemaPhoto.alt = `${slide.date || ""} ${slide.title || "生日回忆"}`.trim();
+    birthdayCinemaPhoto.alt = `${slide.date || ""} ${slide.title || "芸芸的照片"}`.trim();
 
     birthdayCinemaPhoto.onload = () => {
       if (birthdayCinemaIndex !== expectedIndex) return;
@@ -319,6 +463,33 @@ function renderBirthdayCinemaSlide(index) {
   }
 
   preloadBirthdayCinemaImage(birthdayCinemaIndex + 1);
+}
+
+function renderBirthdayCinemaLoading() {
+  clearBirthdayCinemaTimer();
+  if (birthdayCinemaPhotoWrap) birthdayCinemaPhotoWrap.hidden = true;
+  birthdayCinemaStage?.classList.remove("cinema-slide-in", "final-card");
+  birthdayCinemaStage?.classList.add("title-card");
+  if (birthdayCinemaDate) birthdayCinemaDate.textContent = "8.19 · OUR CINEMA";
+  if (birthdayCinemaSlideTitle) birthdayCinemaSlideTitle.textContent = "正在把她的照片装进放映机…";
+  if (birthdayCinemaText) birthdayCinemaText.textContent = "从小时候开始，一张张按时间放到今天。";
+  if (birthdayCinemaCounter) birthdayCinemaCounter.textContent = "-- / --";
+  if (birthdayCinemaProgressBar) birthdayCinemaProgressBar.style.width = "4%";
+  if (birthdayCinemaFinishBtn) birthdayCinemaFinishBtn.hidden = true;
+}
+
+function renderBirthdayCinemaEmpty() {
+  if (birthdayCinemaPhotoWrap) birthdayCinemaPhotoWrap.hidden = true;
+  birthdayCinemaStage?.classList.remove("cinema-slide-in", "final-card");
+  birthdayCinemaStage?.classList.add("title-card");
+  if (birthdayCinemaDate) birthdayCinemaDate.textContent = "8.19 · OUR CINEMA";
+  if (birthdayCinemaSlideTitle) birthdayCinemaSlideTitle.textContent = "放映机还在等照片";
+  if (birthdayCinemaText) {
+    birthdayCinemaText.textContent = "把照片从 1.jpg 开始依次放进 littleyun、youngyun、noguyun、guyun，下一次打开就会自动按顺序播放。";
+  }
+  if (birthdayCinemaCounter) birthdayCinemaCounter.textContent = "00 / 00";
+  if (birthdayCinemaProgressBar) birthdayCinemaProgressBar.style.width = "0%";
+  if (birthdayCinemaFinishBtn) birthdayCinemaFinishBtn.hidden = false;
 }
 
 function setMusicPlayerDisc(index) {
@@ -417,20 +588,33 @@ function restoreMusicAfterBirthdayCinema() {
   else bgMusic.addEventListener("loadedmetadata", restoreTime, { once: true });
 }
 
-function openBirthdayCinema() {
+async function openBirthdayCinema() {
   if (!birthdayCinema) return;
 
-  birthdayCinemaSlides = buildBirthdayCinemaSlides();
-  if (birthdayCinemaSlides.length === 0) return;
-
   birthdayCinemaIndex = 0;
+  birthdayCinemaSlides = [];
   birthdayCinema.classList.add("show");
   birthdayCinema.setAttribute("aria-hidden", "false");
   document.body.classList.add("birthday-cinema-lock");
-  renderBirthdayCinemaSlide(0);
+  renderBirthdayCinemaLoading();
 
   // 正常情况下音乐已经在“进入放映厅”按钮的点击手势里启动；这里再做一次兜底。
   if (!birthdayCinemaOwnsMusic) startBirthdayCinemaMusic();
+
+  try {
+    const slides = await buildBirthdayCinemaSlides();
+    if (!birthdayCinema.classList.contains("show")) return;
+
+    birthdayCinemaSlides = slides;
+    if (birthdayCinemaSlides.length === 0) {
+      renderBirthdayCinemaEmpty();
+    } else {
+      renderBirthdayCinemaSlide(0);
+    }
+  } catch (error) {
+    console.error("[生日放映厅] 读取时间线照片失败：", error);
+    if (birthdayCinema.classList.contains("show")) renderBirthdayCinemaEmpty();
+  }
 
   window.setTimeout(() => {
     closeBirthdayCinemaBtn?.focus({ preventScroll: true });
@@ -448,7 +632,7 @@ function closeBirthdayCinema() {
 
   restoreMusicAfterBirthdayCinema();
 
-  // 放映厅现在属于客厅照片墙，关闭后仍停在客厅原位置。
+  // 放映厅属于客厅照片墙，关闭后仍停在客厅原位置。
   birthdayCardLivingRoomBtn?.focus({ preventScroll: true });
 }
 

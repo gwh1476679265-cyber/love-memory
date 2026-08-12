@@ -9017,7 +9017,7 @@ body.birthday-cinema-lock {
 }
 
 #birthdayCinemaPhoto.cinema-photo-motion {
-  animation: birthdayCinemaKenBurns 1.5s ease-out both;
+  animation: birthdayCinemaKenBurns 2s ease-out both;
 }
 
 @keyframes birthdayCinemaKenBurns {
