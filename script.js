@@ -180,7 +180,7 @@ const memories = {
     images: ["images/20260409-1.jpg",
 	"images/20260409-2.jpg",
 		    ],
-    text: "小众姓联盟成立！"
+    text: "就这样巧吧"
   },
 
   "2026-04-10": {
