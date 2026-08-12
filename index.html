@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="鱼鱼和獭獭的小屋" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="pwa-icon-192.png" />
-  <link rel="stylesheet" href="style.css?v=20260812-phase7-9-1" />
+  <link rel="stylesheet" href="style.css?v=20260812-cinema-details-music-1" />
 </head>
 <body>
 
@@ -48,15 +48,35 @@
     会幸福吗？
   </div>
   <!-- 中间门牌 -->
-  <div class="house-name-board">
+  <div id="houseNameBoard" class="house-name-board birthday-dressed-board">
     <div class="board-nail left"></div>
     <div class="board-nail right"></div>
+
+    <!-- 8.19：门头生日装饰，保持克制，不改变首页空间结构 -->
+    <div class="birthday-board-decor" aria-hidden="true">
+      <span class="birthday-board-ribbon ribbon-left"></span>
+      <span class="birthday-board-ribbon ribbon-right"></span>
+      <span class="birthday-confetti confetti-a"></span>
+      <span class="birthday-confetti confetti-b"></span>
+      <span class="birthday-confetti confetti-c"></span>
+      <span class="birthday-confetti confetti-d"></span>
+      <span class="birthday-confetti confetti-e"></span>
+      <span class="birthday-confetti confetti-f"></span>
+    </div>
+
     <div class="house-name-small">♡ Welcome Home ♡</div>
     <h1>鱼鱼和獭獭的小屋</h1>
-  <!-- 🆕 新增：恋爱天数显示区域 -->
-    <div class="love-counter">
-      我们已相伴 <span id="loveDays">0</span> 天
+
+    <div class="home-board-counters">
+      <div class="love-counter">
+        我们已相伴 <span id="loveDays">0</span> 天
+      </div>
+      <div id="birthdayCountdown" class="birthday-countdown" aria-live="polite">
+        <span class="birthday-countdown-icon" aria-hidden="true">🎉</span>
+        <span id="birthdayCountdownText">距离 8.19 还有 7 天</span>
+      </div>
     </div>
+
   </div>
 
   <div class="home-answer-bubble">
@@ -82,7 +102,7 @@
 </section>
 
 
-  <!-- 进入“恋爱回忆”前展示的生日贺卡 -->
+  <!-- 客厅照片墙：点击标题左侧画框后展示的生日贺卡弹窗 -->
   <div id="birthdayCardIntro" class="birthday-card-intro" aria-hidden="true">
     <div class="birthday-card-mask"></div>
 
@@ -123,9 +143,49 @@
 
       <p id="birthdayCardHint" class="birthday-card-hint">点击贺卡，拆开这份生日惊喜</p>
       <button id="birthdayCardContinueBtn" class="birthday-card-continue" type="button" hidden>
-        点击进入我们的回忆
+        去看 8.19 生日放映厅
       </button>
     </div>
+  </div>
+
+
+  <!-- 8.19：生日放映厅。由客厅照片墙左侧画框里的生日贺卡进入 -->
+  <div id="birthdayCinema" class="birthday-cinema" aria-hidden="true">
+    <div class="birthday-cinema-mask"></div>
+    <section class="birthday-cinema-shell" role="dialog" aria-modal="true" aria-labelledby="birthdayCinemaTitle">
+      <header class="birthday-cinema-header">
+        <div>
+          <div class="birthday-cinema-kicker">8.19 · BIRTHDAY CINEMA</div>
+          <h2 id="birthdayCinemaTitle">我们的放映厅</h2>
+        </div>
+        <button id="closeBirthdayCinemaBtn" class="birthday-cinema-close" type="button" aria-label="退出生日放映厅">×</button>
+      </header>
+
+      <div class="birthday-cinema-progress" aria-hidden="true">
+        <span id="birthdayCinemaProgressBar"></span>
+      </div>
+
+      <div id="birthdayCinemaStage" class="birthday-cinema-stage">
+        <div id="birthdayCinemaPhotoWrap" class="birthday-cinema-photo-wrap" hidden>
+          <img id="birthdayCinemaPhoto" alt="生日放映中的回忆照片">
+          <span class="birthday-cinema-film-grain" aria-hidden="true"></span>
+        </div>
+        <div class="birthday-cinema-copy">
+          <div id="birthdayCinemaDate" class="birthday-cinema-date"></div>
+          <h3 id="birthdayCinemaSlideTitle"></h3>
+          <p id="birthdayCinemaText"></p>
+        </div>
+      </div>
+
+      <div class="birthday-cinema-meta">
+        <span id="birthdayCinemaCounter">-- / --</span>
+        <span id="birthdayCinemaAutoHint" class="birthday-cinema-auto-hint">自动放映 · ♫ 放映厅</span>
+      </div>
+
+      <button id="birthdayCinemaFinishBtn" class="birthday-cinema-finish" type="button" hidden>
+        放映完啦，回到客厅 ♡
+      </button>
+    </section>
   </div>
 
 
@@ -256,10 +316,10 @@
     <main class="timeline-wrap photo-wall-wrap">
       <section class="photo-wall-section" aria-labelledby="photoWallTitle">
         <div class="photo-wall-heading">
-          <span class="photo-wall-heading-icon" aria-hidden="true">🖼️</span>
+          <button id="birthdayCardLivingRoomBtn" class="photo-wall-heading-icon birthday-photo-wall-trigger" type="button" aria-label="打开芸芸的生日贺卡" title="打开生日贺卡">🖼️</button>
           <div>
             <h3 id="photoWallTitle">客厅照片墙</h3>
-            <p>墙上挂着我们一路留下来的照片，每一张都是小屋里舍不得收起来的日子。</p>
+            <p>墙上挂着我们一路留下的照片，每一张都是屋里舍不得收起来的日子。</p>
           </div>
         </div>
 
@@ -672,6 +732,6 @@
   <script src="cloudbase-config.js?v=20260810-phase5-1"></script>
 
   <!-- 页面逻辑 -->
-  <script src="script.js?v=20260812-phase7-9-1"></script>
+  <script src="script.js?v=20260812-cinema-details-music-1"></script>
 </body>
 </html>

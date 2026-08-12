@@ -15,8 +15,8 @@ enterBtn.addEventListener("click", () => {
   memoryPage.classList.add("active");
   window.scrollTo({ top: 0, behavior: "instant" });
 
-  // 先展示生日贺卡，完成后再正常浏览时间轴
-  openBirthdayCardIntro();
+  // Phase 8.19：正常敲门只进入客厅。生日贺卡由客厅照片墙左侧画框主动打开。
+  updateDateTag();
 });
 
 backBtn.addEventListener("click", () => {
@@ -28,14 +28,17 @@ backBtn.addEventListener("click", () => {
 
 
 // ===============================
-// 进入恋爱回忆前：生日贺卡
+// 8.19：门头倒计时 + 客厅照片墙生日贺卡 + 自动放映厅
 // ===============================
 
+const birthdayCardLivingRoomBtn = document.getElementById("birthdayCardLivingRoomBtn");
 const birthdayCardIntro = document.getElementById("birthdayCardIntro");
 const birthdayCardBook = document.getElementById("birthdayCardBook");
 const birthdayCardHint = document.getElementById("birthdayCardHint");
 const birthdayCardContinueBtn = document.getElementById("birthdayCardContinueBtn");
 const skipBirthdayCardBtn = document.getElementById("skipBirthdayCardBtn");
+const houseNameBoard = document.getElementById("houseNameBoard");
+const birthdayCountdownText = document.getElementById("birthdayCountdownText");
 
 let birthdayCardOpened = false;
 let birthdayExperienceClosing = false;
@@ -83,9 +86,8 @@ function unfoldBirthdayCard() {
   birthdayCardOpened = true;
   birthdayCardBook.classList.add("opened");
   birthdayCardBook.setAttribute("aria-expanded", "true");
-  birthdayCardBook.setAttribute("aria-label", "生日贺卡已展开，请点击下方按钮进入我们的回忆");
+  birthdayCardBook.setAttribute("aria-label", "生日贺卡已展开，请点击下方按钮进入 8.19 生日放映厅");
 
-  // 展开后只保留生日祝福，不再出现礼物提示
   if (birthdayCardHint) {
     birthdayCardHint.textContent = "祝这个小女孩生日快乐！";
   }
@@ -99,7 +101,7 @@ function unfoldBirthdayCard() {
   }
 }
 
-function finishBirthdayExperience() {
+function finishBirthdayExperience({ afterClose = null } = {}) {
   if (birthdayExperienceClosing || !birthdayCardIntro) return;
 
   birthdayExperienceClosing = true;
@@ -113,7 +115,10 @@ function finishBirthdayExperience() {
     birthdayCardContinueBtn?.classList.remove("show");
     birthdayExperienceClosing = false;
 
-    updateDateTag();
+    if (typeof afterClose === "function") {
+      afterClose();
+      return;
+    }
 
     if (birthdayCardPreviousFocus && typeof birthdayCardPreviousFocus.focus === "function") {
       birthdayCardPreviousFocus.focus({ preventScroll: true });
@@ -127,7 +132,6 @@ function handleBirthdayCardAction() {
 
 if (birthdayCardBook) {
   birthdayCardBook.addEventListener("click", handleBirthdayCardAction);
-
   birthdayCardBook.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
@@ -136,13 +140,339 @@ if (birthdayCardBook) {
   });
 }
 
-// 展开贺卡后，按钮直接进入恋爱回忆
-birthdayCardContinueBtn?.addEventListener("click", finishBirthdayExperience);
-skipBirthdayCardBtn?.addEventListener("click", finishBirthdayExperience);
+// 门头只保留倒计时与丝带礼花；生日贺卡入口搬到客厅照片墙左侧的画框图标。
+birthdayCardLivingRoomBtn?.addEventListener("click", openBirthdayCardIntro);
+skipBirthdayCardBtn?.addEventListener("click", () => finishBirthdayExperience());
 
-// Esc 可退出贺卡弹窗，避免用户被弹窗困住
+// ===============================
+// 8.19：门头生日倒计时
+// ===============================
+
+const BIRTHDAY_TARGET = new Date(2026, 7, 19); // 2026-08-19，月份从 0 开始计数
+
+function updateBirthdayCountdown() {
+  if (!birthdayCountdownText) return;
+
+  const now = new Date();
+  const todayLocal = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const targetLocal = new Date(BIRTHDAY_TARGET.getFullYear(), BIRTHDAY_TARGET.getMonth(), BIRTHDAY_TARGET.getDate());
+  const diffDays = Math.round((targetLocal.getTime() - todayLocal.getTime()) / 86400000);
+
+  houseNameBoard?.classList.toggle("birthday-today", diffDays === 0);
+  houseNameBoard?.classList.toggle("birthday-passed", diffDays < 0);
+
+  if (diffDays > 0) {
+    birthdayCountdownText.textContent = `距离 8.19 还有 ${diffDays} 天`;
+    return;
+  }
+
+  if (diffDays === 0) {
+    birthdayCountdownText.textContent = "今天就是 8.19 · 生日快乐 ♡";
+    return;
+  }
+
+  birthdayCountdownText.textContent = "8.19 的生日彩带还留在门头上 ♡";
+}
+
+updateBirthdayCountdown();
+
+// ===============================
+// 8.19：照片墙全集自动放映厅
+// ===============================
+
+const birthdayCinema = document.getElementById("birthdayCinema");
+const closeBirthdayCinemaBtn = document.getElementById("closeBirthdayCinemaBtn");
+const birthdayCinemaStage = document.getElementById("birthdayCinemaStage");
+const birthdayCinemaPhotoWrap = document.getElementById("birthdayCinemaPhotoWrap");
+const birthdayCinemaPhoto = document.getElementById("birthdayCinemaPhoto");
+const birthdayCinemaDate = document.getElementById("birthdayCinemaDate");
+const birthdayCinemaSlideTitle = document.getElementById("birthdayCinemaSlideTitle");
+const birthdayCinemaText = document.getElementById("birthdayCinemaText");
+const birthdayCinemaCounter = document.getElementById("birthdayCinemaCounter");
+const birthdayCinemaAutoHint = document.getElementById("birthdayCinemaAutoHint");
+const birthdayCinemaProgressBar = document.getElementById("birthdayCinemaProgressBar");
+const birthdayCinemaFinishBtn = document.getElementById("birthdayCinemaFinishBtn");
+const birthdayCinemaMask = document.querySelector(".birthday-cinema-mask");
+
+const BIRTHDAY_CINEMA_SLIDE_MS = 2000;
+const BIRTHDAY_CINEMA_MUSIC_SRC = "music/放映厅.mp3";
+let birthdayCinemaSlides = [];
+let birthdayCinemaIndex = 0;
+let birthdayCinemaTimer = null;
+let birthdayCinemaMusicState = null;
+let birthdayCinemaOwnsMusic = false;
+let birthdayCinemaNeedsMusicGesture = false;
+
+function buildBirthdayCinemaSlides() {
+  const slides = [];
+
+  // 直接读取照片墙的唯一数据源 memories：日期顺序、同日多条顺序、每条内部图片顺序全部保持一致。
+  getMemoryEntriesInOrder().forEach(({ dateKey, memory }) => {
+    const images = getMemoryImages(memory);
+    images.forEach((image, imageIndex) => {
+      slides.push({
+        date: formatDateText(dateKey),
+        title: String(memory?.title || "这一天的照片"),
+        text: String(memory?.text || "这里还没有写下具体记录。"),
+        image
+      });
+    });
+  });
+
+  return slides;
+}
+
+function clearBirthdayCinemaTimer() {
+  if (birthdayCinemaTimer) {
+    window.clearTimeout(birthdayCinemaTimer);
+    birthdayCinemaTimer = null;
+  }
+}
+
+function completeBirthdayCinemaAutoplay() {
+  clearBirthdayCinemaTimer();
+  if (birthdayCinemaFinishBtn) birthdayCinemaFinishBtn.hidden = false;
+  if (birthdayCinemaAutoHint) birthdayCinemaAutoHint.textContent = "照片放完啦 · ♫ 放映厅";
+}
+
+function scheduleBirthdayCinemaAdvance(expectedIndex) {
+  clearBirthdayCinemaTimer();
+  if (!birthdayCinema?.classList.contains("show")) return;
+  if (expectedIndex !== birthdayCinemaIndex) return;
+
+  birthdayCinemaTimer = window.setTimeout(() => {
+    if (!birthdayCinema?.classList.contains("show")) return;
+    if (birthdayCinemaIndex >= birthdayCinemaSlides.length - 1) {
+      completeBirthdayCinemaAutoplay();
+      return;
+    }
+    renderBirthdayCinemaSlide(birthdayCinemaIndex + 1);
+  }, BIRTHDAY_CINEMA_SLIDE_MS);
+}
+
+function preloadBirthdayCinemaImage(index) {
+  const nextSlide = birthdayCinemaSlides[index];
+  if (!nextSlide?.image) return;
+  const preload = new Image();
+  preload.src = nextSlide.image;
+}
+
+function renderBirthdayCinemaSlide(index) {
+  if (!birthdayCinemaStage || birthdayCinemaSlides.length === 0) return;
+
+  clearBirthdayCinemaTimer();
+  birthdayCinemaIndex = Math.max(0, Math.min(index, birthdayCinemaSlides.length - 1));
+  const slide = birthdayCinemaSlides[birthdayCinemaIndex];
+  const expectedIndex = birthdayCinemaIndex;
+
+  if (birthdayCinemaFinishBtn) birthdayCinemaFinishBtn.hidden = true;
+  if (birthdayCinemaAutoHint) {
+    birthdayCinemaAutoHint.textContent = birthdayCinemaNeedsMusicGesture
+      ? "自动放映 · 轻触画面继续播放《放映厅》"
+      : "自动放映 · ♫ 放映厅";
+  }
+
+  birthdayCinemaStage.classList.remove("cinema-slide-in");
+  void birthdayCinemaStage.offsetWidth;
+  birthdayCinemaStage.classList.add("cinema-slide-in");
+  birthdayCinemaStage.classList.remove("title-card", "final-card");
+
+  if (birthdayCinemaDate) birthdayCinemaDate.textContent = slide.date || "";
+  if (birthdayCinemaSlideTitle) birthdayCinemaSlideTitle.textContent = slide.title || "";
+  if (birthdayCinemaText) birthdayCinemaText.textContent = slide.text || "";
+
+  if (birthdayCinemaPhotoWrap && birthdayCinemaPhoto && slide.image) {
+    birthdayCinemaPhotoWrap.hidden = false;
+    birthdayCinemaPhoto.classList.remove("cinema-photo-motion");
+    void birthdayCinemaPhoto.offsetWidth;
+    birthdayCinemaPhoto.classList.add("cinema-photo-motion");
+    birthdayCinemaPhoto.alt = `${slide.date || ""} ${slide.title || "生日回忆"}`.trim();
+
+    birthdayCinemaPhoto.onload = () => {
+      if (birthdayCinemaIndex !== expectedIndex) return;
+      birthdayCinemaPhotoWrap.hidden = false;
+      scheduleBirthdayCinemaAdvance(expectedIndex);
+    };
+    birthdayCinemaPhoto.onerror = () => {
+      if (birthdayCinemaIndex !== expectedIndex) return;
+      birthdayCinemaPhotoWrap.hidden = true;
+      scheduleBirthdayCinemaAdvance(expectedIndex);
+    };
+    birthdayCinemaPhoto.src = slide.image;
+
+    if (birthdayCinemaPhoto.complete && birthdayCinemaPhoto.naturalWidth > 0) {
+      window.requestAnimationFrame(() => {
+        if (birthdayCinemaIndex === expectedIndex) scheduleBirthdayCinemaAdvance(expectedIndex);
+      });
+    }
+  } else {
+    if (birthdayCinemaPhotoWrap) birthdayCinemaPhotoWrap.hidden = true;
+    scheduleBirthdayCinemaAdvance(expectedIndex);
+  }
+
+  const total = birthdayCinemaSlides.length;
+  if (birthdayCinemaCounter) {
+    birthdayCinemaCounter.textContent = `${String(birthdayCinemaIndex + 1).padStart(2, "0")} / ${String(total).padStart(2, "0")}`;
+  }
+  if (birthdayCinemaProgressBar) {
+    birthdayCinemaProgressBar.style.width = `${((birthdayCinemaIndex + 1) / total) * 100}%`;
+  }
+
+  preloadBirthdayCinemaImage(birthdayCinemaIndex + 1);
+}
+
+function setMusicPlayerDisc(index) {
+  const music = musicList[index];
+  if (!playerDisc) return;
+
+  if (!music) {
+    playerDisc.classList.add("empty");
+    playerDisc.innerHTML = '<span class="music-note">♪</span>';
+    return;
+  }
+
+  playerDisc.classList.remove("empty");
+  playerDisc.innerHTML = `<img src="${music.cover}" alt="${music.title}">`;
+}
+
+function startBirthdayCinemaMusic() {
+  if (!bgMusic || birthdayCinemaOwnsMusic) return;
+
+  birthdayCinemaMusicState = {
+    index: currentMusicIndex,
+    currentTime: Number(bgMusic.currentTime) || 0,
+    wasPlaying: Boolean(bgMusic.src && !bgMusic.paused && !bgMusic.ended),
+    loop: Boolean(bgMusic.loop)
+  };
+  birthdayCinemaOwnsMusic = true;
+  birthdayCinemaNeedsMusicGesture = false;
+
+  // 放映厅使用独立音乐，不加入客厅唱片列表；退出后仍恢复原先唱片与播放进度。
+  currentMusicIndex = -1;
+  bgMusic.src = BIRTHDAY_CINEMA_MUSIC_SRC;
+  bgMusic.loop = true;
+  try { bgMusic.currentTime = 0; } catch (_) {}
+  setMusicPlayerDisc(-1);
+  updateActiveAlbum();
+
+  const playPromise = bgMusic.play();
+  if (playPromise && typeof playPromise.catch === "function") {
+    playPromise.catch((error) => {
+      birthdayCinemaNeedsMusicGesture = true;
+      if (birthdayCinemaAutoHint) birthdayCinemaAutoHint.textContent = "自动放映 · 轻触画面继续播放《放映厅》";
+      console.warn("[生日放映厅] 自动播放《放映厅》失败，等待下一次触摸：", error);
+    });
+  }
+}
+
+function retryBirthdayCinemaMusic() {
+  if (!birthdayCinemaNeedsMusicGesture || !birthdayCinema?.classList.contains("show")) return;
+  birthdayCinemaNeedsMusicGesture = false;
+  const playPromise = bgMusic?.play();
+  if (playPromise && typeof playPromise.then === "function") {
+    playPromise.then(() => {
+      if (birthdayCinemaAutoHint) birthdayCinemaAutoHint.textContent = "自动放映 · ♫ 放映厅";
+    }).catch((error) => {
+      birthdayCinemaNeedsMusicGesture = true;
+      console.warn("[生日放映厅] 再次播放《放映厅》失败：", error);
+    });
+  }
+}
+
+function restoreMusicAfterBirthdayCinema() {
+  if (!birthdayCinemaOwnsMusic || !bgMusic) return;
+
+  const previous = birthdayCinemaMusicState;
+  birthdayCinemaOwnsMusic = false;
+  birthdayCinemaNeedsMusicGesture = false;
+  birthdayCinemaMusicState = null;
+  bgMusic.pause();
+
+  if (!previous || previous.index < 0 || !musicList[previous.index]) {
+    currentMusicIndex = -1;
+    bgMusic.removeAttribute("src");
+    bgMusic.load();
+    bgMusic.loop = false;
+    setMusicPlayerDisc(-1);
+    updateActiveAlbum();
+    return;
+  }
+
+  const previousMusic = musicList[previous.index];
+  currentMusicIndex = previous.index;
+  bgMusic.src = previousMusic.src;
+  bgMusic.loop = previous.loop;
+  setMusicPlayerDisc(previous.index);
+
+  const restoreTime = () => {
+    try { bgMusic.currentTime = previous.currentTime || 0; } catch (_) {}
+    if (previous.wasPlaying) {
+      bgMusic.play().catch((error) => console.warn("[生日放映厅] 恢复原唱片失败：", error));
+    } else {
+      updateActiveAlbum();
+    }
+  };
+
+  if (bgMusic.readyState >= 1) restoreTime();
+  else bgMusic.addEventListener("loadedmetadata", restoreTime, { once: true });
+}
+
+function openBirthdayCinema() {
+  if (!birthdayCinema) return;
+
+  birthdayCinemaSlides = buildBirthdayCinemaSlides();
+  if (birthdayCinemaSlides.length === 0) return;
+
+  birthdayCinemaIndex = 0;
+  birthdayCinema.classList.add("show");
+  birthdayCinema.setAttribute("aria-hidden", "false");
+  document.body.classList.add("birthday-cinema-lock");
+  renderBirthdayCinemaSlide(0);
+
+  // 正常情况下音乐已经在“进入放映厅”按钮的点击手势里启动；这里再做一次兜底。
+  if (!birthdayCinemaOwnsMusic) startBirthdayCinemaMusic();
+
+  window.setTimeout(() => {
+    closeBirthdayCinemaBtn?.focus({ preventScroll: true });
+  }, 180);
+}
+
+function closeBirthdayCinema() {
+  if (!birthdayCinema) return;
+
+  clearBirthdayCinemaTimer();
+  birthdayCinema.classList.remove("show");
+  birthdayCinema.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("birthday-cinema-lock");
+  if (birthdayCinemaFinishBtn) birthdayCinemaFinishBtn.hidden = true;
+
+  restoreMusicAfterBirthdayCinema();
+
+  // 放映厅现在属于客厅照片墙，关闭后仍停在客厅原位置。
+  birthdayCardLivingRoomBtn?.focus({ preventScroll: true });
+}
+
+// 关键：在用户点击按钮的同一手势里先启动放映厅音乐，提高 iPhone Safari / PWA 自动播放成功率。
+birthdayCardContinueBtn?.addEventListener("click", () => {
+  startBirthdayCinemaMusic();
+  finishBirthdayExperience({ afterClose: openBirthdayCinema });
+});
+
+birthdayCinemaFinishBtn?.addEventListener("click", closeBirthdayCinema);
+closeBirthdayCinemaBtn?.addEventListener("click", closeBirthdayCinema);
+birthdayCinemaMask?.addEventListener("click", closeBirthdayCinema);
+birthdayCinemaStage?.addEventListener("click", retryBirthdayCinemaMusic);
+
+// Esc 可退出贺卡或放映厅；放映厅优先。
 window.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && birthdayCardIntro?.classList.contains("show")) {
+  if (event.key !== "Escape") return;
+
+  if (birthdayCinema?.classList.contains("show")) {
+    closeBirthdayCinema();
+    return;
+  }
+
+  if (birthdayCardIntro?.classList.contains("show")) {
     finishBirthdayExperience();
   }
 });

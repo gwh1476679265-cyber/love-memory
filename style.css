@@ -3292,8 +3292,8 @@ body.birthday-card-lock {
 .notify-setup-card p {
   margin: 0 0 18px;
   color: #735d69;
-  font-size: 13px;
-  line-height: 1.75;
+  font-size: 11px;
+  line-height: 1.55;
 }
 
 .notify-setup-card code {
@@ -8699,5 +8699,540 @@ body.birthday-card-lock {
   #aboutPage .todo-notebook-panel.bedroom-agreement-book {
     padding: 13px 11px 12px !important;
     border-radius: 22px !important;
+  }
+}
+
+/* ==========================================
+   8.19 Birthday Phase：门头生日装饰 + 客厅画框贺卡 + 自动生日放映厅
+   仅扩展生日入口与放映体验，不改 CloudBase / 毛毡板 / 卧室 / 厨房逻辑。
+========================================== */
+
+/* ---------- 门头：只保留倒计时、丝带与礼花 ---------- */
+.birthday-dressed-board {
+  overflow: visible;
+  padding-bottom: 18px !important;
+}
+
+.birthday-board-decor {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.birthday-board-ribbon {
+  position: absolute;
+  top: 8px;
+  width: 92px;
+  height: 18px;
+  opacity: .72;
+  background: linear-gradient(90deg, rgba(255, 118, 164, .92), rgba(255, 180, 203, .88));
+  box-shadow: 0 5px 12px rgba(255, 119, 166, .12);
+}
+
+.birthday-board-ribbon::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 18px;
+  height: 18px;
+  background: inherit;
+  clip-path: polygon(0 0, 100% 0, 60% 50%, 100% 100%, 0 100%);
+}
+
+.birthday-board-ribbon.ribbon-left {
+  left: -35px;
+  transform: rotate(-10deg);
+}
+
+.birthday-board-ribbon.ribbon-left::after {
+  right: -16px;
+}
+
+.birthday-board-ribbon.ribbon-right {
+  right: -35px;
+  transform: rotate(10deg) scaleX(-1);
+  background: linear-gradient(90deg, rgba(132, 204, 243, .90), rgba(199, 235, 251, .90));
+}
+
+.birthday-board-ribbon.ribbon-right::after {
+  right: -16px;
+}
+
+.birthday-confetti {
+  position: absolute;
+  width: 7px;
+  height: 12px;
+  border-radius: 999px;
+  opacity: .66;
+  transform: rotate(28deg);
+}
+
+.birthday-confetti.confetti-a { left: 12%; top: 18%; background: #ff9abd; transform: rotate(-28deg); }
+.birthday-confetti.confetti-b { left: 20%; top: 8%; width: 6px; height: 6px; background: #f4c95d; transform: rotate(15deg); }
+.birthday-confetti.confetti-c { right: 16%; top: 20%; background: #8fd6f6; transform: rotate(42deg); }
+.birthday-confetti.confetti-d { right: 8%; top: 42%; width: 6px; height: 6px; background: #ffb2cc; transform: rotate(8deg); }
+.birthday-confetti.confetti-e { left: 9%; bottom: 23%; background: #a7ddf4; transform: rotate(56deg); }
+.birthday-confetti.confetti-f { right: 12%; bottom: 18%; width: 6px; height: 9px; background: #f6cf73; transform: rotate(-30deg); }
+
+.house-name-board > :not(.birthday-board-decor) {
+  position: relative;
+  z-index: 1;
+}
+
+.home-board-counters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 11px;
+}
+
+.home-board-counters .love-counter {
+  margin-top: 0;
+}
+
+.birthday-countdown {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  color: #d98745;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .2px;
+  background: rgba(255, 250, 229, .90);
+  border: 1px solid rgba(240, 204, 124, .72);
+  box-shadow: 0 4px 10px rgba(200, 155, 74, .09);
+  white-space: nowrap;
+}
+
+.birthday-countdown-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.birthday-dressed-board.birthday-today .birthday-countdown {
+  color: #ff5f97;
+  background: linear-gradient(135deg, #fff0f6, #fff7d9);
+  border-color: rgba(255, 160, 193, .78);
+  box-shadow: 0 6px 16px rgba(255, 116, 165, .15);
+}
+
+.birthday-dressed-board.birthday-today .birthday-confetti {
+  animation: birthdayBoardConfetti 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes birthdayBoardConfetti {
+  from { transform: translateY(0) rotate(18deg); opacity: .52; }
+  to { transform: translateY(4px) rotate(48deg); opacity: .9; }
+}
+
+/* 门头只多一行倒计时，首页仍保持原来的呼吸感。 */
+.home-door-card .home-question-bubble { margin-bottom: 22px; }
+.home-door-card .house-name-board { margin-bottom: 22px; }
+.home-door-card .home-answer-bubble { margin-bottom: 24px; }
+
+/* ---------- 客厅照片墙：画框就是生日贺卡入口 ---------- */
+button.photo-wall-heading-icon.birthday-photo-wall-trigger {
+  padding: 0;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+
+button.photo-wall-heading-icon.birthday-photo-wall-trigger:active {
+  transform: rotate(-4deg) scale(.94);
+}
+
+button.photo-wall-heading-icon.birthday-photo-wall-trigger:focus-visible {
+  outline: 2px solid rgba(255, 120, 166, .58);
+  outline-offset: 3px;
+}
+
+/* ---------- 8.19 生日放映厅 ---------- */
+body.birthday-cinema-lock {
+  overflow: hidden;
+  touch-action: none;
+}
+
+.birthday-cinema {
+  position: fixed;
+  inset: 0;
+  z-index: 620;
+  display: grid;
+  place-items: center;
+  padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .34s ease, visibility .34s ease;
+}
+
+.birthday-cinema.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.birthday-cinema-mask {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255, 104, 160, .16), transparent 34%),
+    radial-gradient(circle at 86% 18%, rgba(109, 190, 235, .13), transparent 34%),
+    #221b22;
+}
+
+.birthday-cinema-shell {
+  position: relative;
+  z-index: 2;
+  width: min(94vw, 650px);
+  max-height: min(94vh, 840px);
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 18px 18px 17px;
+  border-radius: 28px;
+  color: #fff;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018)),
+    rgba(35, 28, 35, .96);
+  border: 1px solid rgba(255,255,255,.13);
+  box-shadow: 0 30px 70px rgba(0,0,0,.48);
+}
+
+.birthday-cinema-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 11px;
+}
+
+.birthday-cinema-kicker {
+  margin-bottom: 4px;
+  color: #ffc2d8;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 2.1px;
+}
+
+.birthday-cinema-header h2 {
+  margin: 0;
+  color: #fff7fb;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.birthday-cinema-close {
+  flex: 0 0 auto;
+  width: 35px;
+  height: 35px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 50%;
+  color: #fff;
+  font-family: inherit;
+  font-size: 24px;
+  line-height: 1;
+  background: rgba(255,255,255,.07);
+  cursor: pointer;
+}
+
+.birthday-cinema-progress {
+  height: 3px;
+  margin-bottom: 15px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.10);
+}
+
+.birthday-cinema-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff7cab, #8bcfff);
+  transition: width .34s ease;
+}
+
+.birthday-cinema-stage {
+  position: relative;
+  min-height: 430px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 21px;
+  background:
+    radial-gradient(circle at 20% 16%, rgba(255, 126, 171, .16), transparent 35%),
+    radial-gradient(circle at 82% 24%, rgba(118, 199, 240, .14), transparent 36%),
+    #151216;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: inset 0 0 40px rgba(0,0,0,.28);
+}
+
+.birthday-cinema-stage.cinema-slide-in {
+  animation: birthdayCinemaSlideIn .48s ease both;
+}
+
+@keyframes birthdayCinemaSlideIn {
+  from { opacity: .42; transform: scale(.992); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.birthday-cinema-photo-wrap {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #161216;
+}
+
+.birthday-cinema-photo-wrap[hidden] {
+  display: none !important;
+}
+
+.birthday-cinema-photo-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(10,7,10,.06) 35%, rgba(13,9,13,.86) 100%);
+  pointer-events: none;
+}
+
+#birthdayCinemaPhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transform: scale(.988);
+}
+
+#birthdayCinemaPhoto.cinema-photo-motion {
+  animation: birthdayCinemaKenBurns 1.5s ease-out both;
+}
+
+@keyframes birthdayCinemaKenBurns {
+  from { transform: scale(.988); opacity: .94; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.birthday-cinema-film-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: .12;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(255,255,255,.45) .7px, transparent .7px),
+    radial-gradient(rgba(0,0,0,.55) .7px, transparent .7px);
+  background-size: 5px 5px, 7px 7px;
+  background-position: 0 0, 2px 3px;
+}
+
+.birthday-cinema-copy {
+  position: relative;
+  z-index: 4;
+  padding: 18px 20px 19px;
+  text-shadow: 0 2px 12px rgba(0,0,0,.55);
+}
+
+.birthday-cinema-date {
+  margin-bottom: 7px;
+  color: #ffc1d8;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.7px;
+}
+
+.birthday-cinema-copy h3 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: clamp(18px, 4vw, 25px);
+  line-height: 1.22;
+  font-weight: 900;
+}
+
+.birthday-cinema-copy p {
+  max-width: 520px;
+  margin: 0;
+  color: rgba(255,255,255,.88);
+  font-size: 13px;
+  line-height: 1.75;
+  font-weight: 650;
+}
+
+.birthday-cinema-stage.title-card {
+  justify-content: center;
+  text-align: center;
+}
+
+.birthday-cinema-stage.title-card .birthday-cinema-copy {
+  padding: 42px 27px;
+}
+
+.birthday-cinema-stage.title-card .birthday-cinema-copy p {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.birthday-cinema-stage.final-card {
+  background:
+    radial-gradient(circle at 28% 25%, rgba(255, 105, 160, .23), transparent 36%),
+    radial-gradient(circle at 75% 70%, rgba(111, 196, 239, .18), transparent 38%),
+    #171217;
+}
+
+.birthday-cinema-stage.final-card .birthday-cinema-copy h3 {
+  color: #ffd5e4;
+}
+
+.birthday-cinema-meta {
+  min-height: 28px;
+  margin: 11px 1px 9px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.birthday-cinema-meta > span {
+  flex: 0 0 auto;
+  color: rgba(255,255,255,.56);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.3px;
+}
+
+.birthday-cinema-auto-hint {
+  min-width: 0;
+  overflow: hidden;
+  color: rgba(255,255,255,.62);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.birthday-cinema-finish {
+  width: 100%;
+  min-height: 43px;
+  border: 0;
+  border-radius: 15px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 850;
+  background: linear-gradient(135deg, #ff7cab, #78c8f2);
+  box-shadow: 0 8px 20px rgba(255, 96, 153, .18);
+  cursor: pointer;
+}
+
+.birthday-cinema-finish[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 480px) {
+  .birthday-dressed-board {
+    padding: 20px 13px 16px !important;
+  }
+
+  .home-board-counters {
+    gap: 5px;
+    margin-top: 9px;
+  }
+
+  .home-board-counters .love-counter {
+    padding: 4px 11px;
+    font-size: 10px;
+  }
+
+  .home-board-counters .love-counter span {
+    font-size: 15px;
+  }
+
+  .birthday-countdown {
+    min-height: 27px;
+    padding: 4px 9px;
+    font-size: 9px;
+  }
+
+  .birthday-countdown-icon {
+    font-size: 11px;
+  }
+
+  .home-door-card .home-question-bubble { margin-bottom: 18px; }
+  .home-door-card .house-name-board { margin-bottom: 18px; }
+  .home-door-card .home-answer-bubble { margin-bottom: 20px; }
+
+  .birthday-cinema {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .birthday-cinema-shell {
+    width: 96vw;
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 14px);
+    padding: 14px 11px 12px;
+    border-radius: 23px;
+  }
+
+  .birthday-cinema-header { margin-bottom: 9px; }
+  .birthday-cinema-kicker { font-size: 8px; letter-spacing: 1.6px; }
+  .birthday-cinema-header h2 { font-size: 17px; }
+  .birthday-cinema-close { width: 32px; height: 32px; font-size: 22px; }
+
+  .birthday-cinema-progress { margin-bottom: 10px; }
+
+  .birthday-cinema-stage {
+    min-height: min(58vh, 490px);
+    border-radius: 18px;
+  }
+
+  .birthday-cinema-copy {
+    padding: 20px 17px 19px;
+  }
+
+  .birthday-cinema-date { font-size: 9px; }
+  .birthday-cinema-copy h3 { font-size: 24px; }
+  .birthday-cinema-copy p { font-size: 11px; line-height: 1.7; }
+  .birthday-cinema-stage.title-card .birthday-cinema-copy { padding: 34px 19px; }
+
+  .birthday-cinema-meta { margin-top: 8px; margin-bottom: 7px; }
+  .birthday-cinema-auto-hint { font-size: 8px; }
+  .birthday-cinema-finish { min-height: 40px; font-size: 11px; border-radius: 14px; }
+}
+
+@media (max-height: 700px) and (max-width: 480px) {
+  .birthday-cinema-stage {
+    min-height: 390px;
+  }
+
+  .birthday-cinema-copy {
+    padding-top: 15px;
+    padding-bottom: 15px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .birthday-dressed-board.birthday-today .birthday-confetti,
+  .birthday-cinema-stage.cinema-slide-in,
+  #birthdayCinemaPhoto {
+    animation: none !important;
+  }
+
+  .birthday-cinema,
+  .birthday-cinema-progress span {
+    transition-duration: .01ms !important;
   }
 }
