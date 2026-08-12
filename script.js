@@ -201,8 +201,11 @@ const birthdayCinemaProgressBar = document.getElementById("birthdayCinemaProgres
 const birthdayCinemaFinishBtn = document.getElementById("birthdayCinemaFinishBtn");
 const birthdayCinemaMask = document.querySelector(".birthday-cinema-mask");
 
-// ★ 放映速度就在这里调：3720 ≈ 3.72 秒（当前节奏），1860 ≈ 1.86 秒。
+// ★ 每张照片的主节奏：3720 ≈ 3.72 秒。
+// 转场本身约 700ms，会在两张照片之间做交叉淡化；字幕稍晚 120ms 再换。
 const BIRTHDAY_CINEMA_SLIDE_MS = 3720;
+const BIRTHDAY_CINEMA_CROSSFADE_MS = 700;
+const BIRTHDAY_CINEMA_COPY_DELAY_MS = 120;
 const BIRTHDAY_CINEMA_MUSIC_SRC = "music/放映厅.mp3";
 
 // 四个阶段的顺序就是放映顺序。
@@ -284,6 +287,11 @@ let birthdayCinemaMusicState = null;
 let birthdayCinemaOwnsMusic = false;
 let birthdayCinemaNeedsMusicGesture = false;
 let birthdayCinemaSlidesCache = null;
+let birthdayCinemaActivePhotoLayer = null;
+let birthdayCinemaRenderedIndex = -1;
+let birthdayCinemaCopyTimer = null;
+let birthdayCinemaLayerCleanupTimer = null;
+let birthdayCinemaChapterGlowTimer = null;
 
 async function buildBirthdayCinemaSlides() {
   if (birthdayCinemaSlidesCache) return birthdayCinemaSlidesCache.slice();
@@ -357,6 +365,18 @@ function clearBirthdayCinemaTimer() {
     window.clearTimeout(birthdayCinemaTimer);
     birthdayCinemaTimer = null;
   }
+  if (birthdayCinemaCopyTimer) {
+    window.clearTimeout(birthdayCinemaCopyTimer);
+    birthdayCinemaCopyTimer = null;
+  }
+  if (birthdayCinemaLayerCleanupTimer) {
+    window.clearTimeout(birthdayCinemaLayerCleanupTimer);
+    birthdayCinemaLayerCleanupTimer = null;
+  }
+  if (birthdayCinemaChapterGlowTimer) {
+    window.clearTimeout(birthdayCinemaChapterGlowTimer);
+    birthdayCinemaChapterGlowTimer = null;
+  }
 }
 
 function completeBirthdayCinemaAutoplay() {
@@ -389,63 +409,178 @@ function preloadBirthdayCinemaImages(startIndex, amount = 2) {
   }
 }
 
+function ensureBirthdayCinemaPhotoLayers() {
+  if (!birthdayCinemaPhotoWrap || !birthdayCinemaPhoto) return [];
+
+  birthdayCinemaPhoto.classList.add("birthday-cinema-photo-layer");
+  let secondLayer = birthdayCinemaPhotoWrap.querySelector(".birthday-cinema-photo-layer-secondary");
+
+  if (!secondLayer) {
+    secondLayer = document.createElement("img");
+    secondLayer.className = "birthday-cinema-photo-layer birthday-cinema-photo-layer-secondary";
+    secondLayer.alt = "放映中的芸芸照片";
+    secondLayer.decoding = "async";
+    birthdayCinemaPhotoWrap.appendChild(secondLayer);
+  }
+
+  return [birthdayCinemaPhoto, secondLayer];
+}
+
+function updateBirthdayCinemaCopy(slide, isFinalSlide, { immediate = false } = {}) {
+  const applyCopy = () => {
+    if (birthdayCinemaDate) birthdayCinemaDate.textContent = isFinalSlide ? "8.19 · HAPPY BIRTHDAY" : (slide.date || "");
+    if (birthdayCinemaSlideTitle) birthdayCinemaSlideTitle.textContent = isFinalSlide ? "请许愿" : (slide.title || "");
+    if (birthdayCinemaText) birthdayCinemaText.textContent = isFinalSlide ? "" : (slide.text || "");
+
+    window.requestAnimationFrame(() => {
+      birthdayCinemaStage?.querySelector(".birthday-cinema-copy")?.classList.remove("copy-changing");
+    });
+  };
+
+  const copy = birthdayCinemaStage?.querySelector(".birthday-cinema-copy");
+  if (!copy || immediate) {
+    applyCopy();
+    return;
+  }
+
+  copy.classList.add("copy-changing");
+  birthdayCinemaCopyTimer = window.setTimeout(() => {
+    birthdayCinemaCopyTimer = null;
+    applyCopy();
+  }, BIRTHDAY_CINEMA_COPY_DELAY_MS);
+}
+
+function playBirthdayCinemaChapterGlow() {
+  if (!birthdayCinemaStage) return;
+  birthdayCinemaStage.classList.remove("chapter-transition");
+  void birthdayCinemaStage.offsetWidth;
+  birthdayCinemaStage.classList.add("chapter-transition");
+
+  birthdayCinemaChapterGlowTimer = window.setTimeout(() => {
+    birthdayCinemaChapterGlowTimer = null;
+    birthdayCinemaStage?.classList.remove("chapter-transition");
+  }, 1050);
+}
+
+function resetBirthdayCinemaPhotoLayers() {
+  const layers = ensureBirthdayCinemaPhotoLayers();
+  layers.forEach((layer) => {
+    layer.onload = null;
+    layer.onerror = null;
+    layer.classList.remove("is-current", "is-outgoing", "is-preparing");
+    layer.style.visibility = "hidden";
+    layer.removeAttribute("src");
+  });
+  birthdayCinemaActivePhotoLayer = null;
+  birthdayCinemaRenderedIndex = -1;
+}
+
 function renderBirthdayCinemaSlide(index) {
   if (!birthdayCinemaStage || birthdayCinemaSlides.length === 0) return;
 
   clearBirthdayCinemaTimer();
+  const previousRenderedIndex = birthdayCinemaRenderedIndex;
   birthdayCinemaIndex = Math.max(0, Math.min(index, birthdayCinemaSlides.length - 1));
   const slide = birthdayCinemaSlides[birthdayCinemaIndex];
+  const previousSlide = previousRenderedIndex >= 0 ? birthdayCinemaSlides[previousRenderedIndex] : null;
   const expectedIndex = birthdayCinemaIndex;
   const isFinalSlide = birthdayCinemaIndex === birthdayCinemaSlides.length - 1;
+  const isFirstRenderedSlide = previousRenderedIndex < 0;
+  const isChapterChange = Boolean(previousSlide && previousSlide.groupIndex !== slide.groupIndex);
 
-  setBirthdayCinemaFinalMoment(isFinalSlide);
+  // 最后一幕的礼花等新照片真正出现以后再开始，避免礼花先落在上一张照片上。
+  setBirthdayCinemaFinalMoment(false);
   if (birthdayCinemaAutoHint) {
     birthdayCinemaAutoHint.textContent = birthdayCinemaNeedsMusicGesture
       ? "自动放映 · 轻触画面继续播放《放映厅》"
       : "生日快乐 · ♫ 9号放映厅";
   }
 
-  birthdayCinemaStage.classList.remove("cinema-slide-in");
-  void birthdayCinemaStage.offsetWidth;
-  birthdayCinemaStage.classList.add("cinema-slide-in");
-  birthdayCinemaStage.classList.remove("title-card");
-  birthdayCinemaStage.classList.toggle("final-card", isFinalSlide);
+  birthdayCinemaStage.classList.remove("cinema-slide-in", "title-card");
+  birthdayCinemaStage.classList.toggle("final-card", false);
 
-  if (birthdayCinemaDate) birthdayCinemaDate.textContent = isFinalSlide ? "8.19 · HAPPY BIRTHDAY" : (slide.date || "");
-  if (birthdayCinemaSlideTitle) birthdayCinemaSlideTitle.textContent = isFinalSlide ? "请许愿" : (slide.title || "");
-  if (birthdayCinemaText) birthdayCinemaText.textContent = isFinalSlide ? "" : (slide.text || "");
+  const layers = ensureBirthdayCinemaPhotoLayers();
+  const targetLayer = layers.find((layer) => layer !== birthdayCinemaActivePhotoLayer) || layers[0];
+  const outgoingLayer = birthdayCinemaActivePhotoLayer;
 
-  if (birthdayCinemaAutoHint && isFinalSlide) {
-    birthdayCinemaAutoHint.textContent = "生日快乐 · ♫ 9号放映厅";
-  }
-
-  if (birthdayCinemaPhotoWrap && birthdayCinemaPhoto && slide.image) {
+  if (birthdayCinemaPhotoWrap && targetLayer && slide.image) {
     birthdayCinemaPhotoWrap.hidden = false;
-    birthdayCinemaPhoto.style.visibility = "hidden";
-    birthdayCinemaPhoto.alt = `${slide.date || ""} ${slide.title || "芸芸的照片"}`.trim();
+    targetLayer.onload = null;
+    targetLayer.onerror = null;
+    targetLayer.classList.remove("is-current", "is-outgoing");
+    targetLayer.classList.add("is-preparing");
+    targetLayer.style.visibility = "visible";
+    targetLayer.alt = `${slide.date || ""} ${slide.title || "芸芸的照片"}`.trim();
 
     const revealBirthdayCinemaPhoto = () => {
       if (birthdayCinemaIndex !== expectedIndex) return;
+
       birthdayCinemaPhotoWrap.hidden = false;
-      birthdayCinemaPhoto.style.visibility = "visible";
-      if (!isFinalSlide) scheduleBirthdayCinemaAdvance(expectedIndex);
+      targetLayer.classList.remove("is-preparing");
+      targetLayer.classList.add("is-current");
+
+      if (outgoingLayer && outgoingLayer !== targetLayer) {
+        outgoingLayer.classList.remove("is-current", "is-preparing");
+        outgoingLayer.classList.add("is-outgoing");
+      }
+
+      birthdayCinemaActivePhotoLayer = targetLayer;
+      birthdayCinemaRenderedIndex = expectedIndex;
+
+      if (isChapterChange) playBirthdayCinemaChapterGlow();
+      updateBirthdayCinemaCopy(slide, isFinalSlide, { immediate: isFirstRenderedSlide });
+
+      if (isFinalSlide) {
+        birthdayCinemaStage.classList.add("final-card");
+        setBirthdayCinemaFinalMoment(true);
+        if (birthdayCinemaAutoHint) birthdayCinemaAutoHint.textContent = "生日快乐 · ♫ 9号放映厅";
+      } else {
+        scheduleBirthdayCinemaAdvance(expectedIndex);
+      }
+
+      if (outgoingLayer && outgoingLayer !== targetLayer) {
+        birthdayCinemaLayerCleanupTimer = window.setTimeout(() => {
+          birthdayCinemaLayerCleanupTimer = null;
+          if (outgoingLayer === birthdayCinemaActivePhotoLayer) return;
+          outgoingLayer.classList.remove("is-outgoing");
+          outgoingLayer.style.visibility = "hidden";
+          outgoingLayer.onload = null;
+          outgoingLayer.onerror = null;
+        }, BIRTHDAY_CINEMA_CROSSFADE_MS + 90);
+      }
     };
 
-    birthdayCinemaPhoto.onload = revealBirthdayCinemaPhoto;
-    birthdayCinemaPhoto.onerror = () => {
+    targetLayer.onload = revealBirthdayCinemaPhoto;
+    targetLayer.onerror = () => {
       if (birthdayCinemaIndex !== expectedIndex) return;
-      birthdayCinemaPhoto.style.visibility = "hidden";
-      birthdayCinemaPhotoWrap.hidden = true;
-      if (!isFinalSlide) scheduleBirthdayCinemaAdvance(expectedIndex);
+      targetLayer.classList.remove("is-preparing", "is-current");
+      targetLayer.style.visibility = "hidden";
+      if (!outgoingLayer) birthdayCinemaPhotoWrap.hidden = true;
+      updateBirthdayCinemaCopy(slide, isFinalSlide, { immediate: isFirstRenderedSlide });
+      birthdayCinemaRenderedIndex = expectedIndex;
+      if (isFinalSlide) {
+        birthdayCinemaStage.classList.add("final-card");
+        setBirthdayCinemaFinalMoment(true);
+      } else {
+        scheduleBirthdayCinemaAdvance(expectedIndex);
+      }
     };
-    birthdayCinemaPhoto.src = slide.image;
 
-    if (birthdayCinemaPhoto.complete && birthdayCinemaPhoto.naturalWidth > 0) {
+    targetLayer.src = slide.image;
+
+    if (targetLayer.complete && targetLayer.naturalWidth > 0) {
       window.requestAnimationFrame(revealBirthdayCinemaPhoto);
     }
   } else {
     if (birthdayCinemaPhotoWrap) birthdayCinemaPhotoWrap.hidden = true;
-    if (!isFinalSlide) scheduleBirthdayCinemaAdvance(expectedIndex);
+    birthdayCinemaRenderedIndex = expectedIndex;
+    updateBirthdayCinemaCopy(slide, isFinalSlide, { immediate: isFirstRenderedSlide });
+    if (isFinalSlide) {
+      birthdayCinemaStage.classList.add("final-card");
+      setBirthdayCinemaFinalMoment(true);
+    } else {
+      scheduleBirthdayCinemaAdvance(expectedIndex);
+    }
   }
 
   const total = birthdayCinemaSlides.length;
@@ -461,6 +596,7 @@ function renderBirthdayCinemaSlide(index) {
 
 function renderBirthdayCinemaLoading() {
   clearBirthdayCinemaTimer();
+  resetBirthdayCinemaPhotoLayers();
   setBirthdayCinemaFinalMoment(false);
   if (birthdayCinemaPhotoWrap) birthdayCinemaPhotoWrap.hidden = true;
   birthdayCinemaStage?.classList.remove("cinema-slide-in", "final-card");
@@ -624,6 +760,9 @@ function closeBirthdayCinema() {
   if (!birthdayCinema) return;
 
   clearBirthdayCinemaTimer();
+  resetBirthdayCinemaPhotoLayers();
+  birthdayCinemaStage?.classList.remove("chapter-transition");
+  birthdayCinemaStage?.querySelector(".birthday-cinema-copy")?.classList.remove("copy-changing");
   birthdayCinema.classList.remove("show");
   birthdayCinema.setAttribute("aria-hidden", "true");
   document.body.classList.remove("birthday-cinema-lock");
