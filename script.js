@@ -237,7 +237,7 @@ const BIRTHDAY_CINEMA_GROUPS = [
   {
     folder: "noguyun",
     chapter: "第三幕 · 大大芸",
-    title: "我们之间的两条线似乎越走越近",
+    title: "命运开始让我们越走越近",
     captions: [
       "这一年的你，有很多我后来才一张张补看的瞬间。",
       "从朋友圈慢慢往前翻，像是在重新认识这一年的你。",
@@ -252,7 +252,7 @@ const BIRTHDAY_CINEMA_GROUPS = [
   },
   {
     folder: "guyun",
-    chapter: "第四幕 · 爱你芸",
+    chapter: "第四幕 · 此刻最好的你",
     title: "后来，我也在你的故事里了",
     captions: [
       "我终于不只是隔着照片看你了。",
