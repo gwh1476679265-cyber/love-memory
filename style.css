@@ -8984,6 +8984,26 @@ body.birthday-cinema-lock {
   animation: birthdayCinemaSlideIn .48s ease both;
 }
 
+/* 正常放映画面：只在字幕所在的底部区域压一层局部渐变。
+   上方大部分照片保持原图，不给整张照片套滤镜。 */
+.birthday-cinema-stage:not(.title-card):not(.final-card)::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 6, 9, 0) 0%,
+    rgba(8, 6, 9, .12) 20%,
+    rgba(8, 6, 9, .48) 58%,
+    rgba(8, 6, 9, .78) 100%
+  );
+}
+
 @keyframes birthdayCinemaSlideIn {
   from { opacity: .42; transform: scale(.992); }
   to { opacity: 1; transform: scale(1); }
@@ -9066,9 +9086,12 @@ body.birthday-cinema-lock {
 .birthday-cinema-date {
   margin-bottom: 7px;
   color: #ffc1d8;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 900;
-  letter-spacing: 1.7px;
+  letter-spacing: 1.5px;
+  text-shadow:
+    0 1px 2px rgba(0,0,0,.95),
+    0 3px 12px rgba(0,0,0,.78);
 }
 
 .birthday-cinema-copy h3 {
@@ -9077,15 +9100,25 @@ body.birthday-cinema-lock {
   font-size: clamp(18px, 4vw, 25px);
   line-height: 1.22;
   font-weight: 900;
+  -webkit-text-stroke: .35px rgba(0,0,0,.72);
+  text-shadow:
+    0 1px 2px rgba(0,0,0,.96),
+    0 3px 9px rgba(0,0,0,.86),
+    0 7px 22px rgba(0,0,0,.62);
 }
 
 .birthday-cinema-copy p {
   max-width: 520px;
   margin: 0;
-  color: rgba(255,255,255,.88);
+  color: rgba(255,255,255,.94);
   font-size: 13px;
   line-height: 1.75;
   font-weight: 650;
+  -webkit-text-stroke: .18px rgba(0,0,0,.68);
+  text-shadow:
+    0 1px 2px rgba(0,0,0,.98),
+    0 3px 10px rgba(0,0,0,.84),
+    0 6px 18px rgba(0,0,0,.58);
 }
 
 .birthday-cinema-stage.title-card {
@@ -9235,7 +9268,7 @@ body.birthday-cinema-lock {
     padding: 20px 17px 19px;
   }
 
-  .birthday-cinema-date { font-size: 9px; }
+  .birthday-cinema-date { font-size: 12px; }
   .birthday-cinema-copy h3 { font-size: 24px; }
   .birthday-cinema-copy p { font-size: 11px; line-height: 1.7; }
   .birthday-cinema-stage.title-card .birthday-cinema-copy { padding: 34px 19px; }
