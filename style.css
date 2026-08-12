@@ -8600,3 +8600,104 @@ body.birthday-card-lock {
     margin-top: 22px;
   }
 }
+
+/* ==========================================
+   Phase 7.9.1：卧室改为平面展开约定册
+   - 删除床头柜场景的视觉依赖
+   - 进入卧室直接看到约定内容
+========================================== */
+
+#aboutPage .about-content-wrap {
+  width: min(94vw, 620px) !important;
+  margin: 20px auto 0 !important;
+  padding: 8px 0 56px !important;
+}
+
+.bedroom-agreement-section {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.bedroom-agreement-heading {
+  margin: 0 3px 14px;
+  padding: 0 2px;
+}
+
+.bedroom-agreement-kicker {
+  margin-bottom: 5px;
+  color: #9abfd2;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2.2px;
+}
+
+.bedroom-agreement-heading h3 {
+  margin: 0;
+  color: #ff78a6;
+  font-size: 25px;
+  line-height: 1.2;
+  font-weight: 900;
+  letter-spacing: .4px;
+}
+
+.bedroom-agreement-heading p {
+  margin: 8px 0 0;
+  max-width: 520px;
+  color: #806a77;
+  font-size: 12px;
+  line-height: 1.7;
+  font-weight: 650;
+}
+
+#aboutPage .todo-notebook-panel.bedroom-agreement-book {
+  display: block !important;
+  margin: 0 !important;
+  padding: 16px 14px 15px !important;
+  border: 1.5px solid rgba(255, 205, 224, .88) !important;
+  border-radius: 25px !important;
+  background: rgba(255, 255, 255, .93) !important;
+  box-shadow: 0 12px 28px rgba(131, 99, 117, .08) !important;
+  animation: none !important;
+}
+
+#aboutPage .bedroom-agreement-book .todo-sync-bar {
+  margin: 0 0 12px !important;
+}
+
+#aboutPage .bedroom-agreement-book .todo-create-form {
+  margin-top: 0 !important;
+}
+
+#aboutPage .bedroom-agreement-book .todo-notebook {
+  margin-top: 12px !important;
+  border: 0 !important;
+  border-radius: 18px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 480px) {
+  #aboutPage .about-content-wrap {
+    width: 93vw !important;
+    margin-top: 16px !important;
+    padding-bottom: 46px !important;
+  }
+
+  .bedroom-agreement-heading {
+    margin-bottom: 12px;
+  }
+
+  .bedroom-agreement-heading h3 {
+    font-size: 23px;
+  }
+
+  .bedroom-agreement-heading p {
+    font-size: 11px;
+  }
+
+  #aboutPage .todo-notebook-panel.bedroom-agreement-book {
+    padding: 13px 11px 12px !important;
+    border-radius: 22px !important;
+  }
+}

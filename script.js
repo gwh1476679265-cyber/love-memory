@@ -166,28 +166,6 @@ const memories = {
     text: "小众姓联盟成立！"
   },
 
- "2026-04-03": {
-    title: "心跳114，心动要要死",
-    images: ["images/20260403-1.jpg",
-	"images/20260403-2.jpg",
-	"images/20260403-3.jpg",
-	    ],
-    text: "请评价！"
-  },
-
- "2026-04-09": {
-    title: "LOVE-Rs",
-    images: ["images/20260409-1.jpg",
-	"images/20260409-2.jpg",
-		    ],
-    text: "请评价！"
-  },
-
- "2026-04-10": {
-    title: "我也看到这了分享给你",
-    image: "images/20260410.jpg",
-    text: "边芸芸速度第一次震惊我"
-  },
 
  "2026-04-14": {
     featured: true,
@@ -210,11 +188,6 @@ const memories = {
     text: "可惜没有多拍几张照片"
   },
 
- "2026-04-26": {
-    title: "I ❤️ YOU",
-    image: "images/20260426-1.jpg",
-    text: "回头看都是小巧思"
-  },
 
  "2026-04-28": {
     title: "小狗假意收伞，趁机智取小手",
@@ -1166,6 +1139,7 @@ const enterBedroomBtn = document.getElementById("enterBedroomBtn");
 const enterKitchenBtn = document.getElementById("enterKitchenBtn");
 const backToMemoryBtnEl = document.getElementById("backToMemoryBtn");
 const backToMemoryFromKitchenBtnEl = document.getElementById("backToMemoryFromKitchenBtn");
+const livingRoomBottomTarget = document.querySelector(".kitchen-entry-wrap");
 
 function openBedroomPage(e) {
   if (e) {
@@ -1203,10 +1177,25 @@ function openKitchenPage(e) {
   }
 }
 
+function scrollLivingRoomToBottom() {
+  if (livingRoomBottomTarget) {
+    livingRoomBottomTarget.scrollIntoView({ behavior: "auto", block: "end" });
+  } else {
+    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "auto" });
+  }
+  if (typeof updateDateTag === "function") updateDateTag();
+}
+
 function returnToLivingRoom(pageEl) {
   pageEl?.classList.remove("active");
   memoryPageEl?.classList.add("active");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // 从卧室 / 厨房返回时固定落到客厅最下面。
+  // 首次切页后滚一次，毛毡板同步可能更新布局，再补一次保证 iPhone Safari / PWA 位置稳定。
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(scrollLivingRoomToBottom);
+  });
+  window.setTimeout(scrollLivingRoomToBottom, 180);
 
   if (typeof refreshCloudMessages === "function") {
     refreshCloudMessages({ silent: true });
@@ -1259,38 +1248,8 @@ document.querySelectorAll('.flip-card').forEach(card => {
   });
 });
 
-// 3. 床头柜：点击约定小册子后再展开原有约定功能
-const bedsideCabinetSection = document.getElementById('bedsideCabinetSection');
-const todoNotebookToggle = document.getElementById('todoNotebookToggle');
-const todoNotebookPanel = document.getElementById('todoNotebookPanel');
-const todoNotebookCloseBtn = document.getElementById('todoNotebookCloseBtn');
-
-function setTodoNotebookOpen(open) {
-  const nextOpen = Boolean(open);
-  if (todoNotebookPanel) todoNotebookPanel.hidden = !nextOpen;
-  if (todoNotebookToggle) {
-    todoNotebookToggle.setAttribute('aria-expanded', nextOpen ? 'true' : 'false');
-    todoNotebookToggle.classList.toggle('open', nextOpen);
-  }
-  bedsideCabinetSection?.classList.toggle('book-open', nextOpen);
-
-  if (nextOpen && typeof refreshCloudTodos === 'function') {
-    refreshCloudTodos({ silent: true });
-  }
-}
-
-todoNotebookToggle?.addEventListener('click', () => {
-  const isOpen = todoNotebookToggle.getAttribute('aria-expanded') === 'true';
-  setTodoNotebookOpen(!isOpen);
-});
-
-todoNotebookCloseBtn?.addEventListener('click', () => {
-  setTodoNotebookOpen(false);
-  window.requestAnimationFrame(() => {
-    todoNotebookToggle?.focus({ preventScroll: true });
-    bedsideCabinetSection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-});
+// 3. 卧室：约定册默认直接展开。
+// 约定本身的 PostgreSQL 同步 / 新建 / 勾选 / 删除逻辑继续沿用下方原实现。
 
 // ==========================================
 // 4. 两个人的小屋云同步：约定 + 客厅毛毡板（Phase 6）
