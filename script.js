@@ -386,7 +386,13 @@ function completeBirthdayCinemaAutoplay() {
 }
 
 function scheduleBirthdayCinemaAdvance(expectedIndex) {
-  clearBirthdayCinemaTimer();
+  // 这里只重置“下一张照片”的自动播放计时器。
+  // 不能调用 clearBirthdayCinemaTimer()，否则会把刚创建的字幕淡换 timer 一起清掉，
+  // 造成第一张之后字幕永远停在第一句。
+  if (birthdayCinemaTimer) {
+    window.clearTimeout(birthdayCinemaTimer);
+    birthdayCinemaTimer = null;
+  }
   if (!birthdayCinema?.classList.contains("show")) return;
   if (expectedIndex !== birthdayCinemaIndex) return;
 
