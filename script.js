@@ -204,13 +204,14 @@ const birthdayCinemaMask = document.querySelector(".birthday-cinema-mask");
 // ★ 放映速度就在这里调：3720 ≈ 3.72 秒（当前节奏），1860 ≈ 1.86 秒。
 const BIRTHDAY_CINEMA_SLIDE_MS = 3720;
 const BIRTHDAY_CINEMA_MUSIC_SRC = "music/放映厅.mp3";
-const BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP = 200;
 
 // 四个阶段的顺序就是放映顺序。
+// count 是每个文件夹实际照片数量；以后新增/删除照片，只改对应 count 即可。
 // captions 会按照照片序号循环使用；以后想换文案，只需要改这里。
 const BIRTHDAY_CINEMA_GROUPS = [
   {
     folder: "littleyun",
+    count: 6,
     chapter: "第一幕 · 小小芸",
     title: "小时候的你",
     captions: [
@@ -224,6 +225,7 @@ const BIRTHDAY_CINEMA_GROUPS = [
   },
   {
     folder: "youngyun",
+    count: 5,
     chapter: "第二幕 · 中中芸",
     title: "还未相遇的你和我",
     captions: [
@@ -236,6 +238,7 @@ const BIRTHDAY_CINEMA_GROUPS = [
   },
   {
     folder: "noguyun",
+    count: 8,
     chapter: "第三幕 · 大大芸",
     title: "命运开始让我们越走越近",
     captions: [
@@ -252,6 +255,7 @@ const BIRTHDAY_CINEMA_GROUPS = [
   },
   {
     folder: "guyun",
+    count: 14,
     chapter: "第四幕 · 此刻最好的你",
     title: "后来，我也在你的故事里了",
     captions: [
@@ -264,7 +268,7 @@ const BIRTHDAY_CINEMA_GROUPS = [
       "以前是朋友圈里的你，后来是我手机相册里越来越多的你。",
       "越来越多的照片是我的专属。",
       "认识你以后，时间突然有了很多可以一起记住的坐标。",
-      "希望以后每次放映到这里，后面都还能继续接上新的照片。"  ,
+      "希望以后每次放映到这里，后面都还能继续接上新的照片。",
       "你说：“请多偷拍。”",
       "最好吃的一块小蛋糕。",
       "我说：“当然，请多指教”。"
@@ -281,88 +285,15 @@ let birthdayCinemaOwnsMusic = false;
 let birthdayCinemaNeedsMusicGesture = false;
 let birthdayCinemaSlidesCache = null;
 
-async function birthdayCinemaImageExists(path) {
-  try {
-    const headResponse = await fetch(path, {
-      method: "HEAD",
-      cache: "no-cache"
-    });
-
-    if (headResponse.ok) {
-      const type = String(headResponse.headers.get("content-type") || "").toLowerCase();
-      return !type || type.startsWith("image/");
-    }
-
-    // 少数静态托管不支持 HEAD 时，再退回 GET，只读取响应头后立即取消正文。
-    if (headResponse.status !== 405 && headResponse.status !== 501) return false;
-  } catch (_) {
-    // 继续走 GET fallback。
-  }
-
-  try {
-    const response = await fetch(path, {
-      method: "GET",
-      headers: { Range: "bytes=0-0" },
-      cache: "no-cache"
-    });
-    const type = String(response.headers.get("content-type") || "").toLowerCase();
-    const exists = response.ok && (!type || type.startsWith("image/"));
-    try { await response.body?.cancel(); } catch (_) {}
-    return exists;
-  } catch (_) {
-    return false;
-  }
-}
-
-// 利用“1.jpg、2.jpg、3.jpg 连续编号”这个规则，用指数探测 + 二分查找快速找到每组最后一张。
-// 即使有几十张照片，也不需要一张一张发请求去数。
-async function findBirthdayCinemaGroupCount(group) {
-  const base = `images/${group.folder}`;
-  const exists = (index) => birthdayCinemaImageExists(`${base}/${index}.jpg`);
-
-  if (!(await exists(1))) return 0;
-
-  let lastKnown = 1;
-  let probe = 2;
-
-  while (probe <= BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP && await exists(probe)) {
-    lastKnown = probe;
-    probe *= 2;
-  }
-
-  let left = lastKnown + 1;
-  let right = Math.min(probe - 1, BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP);
-  let best = lastKnown;
-
-  // 如果指数探测直接越过上限，仍检查到上限范围内的最后一张。
-  if (probe > BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP) {
-    right = BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP;
-  }
-
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-    if (await exists(mid)) {
-      best = mid;
-      left = mid + 1;
-    } else {
-      right = mid - 1;
-    }
-  }
-
-  return best;
-}
-
 async function buildBirthdayCinemaSlides() {
   if (birthdayCinemaSlidesCache) return birthdayCinemaSlidesCache.slice();
 
-  const counts = await Promise.all(
-    BIRTHDAY_CINEMA_GROUPS.map((group) => findBirthdayCinemaGroupCount(group))
-  );
-
+  // 照片数量改为显式固定值，不再探测静态托管上的旧文件。
+  // 当前总数：6 + 5 + 8 + 14 = 33 张。
   const slides = [];
 
   BIRTHDAY_CINEMA_GROUPS.forEach((group, groupIndex) => {
-    const count = counts[groupIndex] || 0;
+    const count = Math.max(0, Number(group.count) || 0);
 
     for (let imageIndex = 1; imageIndex <= count; imageIndex += 1) {
       const captions = Array.isArray(group.captions) && group.captions.length
@@ -449,11 +380,13 @@ function scheduleBirthdayCinemaAdvance(expectedIndex) {
   }, BIRTHDAY_CINEMA_SLIDE_MS);
 }
 
-function preloadBirthdayCinemaImage(index) {
-  const nextSlide = birthdayCinemaSlides[index];
-  if (!nextSlide?.image) return;
-  const preload = new Image();
-  preload.src = nextSlide.image;
+function preloadBirthdayCinemaImages(startIndex, amount = 2) {
+  for (let offset = 0; offset < amount; offset += 1) {
+    const nextSlide = birthdayCinemaSlides[startIndex + offset];
+    if (!nextSlide?.image) continue;
+    const preload = new Image();
+    preload.src = nextSlide.image;
+  }
 }
 
 function renderBirthdayCinemaSlide(index) {
@@ -488,24 +421,27 @@ function renderBirthdayCinemaSlide(index) {
 
   if (birthdayCinemaPhotoWrap && birthdayCinemaPhoto && slide.image) {
     birthdayCinemaPhotoWrap.hidden = false;
+    birthdayCinemaPhoto.style.visibility = "hidden";
     birthdayCinemaPhoto.alt = `${slide.date || ""} ${slide.title || "芸芸的照片"}`.trim();
 
-    birthdayCinemaPhoto.onload = () => {
+    const revealBirthdayCinemaPhoto = () => {
       if (birthdayCinemaIndex !== expectedIndex) return;
       birthdayCinemaPhotoWrap.hidden = false;
+      birthdayCinemaPhoto.style.visibility = "visible";
       if (!isFinalSlide) scheduleBirthdayCinemaAdvance(expectedIndex);
     };
+
+    birthdayCinemaPhoto.onload = revealBirthdayCinemaPhoto;
     birthdayCinemaPhoto.onerror = () => {
       if (birthdayCinemaIndex !== expectedIndex) return;
+      birthdayCinemaPhoto.style.visibility = "hidden";
       birthdayCinemaPhotoWrap.hidden = true;
       if (!isFinalSlide) scheduleBirthdayCinemaAdvance(expectedIndex);
     };
     birthdayCinemaPhoto.src = slide.image;
 
     if (birthdayCinemaPhoto.complete && birthdayCinemaPhoto.naturalWidth > 0) {
-      window.requestAnimationFrame(() => {
-        if (birthdayCinemaIndex === expectedIndex && !isFinalSlide) scheduleBirthdayCinemaAdvance(expectedIndex);
-      });
+      window.requestAnimationFrame(revealBirthdayCinemaPhoto);
     }
   } else {
     if (birthdayCinemaPhotoWrap) birthdayCinemaPhotoWrap.hidden = true;
@@ -520,7 +456,7 @@ function renderBirthdayCinemaSlide(index) {
     birthdayCinemaProgressBar.style.width = `${((birthdayCinemaIndex + 1) / total) * 100}%`;
   }
 
-  preloadBirthdayCinemaImage(birthdayCinemaIndex + 1);
+  preloadBirthdayCinemaImages(birthdayCinemaIndex + 1, 2);
 }
 
 function renderBirthdayCinemaLoading() {
