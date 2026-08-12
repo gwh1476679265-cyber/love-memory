@@ -191,6 +191,7 @@ const closeBirthdayCinemaBtn = document.getElementById("closeBirthdayCinemaBtn")
 const birthdayCinemaStage = document.getElementById("birthdayCinemaStage");
 const birthdayCinemaPhotoWrap = document.getElementById("birthdayCinemaPhotoWrap");
 const birthdayCinemaPhoto = document.getElementById("birthdayCinemaPhoto");
+const birthdayCinemaConfetti = document.getElementById("birthdayCinemaConfetti");
 const birthdayCinemaDate = document.getElementById("birthdayCinemaDate");
 const birthdayCinemaSlideTitle = document.getElementById("birthdayCinemaSlideTitle");
 const birthdayCinemaText = document.getElementById("birthdayCinemaText");
@@ -210,40 +211,39 @@ const BIRTHDAY_CINEMA_MAX_IMAGES_PER_GROUP = 200;
 const BIRTHDAY_CINEMA_GROUPS = [
   {
     folder: "littleyun",
-    chapter: "第一幕 · 小时候",
+    chapter: "第一幕 · 小小芸",
     title: "小时候的你",
     captions: [
-      "原来小时候的你，就已经这么可爱了。",
+      "小时候的你就已经这么可爱了。",
       "这些我没来得及认识的小时候，现在也一点点被我看见。",
-      "想把这些小小的你，也一起好好收藏起来。",
+      "这些小小的你，我也会一起好好收藏起来。",
       "看着以前的照片，好像也陪你往小时候走了一小段。"
     ]
   },
   {
     folder: "youngyun",
-    chapter: "第二幕 · 较早时期",
-    title: "还没遇见我的你",
+    chapter: "第二幕 · 中中芸",
+    title: "还未相遇的你和我",
     captions: [
-      "那时候我们还不认识，你已经在认真长成现在的样子。",
       "我喜欢现在的你，也很想认识每一个过去的你。",
-      "原来在遇见我以前，你已经留下了这么多漂亮的瞬间。",
+      "在遇见我以前，你已经留下了这么多漂亮的瞬间。",
       "那些我缺席过的日子，现在可以借这些照片慢慢补回来。"
     ]
   },
   {
     folder: "noguyun",
-    chapter: "第三幕 · 这一年的你",
+    chapter: "第三幕 · 大大芸",
     title: "越来越靠近相遇的你",
     captions: [
       "这一年的你，有很多我后来才一张张补看的瞬间。",
       "从朋友圈慢慢往前翻，像是在重新认识这一年的你。",
       "现在再看这些照片，会觉得我们离相遇越来越近了。",
-      "那时的你还不知道，后面的日子里会多一个很喜欢你的人。"
+      "那时的你还不知道，后面的日子里会多一个很爱你的人。"
     ]
   },
   {
     folder: "guyun",
-    chapter: "第四幕 · 恋爱以后",
+    chapter: "第四幕 · 爱你芸",
     title: "后来，我也在你的故事里了",
     captions: [
       "后来，我终于不只是隔着照片看你了。",
@@ -366,6 +366,42 @@ async function buildBirthdayCinemaSlides() {
   return slides;
 }
 
+function ensureBirthdayCinemaConfetti() {
+  if (!birthdayCinemaConfetti || birthdayCinemaConfetti.childElementCount > 0) return;
+
+  const colors = ["#ff79a9", "#ffd36e", "#7ecdf5", "#ffffff", "#c9a5ff", "#ff9e78"];
+  const pieceCount = 42;
+
+  for (let i = 0; i < pieceCount; i += 1) {
+    const piece = document.createElement("span");
+    piece.className = "birthday-cinema-confetti-piece";
+    piece.style.setProperty("--confetti-left", `${Math.random() * 100}%`);
+    piece.style.setProperty("--confetti-delay", `${(Math.random() * 1.3).toFixed(2)}s`);
+    piece.style.setProperty("--confetti-duration", `${(2.8 + Math.random() * 2.3).toFixed(2)}s`);
+    piece.style.setProperty("--confetti-drift", `${(-70 + Math.random() * 140).toFixed(0)}px`);
+    piece.style.setProperty("--confetti-rotate", `${(180 + Math.random() * 620).toFixed(0)}deg`);
+    piece.style.setProperty("--confetti-size", `${(5 + Math.random() * 7).toFixed(1)}px`);
+    piece.style.setProperty("--confetti-color", colors[i % colors.length]);
+    piece.style.setProperty("--confetti-radius", i % 4 === 0 ? "50%" : (i % 3 === 0 ? "2px" : "0px"));
+    birthdayCinemaConfetti.appendChild(piece);
+  }
+}
+
+function setBirthdayCinemaFinalMoment(active) {
+  const isActive = Boolean(active);
+  birthdayCinemaStage?.classList.toggle("final-card", isActive);
+
+  if (birthdayCinemaConfetti) {
+    if (isActive) ensureBirthdayCinemaConfetti();
+    birthdayCinemaConfetti.classList.toggle("show", isActive);
+  }
+
+  if (birthdayCinemaFinishBtn) {
+    birthdayCinemaFinishBtn.textContent = isActive ? "愿望实现❤" : "放映完啦，回到客厅 ♡";
+    birthdayCinemaFinishBtn.hidden = !isActive;
+  }
+}
+
 function clearBirthdayCinemaTimer() {
   if (birthdayCinemaTimer) {
     window.clearTimeout(birthdayCinemaTimer);
@@ -375,8 +411,8 @@ function clearBirthdayCinemaTimer() {
 
 function completeBirthdayCinemaAutoplay() {
   clearBirthdayCinemaTimer();
-  if (birthdayCinemaFinishBtn) birthdayCinemaFinishBtn.hidden = false;
-  if (birthdayCinemaAutoHint) birthdayCinemaAutoHint.textContent = "照片放完啦 · ♫ 放映厅";
+  setBirthdayCinemaFinalMoment(true);
+  if (birthdayCinemaAutoHint) birthdayCinemaAutoHint.textContent = "生日快乐 · ♫ 放映厅";
 }
 
 function scheduleBirthdayCinemaAdvance(expectedIndex) {
@@ -408,8 +444,9 @@ function renderBirthdayCinemaSlide(index) {
   birthdayCinemaIndex = Math.max(0, Math.min(index, birthdayCinemaSlides.length - 1));
   const slide = birthdayCinemaSlides[birthdayCinemaIndex];
   const expectedIndex = birthdayCinemaIndex;
+  const isFinalSlide = birthdayCinemaIndex === birthdayCinemaSlides.length - 1;
 
-  if (birthdayCinemaFinishBtn) birthdayCinemaFinishBtn.hidden = true;
+  setBirthdayCinemaFinalMoment(isFinalSlide);
   if (birthdayCinemaAutoHint) {
     birthdayCinemaAutoHint.textContent = birthdayCinemaNeedsMusicGesture
       ? "自动放映 · 轻触画面继续播放《放映厅》"
@@ -419,39 +456,41 @@ function renderBirthdayCinemaSlide(index) {
   birthdayCinemaStage.classList.remove("cinema-slide-in");
   void birthdayCinemaStage.offsetWidth;
   birthdayCinemaStage.classList.add("cinema-slide-in");
-  birthdayCinemaStage.classList.remove("title-card", "final-card");
+  birthdayCinemaStage.classList.remove("title-card");
+  birthdayCinemaStage.classList.toggle("final-card", isFinalSlide);
 
-  if (birthdayCinemaDate) birthdayCinemaDate.textContent = slide.date || "";
-  if (birthdayCinemaSlideTitle) birthdayCinemaSlideTitle.textContent = slide.title || "";
-  if (birthdayCinemaText) birthdayCinemaText.textContent = slide.text || "";
+  if (birthdayCinemaDate) birthdayCinemaDate.textContent = isFinalSlide ? "8.19 · HAPPY BIRTHDAY" : (slide.date || "");
+  if (birthdayCinemaSlideTitle) birthdayCinemaSlideTitle.textContent = isFinalSlide ? "请许愿" : (slide.title || "");
+  if (birthdayCinemaText) birthdayCinemaText.textContent = isFinalSlide ? "" : (slide.text || "");
+
+  if (birthdayCinemaAutoHint && isFinalSlide) {
+    birthdayCinemaAutoHint.textContent = "生日快乐 · ♫ 放映厅";
+  }
 
   if (birthdayCinemaPhotoWrap && birthdayCinemaPhoto && slide.image) {
     birthdayCinemaPhotoWrap.hidden = false;
-    birthdayCinemaPhoto.classList.remove("cinema-photo-motion");
-    void birthdayCinemaPhoto.offsetWidth;
-    birthdayCinemaPhoto.classList.add("cinema-photo-motion");
     birthdayCinemaPhoto.alt = `${slide.date || ""} ${slide.title || "芸芸的照片"}`.trim();
 
     birthdayCinemaPhoto.onload = () => {
       if (birthdayCinemaIndex !== expectedIndex) return;
       birthdayCinemaPhotoWrap.hidden = false;
-      scheduleBirthdayCinemaAdvance(expectedIndex);
+      if (!isFinalSlide) scheduleBirthdayCinemaAdvance(expectedIndex);
     };
     birthdayCinemaPhoto.onerror = () => {
       if (birthdayCinemaIndex !== expectedIndex) return;
       birthdayCinemaPhotoWrap.hidden = true;
-      scheduleBirthdayCinemaAdvance(expectedIndex);
+      if (!isFinalSlide) scheduleBirthdayCinemaAdvance(expectedIndex);
     };
     birthdayCinemaPhoto.src = slide.image;
 
     if (birthdayCinemaPhoto.complete && birthdayCinemaPhoto.naturalWidth > 0) {
       window.requestAnimationFrame(() => {
-        if (birthdayCinemaIndex === expectedIndex) scheduleBirthdayCinemaAdvance(expectedIndex);
+        if (birthdayCinemaIndex === expectedIndex && !isFinalSlide) scheduleBirthdayCinemaAdvance(expectedIndex);
       });
     }
   } else {
     if (birthdayCinemaPhotoWrap) birthdayCinemaPhotoWrap.hidden = true;
-    scheduleBirthdayCinemaAdvance(expectedIndex);
+    if (!isFinalSlide) scheduleBirthdayCinemaAdvance(expectedIndex);
   }
 
   const total = birthdayCinemaSlides.length;
@@ -467,6 +506,7 @@ function renderBirthdayCinemaSlide(index) {
 
 function renderBirthdayCinemaLoading() {
   clearBirthdayCinemaTimer();
+  setBirthdayCinemaFinalMoment(false);
   if (birthdayCinemaPhotoWrap) birthdayCinemaPhotoWrap.hidden = true;
   birthdayCinemaStage?.classList.remove("cinema-slide-in", "final-card");
   birthdayCinemaStage?.classList.add("title-card");
@@ -479,6 +519,7 @@ function renderBirthdayCinemaLoading() {
 }
 
 function renderBirthdayCinemaEmpty() {
+  setBirthdayCinemaFinalMoment(false);
   if (birthdayCinemaPhotoWrap) birthdayCinemaPhotoWrap.hidden = true;
   birthdayCinemaStage?.classList.remove("cinema-slide-in", "final-card");
   birthdayCinemaStage?.classList.add("title-card");
@@ -489,7 +530,10 @@ function renderBirthdayCinemaEmpty() {
   }
   if (birthdayCinemaCounter) birthdayCinemaCounter.textContent = "00 / 00";
   if (birthdayCinemaProgressBar) birthdayCinemaProgressBar.style.width = "0%";
-  if (birthdayCinemaFinishBtn) birthdayCinemaFinishBtn.hidden = false;
+  if (birthdayCinemaFinishBtn) {
+    birthdayCinemaFinishBtn.textContent = "回到客厅 ♡";
+    birthdayCinemaFinishBtn.hidden = false;
+  }
 }
 
 function setMusicPlayerDisc(index) {
@@ -628,7 +672,7 @@ function closeBirthdayCinema() {
   birthdayCinema.classList.remove("show");
   birthdayCinema.setAttribute("aria-hidden", "true");
   document.body.classList.remove("birthday-cinema-lock");
-  if (birthdayCinemaFinishBtn) birthdayCinemaFinishBtn.hidden = true;
+  setBirthdayCinemaFinalMoment(false);
 
   restoreMusicAfterBirthdayCinema();
 
