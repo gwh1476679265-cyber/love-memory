@@ -8918,7 +8918,7 @@ body.birthday-cinema-lock {
 }
 
 .birthday-cinema-kicker {
-  margin-bottom: 4px;
+  margin: 0 0 4px 7px;
   color: #ffc2d8;
   font-size: 9px;
   font-weight: 900;
@@ -9100,11 +9100,9 @@ body.birthday-cinema-lock {
   font-size: clamp(18px, 4vw, 25px);
   line-height: 1.22;
   font-weight: 900;
-  -webkit-text-stroke: .35px rgba(0,0,0,.72);
   text-shadow:
-    0 1px 2px rgba(0,0,0,.96),
-    0 3px 9px rgba(0,0,0,.86),
-    0 7px 22px rgba(0,0,0,.62);
+    0 2px 4px rgba(0,0,0,.90),
+    0 6px 18px rgba(0,0,0,.62);
 }
 
 .birthday-cinema-copy p {
@@ -9114,11 +9112,9 @@ body.birthday-cinema-lock {
   font-size: 13px;
   line-height: 1.75;
   font-weight: 650;
-  -webkit-text-stroke: .18px rgba(0,0,0,.68);
   text-shadow:
-    0 1px 2px rgba(0,0,0,.98),
-    0 3px 10px rgba(0,0,0,.84),
-    0 6px 18px rgba(0,0,0,.58);
+    0 2px 4px rgba(0,0,0,.94),
+    0 5px 14px rgba(0,0,0,.62);
 }
 
 .birthday-cinema-stage.title-card {
@@ -9253,7 +9249,7 @@ body.birthday-cinema-lock {
   }
 
   .birthday-cinema-header { margin-bottom: 9px; }
-  .birthday-cinema-kicker { font-size: 8px; letter-spacing: 1.6px; }
+  .birthday-cinema-kicker { margin-left: 6px; font-size: 9px; letter-spacing: 1.6px; }
   .birthday-cinema-header h2 { font-size: 17px; }
   .birthday-cinema-close { width: 32px; height: 32px; font-size: 22px; }
 

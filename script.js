@@ -417,7 +417,7 @@ function setBirthdayCinemaFinalMoment(active) {
   }
 
   if (birthdayCinemaFinishBtn) {
-    birthdayCinemaFinishBtn.textContent = isActive ? "愿望实现❤" : "放映完啦，回到客厅 ♡";
+    birthdayCinemaFinishBtn.textContent = isActive ? "点击实现愿望~❤" : "放映完啦，回到客厅 ♡";
     birthdayCinemaFinishBtn.hidden = !isActive;
   }
 }
@@ -432,7 +432,7 @@ function clearBirthdayCinemaTimer() {
 function completeBirthdayCinemaAutoplay() {
   clearBirthdayCinemaTimer();
   setBirthdayCinemaFinalMoment(true);
-  if (birthdayCinemaAutoHint) birthdayCinemaAutoHint.textContent = "生日快乐 · ♫ 放映厅";
+  if (birthdayCinemaAutoHint) birthdayCinemaAutoHint.textContent = "生日快乐 · ♫ 9号放映厅";
 }
 
 function scheduleBirthdayCinemaAdvance(expectedIndex) {
@@ -470,7 +470,7 @@ function renderBirthdayCinemaSlide(index) {
   if (birthdayCinemaAutoHint) {
     birthdayCinemaAutoHint.textContent = birthdayCinemaNeedsMusicGesture
       ? "自动放映 · 轻触画面继续播放《放映厅》"
-      : "自动放映 · ♫ 放映厅";
+      : "自动放映 · ♫ 9号放映厅";
   }
 
   birthdayCinemaStage.classList.remove("cinema-slide-in");
@@ -484,7 +484,7 @@ function renderBirthdayCinemaSlide(index) {
   if (birthdayCinemaText) birthdayCinemaText.textContent = isFinalSlide ? "" : (slide.text || "");
 
   if (birthdayCinemaAutoHint && isFinalSlide) {
-    birthdayCinemaAutoHint.textContent = "生日快乐 · ♫ 放映厅";
+    birthdayCinemaAutoHint.textContent = "生日快乐 · ♫ 9号放映厅";
   }
 
   if (birthdayCinemaPhotoWrap && birthdayCinemaPhoto && slide.image) {
@@ -606,7 +606,7 @@ function retryBirthdayCinemaMusic() {
   const playPromise = bgMusic?.play();
   if (playPromise && typeof playPromise.then === "function") {
     playPromise.then(() => {
-      if (birthdayCinemaAutoHint) birthdayCinemaAutoHint.textContent = "自动放映 · ♫ 放映厅";
+      if (birthdayCinemaAutoHint) birthdayCinemaAutoHint.textContent = "自动放映 · ♫ 9号放映厅";
     }).catch((error) => {
       birthdayCinemaNeedsMusicGesture = true;
       console.warn("[生日放映厅] 再次播放《放映厅》失败：", error);
