@@ -203,7 +203,7 @@ const birthdayCinemaMask = document.querySelector(".birthday-cinema-mask");
 
 // ★ 每张照片的主节奏：3720 ≈ 3.72 秒。
 // 转场本身约 700ms，会在两张照片之间做交叉淡化；字幕稍晚 120ms 再换。
-const BIRTHDAY_CINEMA_SLIDE_MS = 3680;
+const BIRTHDAY_CINEMA_SLIDE_MS = 3780;
 const BIRTHDAY_CINEMA_CROSSFADE_MS = 700;
 const BIRTHDAY_CINEMA_COPY_DELAY_MS = 120;
 const BIRTHDAY_CINEMA_MUSIC_SRC = "music/放映厅.mp3";
