@@ -203,7 +203,7 @@ const birthdayCinemaMask = document.querySelector(".birthday-cinema-mask");
 
 // ★ 每张照片的主节奏：3720 ≈ 3.72 秒。
 // 转场本身约 700ms，会在两张照片之间做交叉淡化；字幕稍晚 120ms 再换。
-const BIRTHDAY_CINEMA_SLIDE_MS = 3720;
+const BIRTHDAY_CINEMA_SLIDE_MS = 3666;
 const BIRTHDAY_CINEMA_CROSSFADE_MS = 700;
 const BIRTHDAY_CINEMA_COPY_DELAY_MS = 120;
 const BIRTHDAY_CINEMA_MUSIC_SRC = "music/放映厅.mp3";
@@ -228,7 +228,7 @@ const BIRTHDAY_CINEMA_GROUPS = [
   },
   {
     folder: "youngyun",
-    count: 5,
+    count: 6,
     chapter: "第二幕 · 中中芸",
     title: "还未相遇的你和我",
     captions: [
@@ -237,6 +237,7 @@ const BIRTHDAY_CINEMA_GROUPS = [
       "20岁生日快乐！那些我缺席过的日子，现在可以借这些照片慢慢补回来。",
       "21岁生日快乐！这些年份对我来说原本是空白，现在终于有了你的样子。",
       "22岁生日快乐！那时候我们各自在自己的生活里，还不知道彼此会出现。",
+      "五年前第一次在陈宁朋友圈看见你们的合照，命运的齿轮开始转动。",
      ]
   },
   {
@@ -258,21 +259,19 @@ const BIRTHDAY_CINEMA_GROUPS = [
   },
   {
     folder: "guyun",
-    count: 15,
+    count: 13,
     chapter: "第四幕 · 此刻最好的你",
     title: "后来，我也在你的故事里了",
     captions: [
       "我终于不只是隔着照片看你了。",
       "以前只能看见你的某一个瞬间，现在可以站在你身边。",
       "以前是朋友圈里的你，后来是我手机相册里越来越多的你。",
-      "希望以后再往后翻，每一年都能看到我们一起留下的日子。",
       "能从旁观你的照片，变成参与照片里那些日子的人，真的很好。",    
-      "再往后的照片里，我开始知道每一张背后发生了什么。",
       "喜欢镜头里的你，也更喜欢照片拍完以后还在我身边的你。",
+      "再往后的照片里，我开始知道每一张背后发生了什么。",
       "你说：“请多偷拍。”",
       "越来越多的照片是我的专属。",
       "认识你以后，时间突然有了很多可以一起记住的坐标。",
-      "希望以后每次放映到这里，后面都还能继续接上新的照片。",
       "最美味的小蛋糕。", 
       "你的相机里有两个萌物，我有三个。", 
       "爱你的人会把你拍得很好看。"
