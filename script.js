@@ -258,7 +258,7 @@ const BIRTHDAY_CINEMA_GROUPS = [
   },
   {
     folder: "guyun",
-    count: 14,
+    count: 15,
     chapter: "第四幕 · 此刻最好的你",
     title: "后来，我也在你的故事里了",
     captions: [
@@ -298,7 +298,7 @@ async function buildBirthdayCinemaSlides() {
   if (birthdayCinemaSlidesCache) return birthdayCinemaSlidesCache.slice();
 
   // 照片数量改为显式固定值，不再探测静态托管上的旧文件。
-  // 当前总数：6 + 5 + 8 + 14 = 33 张。
+  // 当前总数：6 + 5 + 8 + 15 = 34 张。
   const slides = [];
 
   BIRTHDAY_CINEMA_GROUPS.forEach((group, groupIndex) => {
