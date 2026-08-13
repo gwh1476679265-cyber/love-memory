@@ -437,7 +437,7 @@ function updateBirthdayCinemaCopy(slide, isFinalSlide, { immediate = false } = {
 
   const applyText = () => {
     if (birthdayCinemaDate) birthdayCinemaDate.textContent = isFinalSlide ? "8.19 · HAPPY BIRTHDAY" : (slide.date || "");
-    if (birthdayCinemaSlideTitle) birthdayCinemaSlideTitle.textContent = isFinalSlide ? "请许愿" : (slide.title || "");
+    if (birthdayCinemaSlideTitle) birthdayCinemaSlideTitle.textContent = isFinalSlide ? "请许愿🎂" : (slide.title || "");
     if (birthdayCinemaText) birthdayCinemaText.textContent = isFinalSlide ? "" : (slide.text || "");
   };
 
