@@ -1074,7 +1074,7 @@ const memories = {
     text: "进行一个小小的拆箱吧✔外貌check！✔✔✔"
   },
 
- "2026-08-08": [
+"2026-08-08": [
   {
     featured: true,
     title: "给你庆生！",
@@ -1099,6 +1099,15 @@ const memories = {
     text: "所有人欣赏"
   }
  ],
+
+ "2026-09-07":   {
+    featured: true,
+    title: "暴力清空",
+    images: ["images/20260907-1.jpg",
+	 "images/20260907-2.jpg",    ],
+    text: "解释解释什么叫心有灵犀啊"
+  },
+
 
 };
 
