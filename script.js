@@ -1259,7 +1259,9 @@ const PHOTO_WALL_FEATURED_VARIANTS = {
   '2026-03-31': 'featured-card-dots',
   '2026-04-14': 'featured-card-note',
   '2026-05-09': 'featured-card-swag',
-  '2026-08-08': 'featured-card-stars'
+  '2026-08-08': 'featured-card-stars',
+  '2026-09-07': 'featured-card-red-scrap',
+  '2026-10-18': 'featured-card-blue-scrap'
 };
 
 function buildDecoration(tagName = 'span', className = '', text = '') {
@@ -1305,6 +1307,78 @@ function applyPhotoWallFeaturedVariant(card, item, variantName) {
     });
     card.appendChild(decor);
   }
+  if (variantName === 'featured-card-blue-scrap') {
+    const decor = buildDecoration('div', 'collage-extra-decor collage-blue-scrap-decor');
+
+    [
+      'blue-strip-panel',
+      'blue-dot-grid',
+      'blue-round-tag',
+      'blue-drop blue-drop-a',
+      'blue-drop blue-drop-b',
+      'blue-drop blue-drop-c',
+      'blue-star blue-star-a',
+      'blue-star blue-star-b',
+      'blue-ring-charm',
+      'blue-mini-label blue-mini-label-a',
+      'blue-mini-label blue-mini-label-b'
+    ].forEach((className) => {
+      decor.appendChild(buildDecoration('span', className));
+    });
+
+    card.appendChild(decor);
+    return;
+  }
+
+  if (variantName === 'featured-card-red-scrap') {
+    const decor = buildDecoration('div', 'collage-extra-decor collage-red-scrap-decor');
+
+    [
+      'red-script-feel',
+      'red-clip-top',
+      'red-pushpin-top',
+      'red-swirl-mark',
+      'red-polka-paper',
+      'red-pixel-hearts',
+      'red-circle-arrow',
+      'red-cross-tape',
+      'red-burst-mark'
+    ].forEach((className) => {
+      decor.appendChild(buildDecoration('span', className));
+    });
+
+    card.appendChild(decor);
+    return;
+  }
+}
+
+function shouldShowBirthdayCinemaEntry(dateKey, memory, sameDayIndex) {
+  return (
+    dateKey === "2026-08-08" &&
+    sameDayIndex === 0 &&
+    memory &&
+    memory.title === "给你庆生！"
+  );
+}
+
+function createBirthdayCinemaEntryButton() {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "birthday-memory-entry-btn";
+  btn.innerHTML = `
+    <span class="birthday-memory-entry-icon" aria-hidden="true">🎞️</span>
+    <span class="birthday-memory-entry-copy">
+      <strong>生日贺卡 · 回忆放映厅</strong>
+      <small>点这里回到 8.19 的专属小惊喜</small>
+    </span>
+  `;
+
+  btn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openBirthdayCardIntro();
+  });
+
+  return btn;
 }
 
 function createTimeline() {
@@ -1533,10 +1607,13 @@ function createTimeline() {
       const currentImage = imageList[currentImageIndex] || "";
       openMemoryModal(dateText, memory, currentImage);
     });
+card.appendChild(date);
+card.appendChild(photo);
+card.appendChild(title);
 
-    card.appendChild(date);
-    card.appendChild(photo);
-    card.appendChild(title);
+if (shouldShowBirthdayCinemaEntry(dateKey, memory, sameDayIndex)) {
+  card.appendChild(createBirthdayCinemaEntryButton());
+}
 
     if (memory.featured && featuredVariantName) {
       applyPhotoWallFeaturedVariant(card, item, featuredVariantName);
@@ -4834,3 +4911,36 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('focus', () => checkForSiteUpdate());
 
 initSiteVersionWatcher();
+
+function shouldShowBirthdayCinemaEntry(dateKey, memory, sameDayIndex) {
+  return (
+    dateKey === "2026-08-08" &&
+    sameDayIndex === 0 &&
+    memory &&
+    memory.title === "给你庆生！"
+  );
+}
+
+function createBirthdayCinemaEntryButton() {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "birthday-memory-entry-btn";
+  btn.innerHTML = `
+    <span class="birthday-memory-entry-icon" aria-hidden="true">🎞️</span>
+    <span class="birthday-memory-entry-copy">
+      <strong>生日贺卡 · 回忆放映厅</strong>
+      <small>点这里回到 8.19 的专属小惊喜</small>
+    </span>
+  `;
+
+  btn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openBirthdayCardIntro();
+  });
+
+  return btn;
+}
+
+if (shouldShowBirthdayCinemaEntry(dateKey, memory, sameDayIndex)) {
+  card.appendChild(createBirthdayCinemaEntryButton());
+}
