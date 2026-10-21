@@ -1108,6 +1108,17 @@ const memories = {
     text: "解释解释什么叫心有灵犀啊"
   },
 
+ "2026-10-18":   {
+    featured: true,
+    title: "好久不见",
+    images: ["images/20261018-1.jpg",
+	 "images/20261018-2.jpg",  
+	"images/20261018-3.jpg",
+	 "images/20261018-4.jpg", 
+	 "images/20261018-5.jpg",
+	 "images/20261018-6.jpg",    ],
+    text: "非常非常开心的一天"
+  },
 
 };
 
