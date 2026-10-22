@@ -1143,6 +1143,14 @@ const memories = {
     text: "萌萌的很安心"
   },
 
+ "2026-10-06":   {
+    title: "完结撒花🎉😭",
+    images: ["images/20261006-1.jpg",
+	 "images/20261006-2.jpg", 
+                    ],
+    text: "舍不得舍不得"
+  },
+
 "2026-10-04": {
     title: "麦恩莉唱给麦恩莉",
     image: "images/20261004.jpg",
