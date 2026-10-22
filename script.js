@@ -1074,8 +1074,7 @@ const memories = {
     text: "进行一个小小的拆箱吧✔外貌check！✔✔✔"
   },
 
-"2026-08-08": [
-  {
+"2026-08-08":  {
     featured: true,
     title: "给你庆生！",
     images: ["images/20260808-1.webp",
@@ -1087,9 +1086,23 @@ const memories = {
 	 "images/20260808-7.webp",
 	    ],
     text: "非常之美丽非常之美味的小蛋糕👸和小蛋糕🎂"
-  },
-  {
-    title: "爱你的人会把你拍得很美",
+  }, 
+
+"2026-08-14":  {
+    title: "海盐芝士风味拿铁☕️",
+    images: ["images/20260814-1.jpg",
+	 "images/20260814-2.jpg",
+	 "images/20260814-3.jpg",
+	 "images/20260814-4.jpg",
+	 "images/20260814-5.jpg",
+	 "images/20260814-6.jpg",
+	 	    ],
+    text: "好喝好看"
+  }, 
+
+
+"2026-08-19": {
+      title: "爱你的人会把你拍得很美",
     images: ["images/20260808-8.jpg",
       "images/20260808-9.jpg",
       "images/20260808-10.jpg",
@@ -1097,8 +1110,8 @@ const memories = {
       "images/20260808-12.jpg"
     ],
     text: "所有人欣赏"
-  }
- ],
+  },
+
 
  "2026-09-07":   {
     featured: true,
@@ -1107,6 +1120,35 @@ const memories = {
 	 "images/20260907-2.jpg",    ],
     text: "解释解释什么叫心有灵犀啊"
   },
+
+
+ "2026-09-16":   {
+    title: "谁家呆玉",
+    images: ["images/20260916-1.jpg",
+	 "images/20260916-2.jpg", 
+                   "images/20260916-3.jpg", 
+   ],
+    text: "辛苦但是很美的一天"
+  },
+
+ "2026-09-25":   {
+    title: "适萌而止吧",
+    images: ["images/20260925-1.jpg",
+	 "images/20260925-2.jpg", 
+                   "images/20260925-3.jpg", 
+                   "images/20260925-4.jpg",
+	 "images/20260925-5.jpg", 
+                   "images/20260925-6.jpg", 
+   ],
+    text: "萌萌的很安心"
+  },
+
+"2026-10-04": {
+    title: "麦恩莉唱给麦恩莉",
+    image: "images/20261004.jpg",
+    text: "My only~"
+  },
+
 
  "2026-10-18":   {
     featured: true,
@@ -1308,20 +1350,13 @@ function applyPhotoWallFeaturedVariant(card, item, variantName) {
     card.appendChild(decor);
   }
   if (variantName === 'featured-card-blue-scrap') {
+    // 2026.10.18：清理旧拼贴，仅保留灰白斜纹底纹与天使、海豚、鱼三枚贴纸。
     const decor = buildDecoration('div', 'collage-extra-decor collage-blue-scrap-decor');
 
     [
-      'blue-strip-panel',
-      'blue-dot-grid',
-      'blue-round-tag',
-      'blue-drop blue-drop-a',
-      'blue-drop blue-drop-b',
-      'blue-drop blue-drop-c',
-      'blue-star blue-star-a',
-      'blue-star blue-star-b',
-      'blue-ring-charm',
-      'blue-mini-label blue-mini-label-a',
-      'blue-mini-label blue-mini-label-b'
+      'blue-angel-sticker',
+      'blue-dolphin-sticker',
+      'blue-fish-sticker'
     ].forEach((className) => {
       decor.appendChild(buildDecoration('span', className));
     });
@@ -1331,18 +1366,13 @@ function applyPhotoWallFeaturedVariant(card, item, variantName) {
   }
 
   if (variantName === 'featured-card-red-scrap') {
+    // 2026.09.07：只保留三枚低饱和拼贴素材，跨在照片、底片与背景的交界处。
     const decor = buildDecoration('div', 'collage-extra-decor collage-red-scrap-decor');
 
     [
-      'red-script-feel',
-      'red-clip-top',
-      'red-pushpin-top',
-      'red-swirl-mark',
-      'red-polka-paper',
-      'red-pixel-hearts',
-      'red-circle-arrow',
-      'red-cross-tape',
-      'red-burst-mark'
+      'red-bow-decor',
+      'red-star-cluster',
+      'red-swirl-sticker'
     ].forEach((className) => {
       decor.appendChild(buildDecoration('span', className));
     });
