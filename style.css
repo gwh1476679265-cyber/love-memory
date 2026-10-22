@@ -9216,7 +9216,6 @@ body.birthday-cinema-lock {
   }
 
   .home-door-card .home-question-bubble { margin-bottom: 18px; }
-}
   .home-door-card .house-name-board { margin-bottom: 18px; }
   .home-door-card .home-answer-bubble { margin-bottom: 20px; }
 
@@ -10349,5 +10348,39 @@ body.birthday-cinema-lock {
     bottom: 17% !important;
     width: 82px !important;
     height: 55px !important;
+  }
+}
+
+
+/* 2026-10-22: 毛毡板按便利贴行数自然伸展，不再固定高度或内部滚动。 */
+.felt-board-card {
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+
+.felt-board-surface {
+  height: auto !important;
+  max-height: none !important;
+  min-height: 170px !important;
+  overflow: visible !important;
+  overflow-y: visible !important;
+  box-sizing: border-box !important;
+  align-content: start !important;
+}
+
+@media (max-width: 480px) {
+  .felt-board-card {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .felt-board-surface {
+    height: auto !important;
+    max-height: none !important;
+    min-height: 170px !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
   }
 }
