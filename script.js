@@ -1170,6 +1170,21 @@ const memories = {
     text: "非常非常开心的一天"
   },
 
+
+ "2026-10-24":   {
+    title: "🎇",
+    images: ["images/20261024-1.jpg",
+	 "images/20261024-2.jpg",  
+	"images/20261024-3.jpg",
+	 "images/20261024-4.jpg", 
+	 "images/20261024-5.jpg",
+	 "images/20261024-6.jpg", 
+	"images/20261024-7.jpg",
+	 "images/20261024-8.jpg",
+    ],
+    text: "祝我们无坎"
+  },
+
 };
 
 // ===============================
