@@ -850,7 +850,7 @@ window.addEventListener("keydown", (event) => {
 // 回忆数据区
 // 之后你主要改这里就可以
 // 日期格式必须是：YYYY-MM-DD
-// image 写你的图片路径，例如：images/2026-04-01.webp
+// image 写你的图片路径，例如：images/2026-04-01.jpg
 // 同一天只有一条：继续写 { ... }；同一天有多条：写成 [ { ... }, { ... } ]。
 // 注意：不要重复写两个完全相同的日期 key，JavaScript 会让后一个覆盖前一个。
 // 数组里排在上面的回忆，会先出现在照片墙；排在下面的会后出现。
@@ -860,7 +860,7 @@ const memories = {
   "2026-03-31": {
     featured: true,
     title: "那一天你走进了我的生命",
-    image: "images/20260331.webp",
+    image: "images/20260331.jpg",
     text: "小众姓联盟成立！"
   },
 
@@ -891,20 +891,20 @@ const memories = {
  "2026-04-14": {
     featured: true,
     title: "第一次见面",
-    images: ["images/20260414-1.webp",
-	"images/20260414-2.webp",
-	"images/20260414-3.webp",
-	"images/20260414-4.webp",
+    images: ["images/20260414-1.jpg",
+	"images/20260414-2.jpg",
+	"images/20260414-3.jpg",
+	"images/20260414-4.jpg",
     ],
     text: "暴走西湖🚶"
   },
 
  "2026-04-25": {
     title: "边总莅临和山，意欲收购工大",
-    images: ["images/20260425-1.webp",
-	"images/20260425-2.webp",
-	"images/20260425-3.webp",
-	"images/20260425-4.webp",
+    images: ["images/20260425-1.jpg",
+	"images/20260425-2.jpg",
+	"images/20260425-3.jpg",
+	"images/20260425-4.jpg",
     ],
     text: "可惜没有多拍几张照片"
   },
@@ -918,33 +918,33 @@ const memories = {
 
  "2026-04-28": {
     title: "小狗假意收伞，趁机智取小手",
-    images: ["images/20260428-1.webp",
-	"images/20260428-2.webp",
-	"images/20260428-3.webp",
-	"images/20260428-4.webp",
+    images: ["images/20260428-1.jpg",
+	"images/20260428-2.jpg",
+	"images/20260428-3.jpg",
+	"images/20260428-4.jpg",
     ],
     text: "你的伞小，打你的伞"
   },
 
  "2026-05-04": {
     title: "🌄 💐 ✉️ ",
-    images: ["images/20260504-1.webp",
-	"images/20260504-2.webp",
-	"images/20260504-3.webp",
-	"images/20260504-4.webp",
-	"images/20260504-5.webp",
-	"images/20260504-6.webp",
+    images: ["images/20260504-1.jpg",
+	"images/20260504-2.jpg",
+	"images/20260504-3.jpg",
+	"images/20260504-4.jpg",
+	"images/20260504-5.jpg",
+	"images/20260504-6.jpg",
     ],
     text: "谈很久很久的恋爱"
   },
 
  "2026-05-07": {
     title: "给我庆生🎂",
-    images: ["images/20260507-1.webp",
-	"images/20260507-2.webp",
-	"images/20260507-3.webp",
-	"images/20260507-4.webp",
-	"images/20260507-5.webp",
+    images: ["images/20260507-1.jpg",
+	"images/20260507-2.jpg",
+	"images/20260507-3.jpg",
+	"images/20260507-4.jpg",
+	"images/20260507-5.jpg",
 	    ],
     text: "谢谢宝宝，过得很开心的一个生日"
   },
@@ -952,10 +952,10 @@ const memories = {
   "2026-05-09": {
     featured: true,
     title: "在一起",
-    images: ["images/20260509-1.webp",
-	 "images/20260509-2.webp",
-	 "images/20260509-3.webp",
-	 "images/20260509-4.webp",
+    images: ["images/20260509-1.jpg",
+	 "images/20260509-2.jpg",
+	 "images/20260509-3.jpg",
+	 "images/20260509-4.jpg",
 	    ],
 
     text: "城市阳台的风缓缓的，我们坐在长椅上聊着有的没的，贴在一起的时候，感到无比安心和放松"
@@ -963,11 +963,11 @@ const memories = {
 
 "2026-05-17": {
     title: "提前过520",
-    images: ["images/20260517-1.webp",
-	 "images/20260517-2.webp",
-	 "images/20260517-3.webp",
-	 "images/20260517-4.webp",
-	 "images/20260517-5.webp",
+    images: ["images/20260517-1.jpg",
+	 "images/20260517-2.jpg",
+	 "images/20260517-3.jpg",
+	 "images/20260517-4.jpg",
+	 "images/20260517-5.jpg",
 	    ],
 
     text: "拍立得万岁！"
@@ -975,13 +975,13 @@ const memories = {
 
 "2026-05-22": {
     title: "拼豆＆牛肉火锅",
-    images: ["images/20260522-1.webp",
-	 "images/20260522-2.webp",
-	 "images/20260522-3.webp",
-	 "images/20260522-4.webp",
-	 "images/20260522-5.webp",
-	 "images/20260522-6.webp",
-	 "images/20260522-7.webp",
+    images: ["images/20260522-1.jpg",
+	 "images/20260522-2.jpg",
+	 "images/20260522-3.jpg",
+	 "images/20260522-4.jpg",
+	 "images/20260522-5.jpg",
+	 "images/20260522-6.jpg",
+	 "images/20260522-7.jpg",
 	    ],
 
     text: "拼豆超级放松，很好吃的一顿牛肉"
@@ -989,13 +989,13 @@ const memories = {
 
   "2026-06-01": {
     title: "儿童节特辑",
-    images: ["images/20260601-1.webp",
-	 "images/20260601-2.webp",
-	 "images/20260601-3.webp",
-	 "images/20260601-4.webp",
-	 "images/20260601-5.webp",
-	 "images/20260601-6.webp",
-	 "images/20260601-7.webp",
+    images: ["images/20260601-1.jpg",
+	 "images/20260601-2.jpg",
+	 "images/20260601-3.jpg",
+	 "images/20260601-4.jpg",
+	 "images/20260601-5.jpg",
+	 "images/20260601-6.jpg",
+	 "images/20260601-7.jpg",
 	    ],
     text: "不要放过这个小年糕小豆腐小大福"
  },
@@ -1003,16 +1003,16 @@ const memories = {
 
   "2026-06-06": {
     title: "穿上我买的睡衣了",
-    image: "images/20260606-1.webp",
+    image: "images/20260606-1.jpg",
     text: "超级适配、轻松驾驭、美衣配美人"
  },
 
 
 "2026-06-09": {
     title: "小蛋糕屏保生成中...",
-    images: ["images/20260609-1.webp",
-	 "images/20260609-2.webp",
-	 "images/20260609-3.webp",
+    images: ["images/20260609-1.jpg",
+	 "images/20260609-2.jpg",
+	 "images/20260609-3.jpg",
 	    ],
 
     text: "超多口味的小蛋糕供我选择，最喜欢的三张"
@@ -1020,9 +1020,9 @@ const memories = {
 
 "2026-06-10": {
     title: "被宝宝投喂杨梅了",
-    images: ["images/20260610-1.webp",
-	 "images/20260610-2.webp",
-	 "images/20260610-3.webp",
+    images: ["images/20260610-1.jpg",
+	 "images/20260610-2.jpg",
+	 "images/20260610-3.jpg",
 	    ],
 
     text: "乒乓球一样大的杨梅，没吃过这么大的，而且很甜很新鲜"
@@ -1030,60 +1030,60 @@ const memories = {
 
 "2026-06-14": {
     title: "爱上泉市果切♥",
-    images: ["images/20260614-1.webp",
-	 "images/20260614-2.webp",
-	 "images/20260614-3.webp",
-	 "images/20260614-4.webp",
-	 "images/20260614-5.webp",
+    images: ["images/20260614-1.jpg",
+	 "images/20260614-2.jpg",
+	 "images/20260614-3.jpg",
+	 "images/20260614-4.jpg",
+	 "images/20260614-5.jpg",
 	    ],
     text: "超鲜的牛肉，意外爱上的果切，美味的蛋糕"
   },
 
 "2026-06-20": {
     title: "一个臭美的女子",
-    images: ["images/20260620-1.webp",
-	 "images/20260620-2.webp",
-	 "images/20260620-3.webp",
-	 "images/20260620-4.webp",
-	 "images/20260620-5.webp",
+    images: ["images/20260620-1.jpg",
+	 "images/20260620-2.jpg",
+	 "images/20260620-3.jpg",
+	 "images/20260620-4.jpg",
+	 "images/20260620-5.jpg",
 	    ],
     text: "臭美？绝美！退可萌得钥匙，进可姐得勾人"
   },
 
 "2026-07-22": {
     title: "欠你的一张照片",
-    images: ["images/20260722-1.webp",
-	 "images/20260722-2.webp",
+    images: ["images/20260722-1.jpg",
+	 "images/20260722-2.jpg",
 	 	    ],
     text: "乌漆嘛黑但意外是最好的一张，萌萌的很安心~"
   },
 
   "2026-07-25": {
     title: "你怎么知道我要吃木屋烧烤",
-    image: "images/20260725.webp",
+    image: "images/20260725.jpg",
     text: "鸡肫...娃娃菜...香肠...绿豆汤...柠檬茶...啤酒...🤤🤤"
   },
 
   "2026-08-01": {
     title: "🎀🎂",
-    images: ["images/20260801-1.webp",
-	 "images/20260801-2.webp",
-	  "images/20260801-3.webp",
- 	"images/20260801-4.webp",
- 	"images/20260801-5.webp",	    ],
+    images: ["images/20260801-1.jpg",
+	 "images/20260801-2.jpg",
+	  "images/20260801-3.jpg",
+ 	"images/20260801-4.jpg",
+ 	"images/20260801-5.jpg",	    ],
     text: "进行一个小小的拆箱吧✔外貌check！✔✔✔"
   },
 
 "2026-08-08":  {
     featured: true,
     title: "给你庆生！",
-    images: ["images/20260808-1.webp",
-	 "images/20260808-2.webp",
-	 "images/20260808-3.webp",
-	 "images/20260808-4.webp",
-	 "images/20260808-5.webp",
-	 "images/20260808-6.webp",
-	 "images/20260808-7.webp",
+    images: ["images/20260808-1.jpg",
+	 "images/20260808-2.jpg",
+	 "images/20260808-3.jpg",
+	 "images/20260808-4.jpg",
+	 "images/20260808-5.jpg",
+	 "images/20260808-6.jpg",
+	 "images/20260808-7.jpg",
 	    ],
     text: "非常之美丽非常之美味的小蛋糕👸和小蛋糕🎂"
   }, 
@@ -1172,7 +1172,7 @@ const memories = {
 
 
  "2026-10-24":   {
-    title: "🎇",
+    title: "在呈坎",
     images: ["images/20261024-1.jpg",
 	 "images/20261024-2.jpg",  
 	"images/20261024-3.jpg",
@@ -1180,8 +1180,7 @@ const memories = {
 	 "images/20261024-5.jpg",
 	 "images/20261024-6.jpg", 
 	"images/20261024-7.jpg",
-	 "images/20261024-8.jpg",
-    ],
+	    ],
     text: "祝我们无坎"
   },
 
@@ -3076,7 +3075,7 @@ function getMediaExtension(name, mime, type) {
   const map = {
     'image/jpeg': 'jpg',
     'image/png': 'png',
-    'image/webp': 'webp',
+    'image/jpg': 'jpg',
     'image/gif': 'gif',
     'image/heic': 'heic',
     'image/heif': 'heif',
